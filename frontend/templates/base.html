@@ -108,7 +108,7 @@ async function submitReport() {
   const msg   = document.getElementById("gr-msg");
   if (!type || !title || !desc) { msg.style.display="block"; msg.style.color="red"; msg.textContent="Please fill all fields."; return; }
   try {
-    const r = await fetch("http://127.0.0.1:8000/api/admin/reports", {
+    const r = await fetch("https://jobportal-q9ii.onrender.com/api/admin/reports", {
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},
       body: JSON.stringify({report_type:type, title, description:desc})

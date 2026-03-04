@@ -292,7 +292,7 @@ document.querySelector('.page-content').style.padding='0';
 document.querySelector('.page-content > .container').style.maxWidth='none';
 document.querySelector('.page-content > .container').style.padding='0';
 
-const API=`http://127.0.0.1:8000/api`, token=Auth.getToken();
+const API=`https://jobportal-q9ii.onrender.com/api`, token=Auth.getToken();
 if(!token) window.location.href='/login';
 
 const IC = path => `/static/icons/${path}`;
