@@ -1,0 +1,829 @@
+{% extends "base.html" %}
+{% block title %}My Profile — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-layout { display:grid; grid-template-columns:260px 1fr; gap:28px; padding:32px 0 48px; }
+  .profile-nav { position:sticky; top:76px; height:fit-content; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; font-size:0.88rem; font-weight:500; color:var(--muted); cursor:pointer; transition:all 0.15s; border:none; background:none; width:100%; text-align:left; }
+  .nav-item:hover { background:var(--bg); color:var(--black); }
+  .nav-item.active { background:var(--pink-light); color:var(--pink); font-weight:600; }
+  .nav-dot { width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0; }
+  .nav-dot.done { background:var(--green); }
+  .nav-dot.active { background:var(--pink); }
+
+  .section { display:none; }
+  .section.active { display:block; }
+  .section-title { font-family:var(--font-serif); font-size:1.5rem; margin-bottom:4px; }
+  .section-sub { font-size:0.85rem; color:var(--muted); margin-bottom:24px; }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-grid.three { grid-template-columns:1fr 1fr 1fr; }
+  .form-grid.full { grid-template-columns:1fr; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  .form-label { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+  .form-input, .form-select { padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius); background:var(--bg); color:var(--black); font-size:0.9rem; font-family:var(--font); outline:none; transition:border-color 0.15s; }
+  .form-input:focus, .form-select:focus { border-color:var(--pink); background:#fff; }
+  .form-select { cursor:pointer; }
+
+  .btn-save { background:var(--pink); color:#fff; border:none; padding:11px 28px; border-radius:999px; font-weight:700; font-size:0.9rem; cursor:pointer; transition:background 0.15s; }
+  .btn-save:hover { background:var(--pink-hover); }
+  .btn-save:disabled { opacity:0.6; cursor:not-allowed; }
+  .btn-outline-sm { background:transparent; border:1.5px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:999px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .btn-outline-sm:hover { border-color:var(--pink); color:var(--pink); }
+  .btn-danger-sm { background:transparent; border:1.5px solid var(--red); color:var(--red); padding:5px 10px; border-radius:999px; font-size:0.75rem; cursor:pointer; }
+
+  .tag-area { display:flex; flex-wrap:wrap; gap:8px; padding:10px; border:1.5px solid var(--border); border-radius:var(--radius); min-height:52px; background:var(--bg); }
+  .tag { display:flex; align-items:center; gap:5px; background:var(--black); color:#fff; border-radius:999px; padding:4px 10px; font-size:0.78rem; font-weight:500; }
+  .tag .remove { cursor:pointer; opacity:0.7; font-size:14px; line-height:1; }
+  .tag .remove:hover { opacity:1; }
+  .tag-input { border:none; background:transparent; outline:none; font-size:0.88rem; min-width:120px; flex:1; }
+
+  .skill-categories { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .cat-chip { padding:5px 12px; border-radius:999px; border:1.5px solid var(--border); font-size:0.78rem; font-weight:600; cursor:pointer; color:var(--muted); transition:all 0.15s; }
+  .cat-chip.active { border-color:var(--pink); color:var(--pink); background:var(--pink-light); }
+  .skill-suggestions { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .skill-sug { padding:4px 10px; border-radius:999px; border:1px solid var(--border); font-size:0.78rem; cursor:pointer; background:var(--card); color:var(--muted); transition:all 0.15s; }
+  .skill-sug:hover { border-color:var(--pink); color:var(--pink); }
+
+  .list-item { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; }
+  .list-item-info strong { font-size:0.92rem; }
+  .list-item-info span { font-size:0.8rem; color:var(--muted); display:block; margin-top:2px; }
+  .add-form { background:var(--bg); border:1px dashed var(--border); border-radius:8px; padding:16px; margin-top:12px; }
+  .add-form-title { font-size:0.82rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+
+  .resume-zone { border:2px dashed var(--border); border-radius:10px; padding:32px; text-align:center; transition:all 0.2s; cursor:pointer; }
+  .resume-zone:hover, .resume-zone.drag-over { border-color:var(--pink); background:var(--pink-light); }
+  .resume-icon { font-size:2.5rem; margin-bottom:8px; }
+  .resume-uploaded { background:var(--pink-light); border:1.5px solid #f8c5e0; border-radius:8px; padding:14px 18px; display:flex; align-items:center; gap:12px; }
+
+  .completeness-bar { height:6px; background:var(--border); border-radius:999px; overflow:hidden; margin:8px 0 4px; }
+  .completeness-fill { height:100%; background:var(--pink); border-radius:999px; transition:width 0.4s; }
+
+  .alert { padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-bottom:16px; display:none; }
+  .alert.show { display:block; }
+  .alert-success { background:#e8f5e9; color:#2d9e6b; border:1px solid #b2dfdb; }
+  .alert-error { background:#fdecea; color:var(--red); border:1px solid #f5c6c6; }
+
+  @media(max-width:768px) { .profile-layout { grid-template-columns:1fr; } .profile-nav { position:static; } .form-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="profile-layout">
+
+    <!-- Sidebar nav -->
+    <div class="profile-nav card" style="padding:16px">
+      <div style="padding:8px 14px 16px; border-bottom:1px solid var(--border); margin-bottom:8px;">
+        <div style="font-family:var(--font-serif);font-size:1.1rem">My Profile</div>
+        <div class="completeness-bar"><div class="completeness-fill" id="complete-bar" style="width:0%"></div></div>
+        <div style="font-size:0.75rem;color:var(--muted)" id="complete-text">0% complete</div>
+      </div>
+      <button class="nav-item active" onclick="showSection('basic',this)"><span class="nav-dot active" id="dot-basic"></span> Basic Info</button>
+      <button class="nav-item" onclick="showSection('education',this)"><span class="nav-dot" id="dot-education"></span> Education</button>
+      <button class="nav-item" onclick="showSection('experience',this)"><span class="nav-dot" id="dot-experience"></span> Experience</button>
+      <button class="nav-item" onclick="showSection('skills',this)"><span class="nav-dot" id="dot-skills"></span> Skills</button>
+      <button class="nav-item" onclick="showSection('certifications',this)"><span class="nav-dot" id="dot-certifications"></span> Certifications</button>
+      <button class="nav-item" onclick="showSection('projects',this)"><span class="nav-dot" id="dot-projects"></span> Projects</button>
+      <button class="nav-item" onclick="showSection('resume',this)"><span class="nav-dot" id="dot-resume"></span> Resume</button>
+      <button class="nav-item" onclick="showSection('preferences',this)"><span class="nav-dot" id="dot-preferences"></span> Job Preferences</button>
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+        <a href="/dashboard" style="font-size:0.82rem;color:var(--muted);font-weight:500">← Back to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    <div>
+      <div id="global-alert" class="alert"></div>
+
+      <!-- BASIC INFO -->
+      <div class="section active card" id="sec-basic" style="padding:28px">
+        <div class="section-title">Basic Info</div>
+        <div class="section-sub">Your personal details and location</div>
+
+        <!-- Profile Photo -->
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;padding:16px;background:#f9f6f2;border-radius:10px;border:1px solid #e8e0d4">
+          <div id="photo-preview" style="width:72px;height:72px;border-radius:50%;background:#e8e0d4;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#999">
+            ?
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.88rem;margin-bottom:4px">Profile Photo</div>
+            <div style="font-size:0.78rem;color:#888;margin-bottom:8px">JPG, PNG or WEBP · Max 3MB</div>
+            <label style="background:var(--pink,#E8398A);color:#fff;padding:6px 14px;border-radius:6px;font-size:0.78rem;font-weight:700;cursor:pointer;display:inline-block">
+              Upload Photo
+              <input type="file" id="photo-input" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="uploadPhoto(this)">
+            </label>
+            <span id="photo-status" style="font-size:0.75rem;margin-left:8px;color:#888"></span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Gender</label>
+            <select class="form-select" id="p-gender">
+              <option value="">Prefer not to say</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Date of Birth</label>
+            <input type="date" class="form-input" id="p-dob" />
+          </div>
+          <div class="form-group"><label class="form-label">State</label>
+            <select class="form-select" id="p-state" onchange="onStateChange()">
+              <option value="">Select State</option>
+              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
+              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+              <option>West Bengal</option><option>Delhi</option><option>Jammu and Kashmir</option>
+              <option>Ladakh</option><option>Chandigarh</option><option>Puducherry</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">District</label>
+            <input class="form-input" id="p-district" placeholder="Enter district" />
+          </div>
+          <div class="form-group"><label class="form-label">City</label>
+            <input class="form-input" id="p-city" placeholder="Enter city" />
+          </div>
+          <div class="form-group"><label class="form-label">Pincode</label>
+            <input class="form-input" id="p-pincode" placeholder="560001" maxlength="6" />
+          </div>
+        </div>
+        <div style="margin-top:20px"><button class="btn-save" onclick="saveBasic()">Save Basic Info</button></div>
+      </div>
+
+      <!-- EDUCATION -->
+      <div class="section card" id="sec-education" style="padding:28px">
+        <div class="section-title">Education</div>
+        <div class="section-sub">Your highest qualification</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Education Level</label>
+            <select class="form-select" id="p-edu-level">
+              <option value="">Select level</option>
+              <option value="class10">Class 10 (Matriculation)</option>
+              <option value="class12">Class 12 (Intermediate)</option>
+              <option value="iti">ITI</option>
+              <option value="diploma">Polytechnic Diploma</option>
+              <option value="bachelor">Bachelor's Degree</option>
+              <option value="master">Master's Degree</option>
+              <option value="phd">PhD / Doctorate</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Field of Study</label>
+            <input class="form-input" id="p-edu-field" placeholder="e.g. Computer Science" />
+          </div>
+          <div class="form-group full"><label class="form-label">Institution Name</label>
+            <input class="form-input" id="p-institution" placeholder="e.g. IIT Bombay" />
+          </div>
+          <div class="form-group"><label class="form-label">Year of Passing</label>
+            <input type="number" class="form-input" id="p-passing-year" placeholder="2022" min="1990" max="2030" />
+          </div>
+        </div>
+        <div style="margin-top:20px"><button class="btn-save" onclick="saveEducation()">Save Education</button></div>
+      </div>
+
+      <!-- EXPERIENCE -->
+      <div class="section card" id="sec-experience" style="padding:28px">
+        <div class="section-title">Experience</div>
+        <div class="section-sub">Your work history</div>
+        <div class="form-grid">
+          <div class="form-group full"><label class="form-label">Years of Experience</label>
+            <select class="form-select" id="p-exp">
+              <option value="0">Fresher (0)</option>
+              <option value="less than 1">Less than 1 year</option>
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years</option>
+              <option value="4">4 years</option>
+              <option value="5">5 years</option>
+              <option value="6-8">6–8 years</option>
+              <option value="9-10">9–10 years</option>
+              <option value="10+">10+ years</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Current / Last Job Title</label>
+            <input class="form-input" id="p-title" placeholder="e.g. Software Engineer" />
+          </div>
+          <div class="form-group"><label class="form-label">Industry</label>
+            <input class="form-input" id="p-industry" placeholder="e.g. IT / Finance / Healthcare" />
+          </div>
+        </div>
+        <div style="margin-top:20px"><button class="btn-save" onclick="saveExperience()">Save Experience</button></div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="section card" id="sec-skills" style="padding:28px">
+        <div class="section-title">Skills</div>
+        <div class="section-sub">Select your skills — these power your job match score</div>
+
+        <div class="skill-categories" id="skill-cats">
+          <span class="cat-chip active" onclick="setCategory('Technology & IT', this)">Technology & IT</span>
+          <span class="cat-chip" onclick="setCategory('Business & Management', this)">Business</span>
+          <span class="cat-chip" onclick="setCategory('Trades & Technical', this)">Trades</span>
+          <span class="cat-chip" onclick="setCategory('Healthcare', this)">Healthcare</span>
+          <span class="cat-chip" onclick="setCategory('Logistics & Delivery', this)">Logistics</span>
+          <span class="cat-chip" onclick="setCategory('Creative & Media', this)">Creative</span>
+          <span class="cat-chip" onclick="setCategory('Customer Service', this)">Customer Service</span>
+          <span class="cat-chip" onclick="setCategory('Education & Training', this)">Education</span>
+          <span class="cat-chip" onclick="setCategory('Hospitality & Food', this)">Hospitality</span>
+          <span class="cat-chip" onclick="setCategory('Security & Facility', this)">Security</span>
+          <span class="cat-chip" onclick="setCategory('Languages', this)">Languages</span>
+          <span class="cat-chip" onclick="setCategory('Soft Skills', this)">Soft Skills</span>
+        </div>
+
+        <div class="skill-suggestions" id="skill-suggestions"></div>
+
+        <div style="margin-bottom:6px;font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Your Skills</div>
+        <div class="tag-area" id="skills-tags">
+          <input class="tag-input" id="skill-input" placeholder="Type a skill and press Enter…" onkeydown="addSkillFromInput(event)" />
+        </div>
+        <div style="margin-top:20px"><button class="btn-save" onclick="saveSkills()">Save Skills</button></div>
+      </div>
+
+      <!-- CERTIFICATIONS -->
+      <div class="section card" id="sec-certifications" style="padding:28px">
+        <div class="section-title">Certifications</div>
+        <div class="section-sub">Courses and certifications you have completed</div>
+        <div id="certs-list"></div>
+        <div class="add-form">
+          <div class="add-form-title">+ Add Certification</div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Certification Name</label>
+              <input class="form-input" id="c-name" placeholder="e.g. AWS Solutions Architect" />
+            </div>
+            <div class="form-group"><label class="form-label">Platform</label>
+              <select class="form-select" id="c-platform">
+                <option value="">Select</option>
+                <option>Udemy</option><option>Coursera</option><option>NPTEL</option>
+                <option>Google</option><option>Microsoft</option><option>AWS</option>
+                <option>Government</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Year Completed</label>
+              <input type="number" class="form-input" id="c-year" placeholder="2023" min="2000" max="2030" />
+            </div>
+            <div class="form-group"><label class="form-label">Certificate URL (optional)</label>
+              <input class="form-input" id="c-url" placeholder="https://..." />
+            </div>
+          </div>
+          <button class="btn-save" style="margin-top:12px" onclick="addCert()">Add</button>
+        </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="section card" id="sec-projects" style="padding:28px">
+        <div class="section-title">Projects</div>
+        <div class="section-sub">Projects you have built or contributed to</div>
+        <div id="projects-list"></div>
+        <div class="add-form">
+          <div class="add-form-title">+ Add Project</div>
+          <div class="form-grid">
+            <div class="form-group full"><label class="form-label">Project Title</label>
+              <input class="form-input" id="pr-title" placeholder="e.g. E-commerce Website" />
+            </div>
+            <div class="form-group full"><label class="form-label">Description</label>
+              <textarea class="form-input" id="pr-desc" rows="2" placeholder="What did you build and what problem did it solve?"></textarea>
+            </div>
+            <div class="form-group"><label class="form-label">Tech Stack</label>
+              <input class="form-input" id="pr-tech" placeholder="React, Node.js, PostgreSQL" />
+            </div>
+            <div class="form-group"><label class="form-label">Year</label>
+              <input type="number" class="form-input" id="pr-year" placeholder="2023" min="2000" max="2030" />
+            </div>
+            <div class="form-group full"><label class="form-label">Project URL (optional)</label>
+              <input class="form-input" id="pr-url" placeholder="https://github.com/..." />
+            </div>
+          </div>
+          <button class="btn-save" style="margin-top:12px" onclick="addProject()">Add</button>
+        </div>
+      </div>
+
+      <!-- RESUME -->
+      <div class="section card" id="sec-resume" style="padding:28px">
+        <div class="section-title">Resume</div>
+        <div class="section-sub">Upload your resume PDF — used for AI scoring</div>
+        <div id="resume-area"></div>
+        <div style="margin-top:20px;font-size:0.82rem;color:var(--muted)">Supported format: PDF only, max 10MB</div>
+      </div>
+
+      <!-- PREFERENCES -->
+      <div class="section card" id="sec-preferences" style="padding:28px">
+        <div class="section-title">Job Preferences</div>
+        <div class="section-sub">Help us match you to the right jobs</div>
+        <div class="form-grid">
+          <div class="form-group full"><label class="form-label">Target Role</label>
+            <input class="form-input" id="p-target-role" placeholder="e.g. Backend Developer, Data Analyst" />
+          </div>
+          <div class="form-group"><label class="form-label">Preferred Job Type</label>
+            <select class="form-select" id="p-job-type">
+              <option value="">Any</option>
+              <option value="full-time">Full Time</option>
+              <option value="part-time">Part Time</option>
+              <option value="contract">Contract</option>
+              <option value="internship">Internship</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Preferred Work Mode</label>
+            <select class="form-select" id="p-work-mode">
+              <option value="">Any</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onsite">Onsite</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Availability</label>
+            <select class="form-select" id="p-availability">
+              <option value="immediate">Immediate</option>
+              <option value="15days">15 days</option>
+              <option value="30days">30 days</option>
+              <option value="60days">60 days</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Expected Salary Min (₹/month)</label>
+            <input type="number" class="form-input" id="p-sal-min" placeholder="30000" />
+          </div>
+          <div class="form-group"><label class="form-label">Expected Salary Max (₹/month)</label>
+            <input type="number" class="form-input" id="p-sal-max" placeholder="80000" />
+          </div>
+        </div>
+        <div style="margin-top:20px"><button class="btn-save" onclick="savePreferences()">Save Preferences</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = "http://127.0.0.1:8000/api";
+const token = localStorage.getItem("token");
+if (!token) { window.location.href = "/login?returnTo=" + encodeURIComponent(window.location.pathname); }
+
+const SKILL_DATA = {
+  "Technology & IT": ["Python","JavaScript","React","Node.js","FastAPI","Django","SQL","PostgreSQL","MongoDB","AWS","Docker","Kubernetes","Git","Machine Learning","Deep Learning","TensorFlow","Data Analysis","REST API","TypeScript","Vue.js","DevOps","Cybersecurity","Mobile Development","UI/UX","Cloud Computing"],
+  "Business & Management": ["Sales","Marketing","HR","Finance","Accounting","Project Management","Operations","Supply Chain","CRM","Business Analysis","Negotiation","Leadership","Strategy","Tally","MS Excel","ERP"],
+  "Trades & Technical": ["Electrician","Plumbing","Carpentry","Welding","AC Repair","Painting","Masonry","Auto Mechanic","ITI","Electrical Wiring","Pipe Fitting","HVAC","Solar Installation","CNC Machine","Lathe Operation"],
+  "Healthcare": ["Nursing","Patient Care","Pharmacy","Lab Technician","Medical Coding","First Aid","ECG","Phlebotomy","OT Assistant","Radiology","Physiotherapy","ASHA Worker"],
+  "Logistics & Delivery": ["Driving (2-Wheeler)","Driving (4-Wheeler)","Driving (HMV)","Delivery","Warehouse Management","Inventory","Forklift","Supply Chain","Logistics Coordination","Fleet Management"],
+  "Creative & Media": ["Graphic Design","Video Editing","Photography","Content Writing","Social Media","Figma","Adobe Photoshop","Illustration","Animation","Copywriting","SEO"],
+  "Customer Service": ["Call Centre","Chat Support","CRM","Complaint Handling","Telecalling","Customer Retention","BPO","Voice Process","Non-Voice Process"],
+  "Education & Training": ["Teaching","Tutoring","Content Development","Training","Curriculum Design","E-learning","Coaching","Mentoring","Special Education"],
+  "Hospitality & Food": ["Cooking","Housekeeping","Front Desk","Food Service","Event Management","Bartending","Hotel Operations","Restaurant Management","F&B Service","Catering"],
+  "Security & Facility": ["Security Guard","CCTV Monitoring","Facility Management","Cleaning","Pest Control","Fire Safety","Access Control","Surveillance"],
+  "Languages": ["Hindi","English","Telugu","Tamil","Bengali","Marathi","Kannada","Gujarati","Punjabi","Odia","Malayalam","Urdu","Assamese","Bhojpuri"],
+  "Soft Skills": ["Communication","Leadership","Teamwork","Problem Solving","Time Management","Adaptability","Critical Thinking","Conflict Resolution","Negotiation","Presentation"],
+};
+
+let currentCategory = "Technology & IT";
+let mySkills = []; // {skill_name, category, id (if saved)}
+let myCerts = [];
+let myProjects = [];
+
+async function apiFetch(path, opts={}) {
+  const r = await fetch(API + path, {
+    headers: { "Content-Type":"application/json", "Authorization":"Bearer "+token },
+    ...opts
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || "Request failed");
+  return j;
+}
+
+function showAlert(msg, type="success") {
+  const el = document.getElementById("global-alert");
+  el.textContent = msg;
+  el.className = `alert alert-${type} show`;
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ── Section nav ─────────────────────────────────────────────────────────
+function showSection(id, btn) {
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+  document.getElementById("sec-"+id).classList.add("active");
+  btn.classList.add("active");
+  document.querySelectorAll(".nav-dot").forEach(d=>d.classList.remove("active"));
+  document.getElementById("dot-"+id)?.classList.add("active");
+}
+
+// ── Load existing profile ────────────────────────────────────────────────
+async function loadProfile() {
+  try {
+    const res = await apiFetch("/candidate/profile");
+    if (!res.data) { _profileExists = false; return; }
+    _profileExists = true;
+    const { profile, skills, certs, projects } = res.data;
+    if (profile)  fillProfile(profile);
+    if (skills)   { mySkills = skills.map(s=>({...s, skill_name:s.skill_name})); renderSkillTags(); }
+    if (certs)    { myCerts = certs; renderCerts(); }
+    if (projects) { myProjects = projects; renderProjects(); }
+    // Populate _saved so completeness bar reflects DB data on load
+    _saved.profile = Object.assign({}, profile || {});
+    _saved.skills  = skills  || [];
+    _saved.certs   = certs   || [];
+    if (profile?.resume_url) renderResumeUploaded(profile.resume_url);
+    else renderResumeEmpty();
+    // Always call refreshCompleteness last after _saved is fully set
+    refreshCompleteness();
+    // Light up dots for sections that have data in DB
+    const p = _saved.profile;
+    if (p?.city && p?.state && p?.gender)         updateDot("basic");
+    if (p?.education_level)                        updateDot("education");
+    if (p?.experience !== undefined && p?.experience !== null) updateDot("experience");
+    if ((_saved.skills?.length || 0) > 0)          updateDot("skills");
+    if ((_saved.certs?.length  || 0) > 0)          updateDot("certifications");
+    if (p?.target_role)                            updateDot("preferences");
+    if (p?.resume_url)                             updateDot("resume");
+  } catch(e) {
+    console.error("loadProfile error:", e);
+    renderResumeEmpty();
+  }
+}
+
+function fillProfile(p) {
+  setVal("p-gender", p.gender);
+  setVal("p-dob", p.date_of_birth);
+  setVal("p-state", p.state);
+  setVal("p-district", p.district);
+  setVal("p-city", p.city);
+  setVal("p-pincode", p.pincode);
+  setVal("p-edu-level", p.education_level);
+  setVal("p-edu-field", p.education_field);
+  setVal("p-institution", p.institution);
+  setVal("p-passing-year", p.passing_year);
+  setVal("p-exp", p.experience);
+  setVal("p-title", p.current_title);
+  setVal("p-industry", p.industry);
+  setVal("p-target-role", p.target_role);
+  setVal("p-job-type", p.job_type);
+  setVal("p-work-mode", p.work_mode);
+  setVal("p-availability", p.availability);
+  setVal("p-sal-min", p.expected_salary_min);
+  setVal("p-sal-max", p.expected_salary_max);
+  if (p.resume_url) renderResumeUploaded(p.resume_url);
+  if (p.photo_url) renderPhotoPreview(p.photo_url);
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  // For select elements, try exact match first then lowercase
+  if (el.tagName === "SELECT") {
+    el.value = val;
+    if (!el.value) el.value = val.toLowerCase();
+  } else {
+    el.value = val;
+  }
+}
+
+function onStateChange() {
+  // When state changes, clear district/city so user picks fresh
+  const state = document.getElementById("p-state").value;
+  // Could expand to cascading districts in future
+  // For now just clear city if state changes
+}
+
+// Each section only saves its own fields — no cross-contamination
+function getBasicBody() {
+  return {
+    gender:       getVal("p-gender"),
+    date_of_birth: getVal("p-dob") || null,
+    state:        getVal("p-state"),
+    district:     getVal("p-district"),
+    city:         getVal("p-city"),
+    pincode:      getVal("p-pincode"),
+  };
+}
+function getEducationBody() {
+  return {
+    education_level: getVal("p-edu-level"),
+    education_field: getVal("p-edu-field"),
+    institution:     getVal("p-institution"),
+    passing_year:    parseInt(getVal("p-passing-year")) || null,
+  };
+}
+function getExperienceBody() {
+  return {
+    experience:    getVal("p-exp"),
+    current_title: getVal("p-title"),
+    industry:      getVal("p-industry"),
+  };
+}
+function getPreferencesBody() {
+  return {
+    target_role:         getVal("p-target-role"),
+    job_type:            getVal("p-job-type"),
+    work_mode:           getVal("p-work-mode"),
+    availability:        getVal("p-availability"),
+    expected_salary_min: parseInt(getVal("p-sal-min")) || null,
+    expected_salary_max: parseInt(getVal("p-sal-max")) || null,
+  };
+}
+
+function getVal(id) { return document.getElementById(id)?.value || null; }
+
+let _profileExists = null; // cache so we don't guess every time
+let _saved = {};
+
+async function upsertProfile(body) {
+  if (_profileExists === null) {
+    // First save: check if profile exists
+    const check = await apiFetch("/candidate/profile");
+    _profileExists = !!check.data;
+  }
+  if (_profileExists) {
+    await apiFetch("/candidate/profile", { method:"PUT", body:JSON.stringify(body) });
+  } else {
+    await apiFetch("/candidate/profile", { method:"POST", body:JSON.stringify(body) });
+    _profileExists = true; // now it exists
+  }
+}
+
+// ── Save sections ─────────────────────────────────────────────────────────
+async function uploadPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById("photo-status");
+  status.textContent = "Uploading...";
+  status.style.color = "#888";
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const res = await fetch(`${API}/candidate/photo`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Upload failed");
+    renderPhotoPreview(json.data.photo_url);
+    status.textContent = "Photo saved!";
+    status.style.color = "#059669";
+  } catch(e) {
+    status.textContent = e.message;
+    status.style.color = "#DC2626";
+  }
+}
+
+function renderPhotoPreview(url) {
+  const el = document.getElementById("photo-preview");
+  if (!el) return;
+  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+}
+
+async function saveBasic() {
+  try { const b=getBasicBody(); await upsertProfile(b); markSaved("basic",b); showAlert("Basic info saved!"); updateDot("basic"); }
+  catch(e) { showAlert(e.message, "error"); }
+}
+async function saveEducation() {
+  try { const b=getEducationBody(); await upsertProfile(b); markSaved("education",b); showAlert("Education saved!"); updateDot("education"); }
+  catch(e) { showAlert(e.message, "error"); }
+}
+async function saveExperience() {
+  try { const b=getExperienceBody(); await upsertProfile(b); markSaved("experience",b); showAlert("Experience saved!"); updateDot("experience"); }
+  catch(e) { showAlert(e.message, "error"); }
+}
+async function savePreferences() {
+  try { const b=getPreferencesBody(); await upsertProfile(b); markSaved("preferences",b); showAlert("Preferences saved!"); updateDot("preferences"); }
+  catch(e) { showAlert(e.message, "error"); }
+}
+
+function updateDot(id) {
+  const dot = document.getElementById("dot-"+id);
+  if (dot) { dot.classList.remove("active"); dot.classList.add("done"); }
+}
+
+// ── Skills ─────────────────────────────────────────────────────────────
+function setCategory(cat, chip) {
+  currentCategory = cat;
+  document.querySelectorAll(".cat-chip").forEach(c=>c.classList.remove("active"));
+  chip.classList.add("active");
+  renderSuggestions();
+}
+
+function renderSuggestions() {
+  const sug = SKILL_DATA[currentCategory] || [];
+  const existing = new Set(mySkills.map(s=>s.skill_name.toLowerCase()));
+  document.getElementById("skill-suggestions").innerHTML = sug
+    .filter(s=>!existing.has(s.toLowerCase()))
+    .map(s=>`<span class="skill-sug" onclick="addSkill('${s}')">${s}</span>`)
+    .join('');
+}
+
+function addSkill(name) {
+  if (mySkills.find(s=>s.skill_name.toLowerCase()===name.toLowerCase())) return;
+  mySkills.push({ skill_name:name, category:currentCategory, level:"intermediate" });
+  renderSkillTags();
+  renderSuggestions();
+}
+
+function addSkillFromInput(e) {
+  if (e.key !== "Enter") return;
+  const val = e.target.value.trim();
+  if (val) { addSkill(val); e.target.value=""; }
+}
+
+function removeSkill(name) {
+  mySkills = mySkills.filter(s=>s.skill_name!==name);
+  renderSkillTags();
+  renderSuggestions();
+}
+
+function renderSkillTags() {
+  const area = document.getElementById("skills-tags");
+  const input = `<input class="tag-input" id="skill-input" placeholder="Type a skill and press Enter…" onkeydown="addSkillFromInput(event)" />`;
+  area.innerHTML = mySkills.map(s=>`
+    <span class="tag">${s.skill_name}<span class="remove" onclick="removeSkill('${s.skill_name}')">×</span></span>
+  `).join('') + input;
+}
+
+async function saveSkills() {
+  try {
+    const body = mySkills.map(s=>({ skill_name:s.skill_name, category:s.category||currentCategory, level:s.level||"intermediate" }));
+    // Single bulk DELETE, then one POST — 2 API calls total regardless of skill count
+    await apiFetch("/candidate/skills", {method:"DELETE"});
+    if (body.length) await apiFetch("/candidate/skills", {method:"POST", body:JSON.stringify(body)});
+    _saved.skills = [...mySkills]; showAlert(`${mySkills.length} skills saved!`);
+    updateDot("skills"); refreshCompleteness();
+  } catch(e) { showAlert(e.message,"error"); }
+}
+
+// ── Certifications ────────────────────────────────────────────────────────
+function renderCerts() {
+  document.getElementById("certs-list").innerHTML = myCerts.map(c=>`
+    <div class="list-item">
+      <div class="list-item-info"><strong>${c.cert_name}</strong><span>${c.platform||''} ${c.year_completed ? '· '+c.year_completed : ''}</span></div>
+      <button class="btn-danger-sm" onclick="deleteCert(${c.id})">Remove</button>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">No certifications added yet.</div>';
+}
+
+async function addCert() {
+  const name = document.getElementById("c-name").value.trim();
+  if (!name) { showAlert("Certification name required","error"); return; }
+  const body = { cert_name:name, platform:getVal("c-platform"), year_completed:parseInt(getVal("c-year"))||null, cert_url:getVal("c-url") };
+  try {
+    const r = await apiFetch("/candidate/certifications", {method:"POST", body:JSON.stringify(body)});
+    myCerts.push(r.data);
+    renderCerts();
+    ["c-name","c-year","c-url"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("c-platform").value="";
+    showAlert("Certification added!"); updateDot("certifications");
+  } catch(e) { showAlert(e.message,"error"); }
+}
+
+async function deleteCert(id) {
+  try {
+    await apiFetch(`/candidate/certifications/${id}`,{method:"DELETE"});
+    myCerts = myCerts.filter(c=>c.id!==id);
+    renderCerts();
+  } catch(e) { showAlert(e.message,"error"); }
+}
+
+// ── Projects ─────────────────────────────────────────────────────────────
+function renderProjects() {
+  document.getElementById("projects-list").innerHTML = myProjects.map(p=>`
+    <div class="list-item">
+      <div class="list-item-info"><strong>${p.title}</strong><span>${p.tech_stack||''} ${p.year ? '· '+p.year : ''}</span></div>
+      <button class="btn-danger-sm" onclick="deleteProject(${p.id})">Remove</button>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">No projects added yet.</div>';
+}
+
+async function addProject() {
+  const title = document.getElementById("pr-title").value.trim();
+  if (!title) { showAlert("Project title required","error"); return; }
+  const body = { title, description:getVal("pr-desc"), tech_stack:getVal("pr-tech"), year:parseInt(getVal("pr-year"))||null, project_url:getVal("pr-url") };
+  try {
+    const r = await apiFetch("/candidate/projects",{method:"POST",body:JSON.stringify(body)});
+    myProjects.push(r.data);
+    renderProjects();
+    ["pr-title","pr-desc","pr-tech","pr-year","pr-url"].forEach(id=>document.getElementById(id).value="");
+    showAlert("Project added!"); updateDot("projects");
+  } catch(e) { showAlert(e.message,"error"); }
+}
+
+async function deleteProject(id) {
+  try {
+    await apiFetch(`/candidate/projects/${id}`,{method:"DELETE"});
+    myProjects = myProjects.filter(p=>p.id!==id);
+    renderProjects();
+  } catch(e) { showAlert(e.message,"error"); }
+}
+
+// ── Resume ────────────────────────────────────────────────────────────────
+function renderResumeEmpty() {
+  document.getElementById("resume-area").innerHTML = `
+    <label for="resume-file">
+      <div class="resume-zone" id="resume-drop-zone">
+        <div class="resume-icon">📄</div>
+        <div style="font-family:var(--font-serif);font-size:1.1rem;margin-bottom:4px">Upload your Resume</div>
+        <div style="color:var(--muted);font-size:0.85rem">Drag & drop or click to choose PDF</div>
+      </div>
+    </label>
+    <input type="file" id="resume-file" accept=".pdf" style="display:none" onchange="uploadResume(this)">`;
+  const zone = document.getElementById("resume-drop-zone");
+  zone?.addEventListener("dragover", e=>{e.preventDefault();zone.classList.add("drag-over");});
+  zone?.addEventListener("dragleave", ()=>zone.classList.remove("drag-over"));
+  zone?.addEventListener("drop", e=>{e.preventDefault();zone.classList.remove("drag-over");const f=e.dataTransfer.files[0];if(f)uploadResumeFile(f);});
+}
+
+function renderResumeUploaded(url) {
+  document.getElementById("resume-area").innerHTML = `
+    <div class="resume-uploaded">
+      <span style="font-size:2rem">📄</span>
+      <div style="flex:1">
+        <div style="font-weight:600;margin-bottom:2px">Resume uploaded</div>
+        <a href="${url}" target="_blank" style="font-size:0.82rem;color:var(--pink)">View PDF →</a>
+      </div>
+      <button class="btn-outline-sm" onclick="deleteResume()">Remove</button>
+    </div>
+    <div style="margin-top:12px">
+      <label for="resume-replace" style="cursor:pointer">
+        <span class="btn-outline-sm">Replace Resume</span>
+      </label>
+      <input type="file" id="resume-replace" accept=".pdf" style="display:none" onchange="uploadResume(this)">
+    </div>`;
+  updateDot("resume");
+}
+
+async function uploadResume(input) {
+  const file = input.files[0];
+  if (!file) return;
+  uploadResumeFile(file);
+}
+
+async function uploadResumeFile(file) {
+  if (!file.name.endsWith(".pdf")) { showAlert("Only PDF files accepted","error"); return; }
+  if (file.size > 10*1024*1024) { showAlert("File too large (max 10MB)","error"); return; }
+  document.getElementById("resume-area").innerHTML = `<div style="color:var(--muted);padding:20px;text-align:center">⏳ Uploading…</div>`;
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const r = await fetch(API+"/candidate/resume", {method:"POST", headers:{"Authorization":"Bearer "+token}, body:fd});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail||"Upload failed");
+    renderResumeUploaded(j.data.resume_url);
+    _saved.profile = Object.assign(_saved.profile||{}, {resume_url:"yes"}); showAlert("Resume uploaded!"); refreshCompleteness();
+  } catch(e) { showAlert(e.message,"error"); renderResumeEmpty(); }
+}
+
+async function deleteResume() {
+  if (!confirm("Remove resume?")) return;
+  try { await apiFetch("/candidate/resume",{method:"DELETE"}); renderResumeEmpty(); showAlert("Resume removed"); }
+  catch(e) { showAlert(e.message,"error"); }
+}
+
+
+// _saved = what is confirmed in DB. Updated when each section saves or on page load.
+function refreshCompleteness() {
+  updateCompleteness(_saved.profile || {}, _saved.skills || [], _saved.certs || []);
+}
+
+function markSaved(section, data) {
+  // Merge only the saved section's fields into _saved.profile
+  _saved.profile = Object.assign(_saved.profile || {}, data);
+  refreshCompleteness();
+}
+function updateCompleteness(p, skills, certs) {
+  let score = 0;
+  // Basic info (max 15%)
+  if (p?.city)     score += 5;
+  if (p?.state)    score += 5;
+  if (p?.gender)   score += 5;
+  // Education (max 15%)
+  if (p?.education_level) score += 8;
+  if (p?.institution)     score += 4;
+  if (p?.passing_year)    score += 3;
+  // Experience (max 10%)
+  if (p?.experience && p.experience !== "0") score += 7;
+  if (p?.current_title)   score += 3;
+  // Skills (max 25%)
+  const sc = skills?.length || 0;
+  if (sc >= 1)  score += 5;
+  if (sc >= 5)  score += 10;
+  if (sc >= 10) score += 10;
+  // Resume (max 20%)
+  if (p?.resume_url) score += 20;
+  // Preferences (max 15%)
+  if (p?.target_role) score += 8;
+  if (p?.job_type)    score += 4;
+  if (p?.availability) score += 3;
+  score = Math.min(score, 100);
+  document.getElementById("complete-bar").style.width = score+"%";
+  document.getElementById("complete-text").textContent = score+"% complete";
+}
+
+// Init
+renderSuggestions();
+loadProfile();
+</script>
+{% endblock %}

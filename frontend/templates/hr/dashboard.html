@@ -1,0 +1,723 @@
+{% extends "base.html" %}
+{% block title %}HR Dashboard — JobPortal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Libre+Baskerville:wght@700&display=swap');
+
+:root {
+  --pink:     #E8398A;
+  --pink-lt:  #FDEDF3;
+  --off:      #F5F5F0;
+  --off2:     #EEEEE9;
+  --white:    #FFFFFF;
+  --black:    #111111;
+  --gray:     #555555;
+  --gray-lt:  #888888;
+  --border:   #EEEEE9;
+  --good:     #0D7A4E; --good-lt: #E6F5EE;
+  --mid:      #9A5C00; --mid-lt:  #FFF3DC;
+  --bad:      #E8398A; --bad-lt:  #FDEDF3;
+  --r: 10px;
+}
+
+body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:var(--black); }
+
+/* LAYOUT */
+.wrap { max-width:1200px; margin:0 auto; padding:28px 20px 60px; }
+
+/* HERO */
+.hero { background:#E8398A; color:#fff; padding:28px 32px; border-radius:var(--r); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
+.hero-left { display:flex; align-items:center; gap:16px; }
+.hero-logo { width:56px; height:56px; border-radius:8px; object-fit:cover; background:#222; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+.hero-logo img { width:100%; height:100%; object-fit:cover; }
+.hero-logo-placeholder { width:56px; height:56px; border-radius:8px; background:#333; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.3rem; font-weight:800; color:#aaa; font-family:'Libre Baskerville',serif; }
+.hero-name { font-family:'Libre Baskerville',serif; font-size:1.6rem; font-weight:700; line-height:1.1; margin-bottom:4px; }
+.hero-sub  { color:rgba(255,255,255,0.75); font-size:0.85rem; }
+.hero-badge { background:var(--good); color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.5px; margin-left:8px; vertical-align:middle; }
+.btn-primary { background:#fff; color:#E8398A; border:none; padding:9px 20px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-primary:hover { background:#d42f7c; color:#fff; text-decoration:none; }
+.btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.5); padding:9px 20px; border-radius:6px; font-weight:600; font-size:0.85rem; cursor:pointer; text-decoration:none; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-ghost:hover { border-color:#aaa; color:#fff; text-decoration:none; }
+
+/* STAT GRID */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.stat-tile { background:var(--off); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; }
+.stat-num  { font-family:'Libre Baskerville',serif; font-size:2.2rem; font-weight:700; line-height:1; color:var(--black); margin-bottom:4px; }
+.stat-lbl  { font-size:.75rem; font-weight:700; color:var(--gray-lt); text-transform:uppercase; letter-spacing:.7px; }
+
+/* SECTION HEADING */
+.sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+.sec-title { font-family:'Libre Baskerville',serif; font-size:1.05rem; font-weight:700; color:var(--black); display:flex; align-items:center; gap:8px; }
+.sec-title img { width:18px; height:18px; object-fit:contain; }
+
+/* JOBS TABLE */
+.jobs-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:20px; }
+.jobs-table { width:100%; border-collapse:collapse; }
+.jobs-table th { text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--gray-lt); font-weight:700; padding:10px 16px; border-bottom:2px solid var(--border); background:var(--off); }
+.jobs-table td { padding:12px 16px; font-size:.88rem; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--black); }
+.jobs-table tr:last-child td { border-bottom:none; }
+.jobs-table tr:hover td { background:var(--off); }
+.job-title-cell { font-weight:700; }
+.job-title-cell small { display:block; font-size:.75rem; color:var(--gray-lt); font-weight:400; margin-top:1px; }
+.pill { display:inline-block; padding:2px 9px; border-radius:4px; font-size:.72rem; font-weight:700; letter-spacing:.3px; }
+.pill-active { background:var(--good-lt); color:var(--good); }
+.pill-closed { background:var(--bad-lt);  color:var(--bad); }
+.pill-draft  { background:var(--off2);    color:var(--gray); }
+.btn-sm { padding:5px 12px; border-radius:5px; font-size:.75rem; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:'Source Sans 3',sans-serif; }
+.btn-view-apps { background:var(--pink); color:#fff; border-color:var(--pink); }
+.btn-view-apps:hover { opacity:.85; }
+.btn-edit { background:transparent; color:var(--black); border-color:var(--border); }
+.btn-edit:hover { border-color:var(--black); }
+.btn-del { background:transparent; color:var(--bad); border-color:var(--bad-lt); }
+.btn-del:hover { background:var(--bad-lt); }
+
+/* APPLICANTS PANEL */
+.applicants-panel { background:var(--white); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:20px; display:none; }
+.applicants-panel.open { display:block; }
+.panel-head { background:var(--off); padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.panel-title { font-family:'Libre Baskerville',serif; font-size:1rem; font-weight:700; }
+.panel-sub { font-size:.78rem; color:var(--gray-lt); }
+.app-row { display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); }
+.app-row:last-child { border-bottom:none; }
+.app-rank { font-family:'Libre Baskerville',serif; font-size:1.3rem; font-weight:700; color:var(--border); width:24px; text-align:center; flex-shrink:0; }
+.app-rank.r1 { color:var(--pink); }
+.app-rank.r2 { color:#C47A00; }
+.app-rank.r3 { color:#888; }
+.app-photo { width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--off2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.app-photo img { width:100%; height:100%; object-fit:cover; }
+.app-photo-placeholder { width:42px; height:42px; border-radius:50%; background:var(--off2); border:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:700; color:var(--gray-lt); }
+.app-info { flex:1; min-width:0; }
+.app-name { font-weight:700; font-size:.9rem; color:var(--black); margin-bottom:2px; }
+.app-meta { font-size:.75rem; color:var(--gray-lt); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.app-meta img { width:11px; height:11px; opacity:.5; }
+.app-right { display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+.match-badge { font-size:.72rem; font-weight:800; padding:3px 9px; border-radius:4px; }
+.mb-high { background:var(--good-lt); color:var(--good); }
+.mb-mid  { background:var(--mid-lt);  color:var(--mid); }
+.mb-low  { background:var(--bad-lt);  color:var(--bad); }
+.mb-neu  { background:var(--off2);    color:var(--gray); }
+.status-badge { font-size:.72rem; font-weight:700; padding:3px 9px; border-radius:4px; }
+.sb-applied     { background:var(--off2);    color:var(--gray); }
+.sb-shortlisted { background:var(--good-lt); color:var(--good); }
+.sb-rejected    { background:var(--bad-lt);  color:var(--bad); }
+.sb-viewed      { background:#EEF4FF;        color:#2563EB; }
+.btn-shortlist { background:var(--good-lt); color:var(--good); border:none; padding:5px 12px; border-radius:5px; font-size:.75rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; }
+.btn-reject    { background:var(--bad-lt);  color:var(--bad);  border:none; padding:5px 12px; border-radius:5px; font-size:.75rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; }
+.btn-shortlist:hover { opacity:.85; }
+.btn-reject:hover    { opacity:.85; }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:12px; padding:28px; width:90%; max-width:580px; max-height:90vh; overflow-y:auto; }
+.modal-title { font-family:'Libre Baskerville',serif; font-size:1.2rem; font-weight:700; margin-bottom:20px; color:var(--black); }
+.form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-group { display:flex; flex-direction:column; gap:4px; }
+.form-label { font-size:.78rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; }
+.form-input { border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:.88rem; font-family:'Source Sans 3',sans-serif; color:var(--black); background:#fff; outline:none; }
+.form-input:focus { border-color:var(--pink); }
+.alert { display:none; padding:10px 14px; border-radius:6px; font-size:.83rem; margin-bottom:10px; }
+.alert.show { display:block; }
+.alert-error { background:var(--bad-lt); color:var(--bad); }
+
+/* WELCOME */
+.welcome-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:48px 40px; max-width:520px; margin:40px auto; text-align:center; }
+.step-list { display:flex; flex-direction:column; gap:10px; text-align:left; background:var(--off); border-radius:8px; padding:18px; margin:20px 0; }
+.step-item { display:flex; align-items:center; gap:12px; font-size:.88rem; }
+.step-num  { background:var(--black); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; flex-shrink:0; }
+
+.spinner { width:13px; height:13px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; display:inline-block; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@media(max-width:768px) { .stat-grid { grid-template-columns:repeat(2,1fr); } .form-grid2 { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="hr-root"><p style="padding:60px;text-align:center;color:#aaa">Loading...</p></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelector('.page-content').style.padding='0';
+document.querySelector('.page-content > .container').style.maxWidth='none';
+document.querySelector('.page-content > .container').style.padding='0';
+
+const API=`http://127.0.0.1:8000/api`, token=Auth.getToken();
+if(!token||Auth.getRole()!=='hr') window.location.href='/login';
+
+function ic(name,size=16){ return `<img src="/static/icons/${name}.png" width="${size}" height="${size}" style="object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">`; }
+
+
+async function uploadLogo(input){
+  const file=input.files[0]; if(!file) return;
+  const status=document.getElementById("logo-status");
+  status.textContent="Uploading..."; status.style.color="var(--muted)";
+  const fd=new FormData(); fd.append("file",file);
+  try{
+    const res=await fetch(API+"/hr/company/logo",{method:"POST",headers:{Authorization:`Bearer ${token}`},body:fd});
+    const json=await res.json();
+    if(!res.ok) throw new Error(json.detail||"Upload failed");
+    renderLogoPreview(json.data.logo_url);
+    _dash.logo_url=json.data.logo_url;
+    status.textContent="Logo saved!"; status.style.color="var(--pink)";
+    load();
+  }catch(e){ status.textContent=e.message; status.style.color="red"; }
+}
+
+function renderLogoPreview(url){
+  const el=document.getElementById("logo-preview");
+  if(!el) return;
+  el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+}
+
+async function apiFetch(path,opts={}){
+  const res=await fetch(API+path,{...opts,headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json",...(opts.headers||{})}});
+  const json=await res.json();
+  if(!res.ok) throw new Error(json.detail||"Error");
+  return json;
+}
+
+let _jobs=[];
+let _dash={};
+
+async function load(){
+  try{
+    const dashRes=await apiFetch("/hr/dashboard");
+    const jobsRes=await apiFetch("/hr/jobs").catch(()=>({data:[]}));
+    _jobs=jobsRes.data||[];
+    _dash=dashRes.data||{};
+    render(_dash,_jobs);
+  }catch(e){
+    document.getElementById("hr-root").innerHTML=`<div style="padding:40px;text-align:center;color:var(--bad)">${e.message}</div>`;
+  }
+}
+
+function render(dash,jobs){
+  if(!dash.company_exists){
+    document.getElementById("hr-root").innerHTML=`
+    <div class="wrap">
+      <div class="welcome-card">
+        ${ic('company',48)}
+        <h2 style="font-family:'Libre Baskerville',serif;font-size:1.6rem;margin:16px 0 8px">Welcome to HR Portal</h2>
+        <p style="color:var(--gray);font-size:.9rem;margin-bottom:0">Set up your company profile to start posting jobs and finding candidates.</p>
+        <div class="step-list">
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-lt);margin-bottom:4px">How it works</div>
+          <div class="step-item"><div class="step-num">1</div>Create your company profile</div>
+          <div class="step-item"><div class="step-num">2</div>Post jobs with required skills</div>
+          <div class="step-item"><div class="step-num">3</div>AI ranks matching candidates automatically</div>
+        </div>
+        <button class="btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="openCompanyModal()">${ic('company',15)} Create Company Profile</button>
+      </div>
+    </div>
+    ${companyModalHTML()}
+    ${pinMapModalHTML()}`;
+    return;
+  }
+
+  const initials=(dash.company_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+  document.getElementById("hr-root").innerHTML=`
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-left">
+        ${dash.logo_url
+          ? `<div class="hero-logo"><img src="${dash.logo_url}" alt="logo"></div>`
+          : `<div class="hero-logo-placeholder">${initials}</div>`}
+        <div>
+          <div class="hero-name">${dash.company_name}${dash.is_verified?'<span class="hero-badge">VERIFIED</span>':''}</div>
+          <div class="hero-sub">${dash.is_verified?'Verified Company · ':''}${dash.industry||''}${dash.city?' · '+dash.city:''}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="openJobModal()">${ic('jobs',15)} Post New Job</button>
+        <button class="btn-ghost" onclick="openCompanyModal()">Edit Company</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="stat-num">${dash.total_jobs}</div><div class="stat-lbl">Total Jobs</div></div>
+      <div class="stat-tile"><div class="stat-num" style="color:var(--good)">${dash.active_jobs}</div><div class="stat-lbl">Active Jobs</div></div>
+      <div class="stat-tile"><div class="stat-num" style="color:var(--pink)">${dash.total_applicants}</div><div class="stat-lbl">Applicants</div></div>
+      <div class="stat-tile"><div class="stat-num" style="color:var(--mid)">${dash.shortlisted}</div><div class="stat-lbl">Shortlisted</div></div>
+    </div>
+
+    <div class="jobs-card">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="sec-title">${ic('jobs')} Your Jobs</div>
+        <button class="btn-primary btn-sm btn-view-apps" style="font-size:.82rem;padding:7px 16px" onclick="openJobModal()">+ Post New Job</button>
+      </div>
+      ${jobs.length?renderJobsTable(jobs):`<div style="text-align:center;padding:48px 20px"><img src="/static/icons/empty-jobs.png" width="160" height="160" style="display:block;margin:0 auto;object-fit:contain;margin-bottom:14px;opacity:.93" onerror="this.style.display='none'"><div style="font-family:'Libre Baskerville',serif;font-size:1.1rem;color:#111;font-weight:700;margin-bottom:6px">No jobs posted yet</div><div style="font-size:.85rem;color:#888;margin-bottom:16px">Post your first job to start finding candidates.</div></div>`}
+    </div>
+
+    <div id="applicants-section"></div>
+  </div>
+  ${jobModalHTML()}
+  ${companyModalHTML()}
+  ${pinMapModalHTML()}`;
+
+  window._jobs=jobs;
+}
+
+function renderJobsTable(jobs){
+  return `<div style="overflow-x:auto"><table class="jobs-table">
+    <thead><tr><th>Job Title</th><th>Location</th><th>Type</th><th>Openings</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+      ${jobs.map(j=>`<tr>
+        <td><div class="job-title-cell">${j.title}<small>${j.category||''}</small></div></td>
+        <td style="color:var(--gray)">${j.city||'—'}</td>
+        <td style="color:var(--gray)">${j.job_type||'—'}</td>
+        <td style="color:var(--gray)">${j.openings||1}</td>
+        <td><span class="pill pill-${j.status||'draft'}">${j.status||'draft'}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn-sm btn-view-apps" onclick="viewApplicants(${j.id},'${j.title.replace(/'/g,"\\'")}')">View Applicants</button>
+            <button class="btn-sm btn-edit" onclick="openEditModal(${j.id})">Edit</button>
+            <button class="btn-sm btn-del" onclick="deleteJob(${j.id},'${j.title.replace(/'/g,"\\'")}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function viewApplicants(jobId, jobTitle){
+  const sec=document.getElementById("applicants-section");
+  sec.className="applicants-panel open";
+  sec.innerHTML=`<div class="panel-head"><div class="panel-title">Loading applicants...</div></div>`;
+  sec.scrollIntoView({behavior:'smooth'});
+  try{
+    const res=await apiFetch(`/hr/jobs/${jobId}/applicants`);
+    renderApplicants(res.data, jobId, jobTitle);
+  }catch(e){
+    sec.innerHTML=`<div style="padding:24px;color:var(--bad)">${e.message}</div>`;
+  }
+}
+
+function renderApplicants(apps, jobId, jobTitle){
+  const sec=document.getElementById("applicants-section");
+  if(!apps.length){
+    sec.innerHTML=`<div class="applicants-panel open"><div class="panel-head"><div class="panel-title">Applicants for: ${jobTitle}</div></div><div style="text-align:center;padding:40px 20px"><img src="/static/icons/empty-applicants.png" width="150" height="150" style="display:block;margin:0 auto;object-fit:contain;margin-bottom:14px;opacity:.93" onerror="this.style.display='none'"><div style="font-family:'Libre Baskerville',serif;font-size:1rem;color:#111;font-weight:700;margin-bottom:6px">No applicants yet</div><div style="font-size:.83rem;color:#888">Share the job posting to attract candidates.</div></div></div>`;
+    return;
+  }
+  const sorted=[...apps].sort((a,b)=>(b.match_score||0)-(a.match_score||0));
+  sec.innerHTML=`<div class="applicants-panel open">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">${ic('users',16)} Applicants for: ${jobTitle}</div>
+        <div class="panel-sub">${apps.length} total · ranked by AI match score</div>
+      </div>
+      <button class="btn-sm btn-edit" onclick="document.getElementById('applicants-section').className='applicants-panel'">Close ✕</button>
+    </div>
+    ${sorted.map((a,i)=>{
+      const m=a.match_score||0;
+      const mcls=m>=70?'mb-high':m>=40?'mb-mid':m>0?'mb-low':'mb-neu';
+      const scls=a.status==='shortlisted'?'sb-shortlisted':a.status==='rejected'?'sb-rejected':a.status==='viewed'?'sb-viewed':'sb-applied';
+      const rankCls=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      const nameInitials=(a.full_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const rankIcon = i===0
+        ? `<img src="/static/icons/first.png" width="28" height="28" style="object-fit:contain" onerror="this.outerHTML='<div class=\'app-rank r1\'>1</div>'">`
+        : i===1
+        ? `<img src="/static/icons/second.png" width="28" height="28" style="object-fit:contain" onerror="this.outerHTML='<div class=\'app-rank r2\'>2</div>'">`
+        : i===2
+        ? `<img src="/static/icons/third.png" width="28" height="28" style="object-fit:contain" onerror="this.outerHTML='<div class=\'app-rank r3\'>3</div>'">`
+        : `<div class="app-rank">${i+1}</div>`;
+      return `<div class="app-row">
+        <div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center">${rankIcon}</div>
+        ${a.photo_url
+          ? `<div class="app-photo"><img src="${a.photo_url}" alt="${a.full_name}"></div>`
+          : `<div class="app-photo-placeholder">${nameInitials}</div>`}
+        <div class="app-info">
+          <div class="app-name">${a.full_name}</div>
+          <div class="app-meta">
+            ${a.city?`${ic('location',11)}<span>${a.city}</span>`:''}
+            ${a.experience?`<span>· ${a.experience} exp</span>`:''}
+            ${a.availability?`<span>· ${a.availability}</span>`:''}
+            ${a.email?`${ic('email',11)}<span>${a.email}</span>`:''}
+          </div>
+        </div>
+        <div class="app-right">
+          ${m?`<span class="match-badge ${mcls}">${m}% match</span>`:'<span class="match-badge mb-neu">Not scored</span>'}
+          <span class="status-badge ${scls}">${a.status}</span>
+          <div style="display:flex;gap:6px">
+            ${a.status!=='shortlisted'?`<button class="btn-shortlist" onclick="updateApp(${a.application_id},'shortlisted',this)">Shortlist</button>`:''}
+            ${a.status!=='rejected'?`<button class="btn-reject" onclick="updateApp(${a.application_id},'rejected',this)">Reject</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function updateApp(appId, status, btn){
+  btn.disabled=true;
+  try{
+    await apiFetch(`/hr/applicants/${appId}`,{method:'PATCH',body:JSON.stringify({status})});
+    const jobEl=document.querySelector('.btn-view-apps[onclick*="viewApplicants"]');
+    // Re-fetch current job's applicants
+    const panel=document.getElementById('applicants-section');
+    const title=panel.querySelector('.panel-title')?.textContent?.replace('Applicants for: ','').replace(/^\s*\S+\s*/,'') || '';
+    // Find job id from the panel context — easier to just reload
+    load();
+  }catch(e){ alert(e.message); btn.disabled=false; }
+}
+
+async function deleteJob(jobId,title){
+  if(!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  try{ await apiFetch(`/hr/jobs/${jobId}`,{method:'DELETE'}); load(); }
+  catch(e){ alert("Delete failed: "+e.message); }
+}
+
+// ── JOB MODAL ──
+let editingJobId=null;
+function jobModalHTML(){
+  return `<div class="modal-overlay" id="job-modal">
+    <div class="modal">
+      <h2 class="modal-title">Post New Job</h2>
+      <div id="job-form-alert" class="alert"></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group"><label class="form-label">Job Title *</label><input class="form-input" id="jf-title" placeholder="e.g. Python Backend Developer"/></div>
+        <div class="form-grid2">
+          <div class="form-group"><label class="form-label">Category</label>
+            <select class="form-input" id="jf-category">
+              <option value="">Select</option>
+              <option>Technology & IT</option><option>Business & Management</option>
+              <option>Marketing & Sales</option><option>Healthcare</option>
+              <option>Education</option><option>Finance & Accounting</option>
+              <option>Trades & Technical</option><option>Logistics & Delivery</option>
+              <option>Customer Service</option><option>Creative & Media</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Role Type</label>
+            <select class="form-input" id="jf-role-type">
+              <option value="">Select</option>
+              <option value="technical">Technical</option>
+              <option value="non-technical">Non-Technical</option>
+              <option value="blue-collar">Blue Collar</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Job Type</label>
+            <select class="form-input" id="jf-job-type">
+              <option value="full-time">Full-Time</option><option value="part-time">Part-Time</option>
+              <option value="internship">Internship</option><option value="contract">Contract</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Work Mode</label>
+            <select class="form-input" id="jf-work-mode">
+              <option value="onsite">Onsite</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ── LOCATION SMART SEARCH ── -->
+        <div class="form-group" style="position:relative">
+          <label class="form-label">Job Location *</label>
+          <input class="form-input" id="jf-location-search"
+            placeholder="Type area, city or landmark…"
+            autocomplete="off"
+            oninput="locationSearch(this.value)"
+            onfocus="if(this.value.length>1)document.getElementById('jf-loc-dropdown').style.display='block'"
+          />
+          <!-- Dropdown suggestions -->
+          <div id="jf-loc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:0 0 8px 8px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto"></div>
+          <!-- Confirmed location pill -->
+          <div id="jf-loc-confirmed" style="display:none;margin-top:6px;background:#E6F5EE;border:1px solid #b6dfc9;border-radius:6px;padding:7px 10px;font-size:.82rem;align-items:center;gap:8px">
+            <span style="font-size:.9rem">📍</span>
+            <span id="jf-loc-text" style="flex:1;color:#0D7A4E;font-weight:600"></span>
+            <button onclick="clearLocation()" style="background:none;border:none;cursor:pointer;color:#888;font-size:.8rem;padding:0">✕ Change</button>
+          </div>
+          <!-- Fallback link -->
+          <div id="jf-loc-fallback" style="margin-top:5px;font-size:.75rem;color:#888">
+            Can't find it? <a href="#" onclick="openPinMap();return false;" style="color:var(--pink);font-weight:600;text-decoration:none">Drop a pin on map →</a>
+          </div>
+          <!-- Hidden fields sent to API -->
+          <input type="hidden" id="jf-lat"/>
+          <input type="hidden" id="jf-lng"/>
+          <input type="hidden" id="jf-city"/>
+          <input type="hidden" id="jf-state"/>
+          <input type="hidden" id="jf-district"/>
+          <input type="hidden" id="jf-full-address"/>
+        </div>
+
+        <div class="form-grid2">
+          <div class="form-group"><label class="form-label">Min Experience (yrs)</label><input class="form-input" id="jf-exp" type="number" min="0" value="0"/></div>
+          <div class="form-group"><label class="form-label">Openings</label><input class="form-input" id="jf-openings" type="number" min="1" value="1"/></div>
+          <div class="form-group"><label class="form-label">Salary Min (₹/mo)</label><input class="form-input" id="jf-sal-min" type="number" placeholder="20000"/></div>
+          <div class="form-group"><label class="form-label">Salary Max (₹/mo)</label><input class="form-input" id="jf-sal-max" type="number" placeholder="50000"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Skills (use * for mandatory, comma separated)</label><input class="form-input" id="jf-skills" placeholder="Python*, FastAPI*, Docker, Git"/></div>
+        <div class="form-group"><label class="form-label">Job Description</label><textarea class="form-input" id="jf-desc" rows="3" placeholder="Describe the role..."></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn-primary" id="job-submit-btn" style="flex:1;justify-content:center" onclick="submitJob()">Post Job</button>
+          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600" onclick="closeModal('job-modal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── NOMINATIM LOCATION LOGIC ─────────────────────────────────────────────
+let _locTimer=null, _pinMap=null, _pinMarker=null, _pendingPin=null;
+
+async function locationSearch(q){
+  const dd=document.getElementById('jf-loc-dropdown');
+  if(!dd) return;
+  if(q.length<3){ dd.style.display='none'; return; }
+  clearTimeout(_locTimer);
+  _locTimer=setTimeout(async()=>{
+    try{
+      dd.innerHTML='<div style="padding:10px 14px;font-size:.8rem;color:#aaa">Searching...</div>';
+      dd.style.display='block';
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6&countrycodes=in`,{headers:{'Accept-Language':'en','User-Agent':'JobPortal/1.0'}});
+      const results=await res.json();
+      if(!results.length){
+        dd.innerHTML='<div style="padding:10px 14px;font-size:.8rem;color:#888">No results. Try a broader term or <a href="#" onclick="openPinMap();return false;" style="color:var(--pink)">drop a pin</a>.</div>';
+        return;
+      }
+      dd.innerHTML=results.map(r=>{
+        const a=r.address||{};
+        const city=a.city||a.town||a.village||a.suburb||a.county||'';
+        const state=a.state||'';
+        const district=a.county||a.state_district||'';
+        const d=JSON.stringify({lat:r.lat,lng:r.lon,city,state,district,full_address:r.display_name});
+        return `<div data-loc='${d.replace(/'/g,"&apos;")}' onclick='selectLocation(JSON.parse(this.dataset.loc))' style='padding:9px 14px;font-size:.82rem;cursor:pointer;border-bottom:1px solid #f5f5f5;line-height:1.35;color:#222' onmouseover='this.style.background="#FFF0F7"' onmouseout='this.style.background=""'>${r.display_name}</div>`;
+      }).join('');
+    }catch(e){ dd.innerHTML='<div style="padding:10px 14px;font-size:.8rem;color:red">Search failed. Check internet.</div>'; }
+  },380);
+}
+
+function selectLocation(data){
+  document.getElementById('jf-lat').value=data.lat;
+  document.getElementById('jf-lng').value=data.lng;
+  document.getElementById('jf-city').value=data.city;
+  document.getElementById('jf-state').value=data.state;
+  document.getElementById('jf-district').value=data.district;
+  document.getElementById('jf-full-address').value=data.full_address;
+  document.getElementById('jf-location-search').value='';
+  document.getElementById('jf-loc-dropdown').style.display='none';
+  document.getElementById('jf-loc-text').textContent=[data.city,data.district,data.state].filter(Boolean).join(', ')||data.full_address;
+  document.getElementById('jf-loc-confirmed').style.display='flex';
+  document.getElementById('jf-loc-fallback').style.display='none';
+}
+
+function clearLocation(){
+  ['jf-lat','jf-lng','jf-city','jf-state','jf-district','jf-full-address'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const c=document.getElementById('jf-loc-confirmed'); if(c) c.style.display='none';
+  const fb=document.getElementById('jf-loc-fallback'); if(fb) fb.style.display='block';
+  const s=document.getElementById('jf-location-search'); if(s) s.value='';
+}
+
+function openPinMap(){
+  document.getElementById('pin-map-modal').classList.add('open');
+  setTimeout(()=>{
+    if(!_pinMap){
+      _pinMap=L.map('pin-map-container').setView([20.5937,78.9629],5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap',maxZoom:19}).addTo(_pinMap);
+      _pinMap.on('click',async(e)=>{
+        const{lat,lng}=e.latlng;
+        if(_pinMarker) _pinMarker.remove();
+        _pinMarker=L.marker([lat,lng]).addTo(_pinMap);
+        _pendingPin={lat,lng,city:'',state:'',district:'',full_address:''};
+        const res=document.getElementById('pin-map-result');
+        res.style.display='block'; res.textContent='Looking up address...';
+        const btn=document.getElementById('pin-confirm-btn');
+        btn.disabled=true; btn.style.opacity='.4';
+        try{
+          const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en','User-Agent':'JobPortal/1.0'}});
+          const d=await r.json();
+          const a=d.address||{};
+          _pendingPin.city=a.city||a.town||a.village||a.suburb||a.county||'';
+          _pendingPin.state=a.state||'';
+          _pendingPin.district=a.county||a.state_district||'';
+          _pendingPin.full_address=d.display_name||`${lat},${lng}`;
+          res.textContent='📍 '+d.display_name;
+        }catch(e){
+          _pendingPin.full_address=`${lat.toFixed(5)},${lng.toFixed(5)}`;
+          res.textContent='Pin placed at coordinates (address lookup failed)';
+        }
+        btn.disabled=false; btn.style.opacity='1';
+      });
+    } else { _pinMap.invalidateSize(); }
+  },200);
+}
+
+function closePinMap(){ document.getElementById('pin-map-modal').classList.remove('open'); }
+
+function confirmPinLocation(){
+  if(!_pendingPin||!_pendingPin.lat) return;
+  selectLocation(_pendingPin);
+  closePinMap();
+}
+
+document.addEventListener('click',(e)=>{
+  const dd=document.getElementById('jf-loc-dropdown');
+  if(dd&&!dd.contains(e.target)&&e.target.id!=='jf-location-search') dd.style.display='none';
+});
+
+// ── PIN MAP MODAL ──
+function pinMapModalHTML(){
+  return `<div class="modal-overlay" id="pin-map-modal" style="z-index:300">
+    <div class="modal" style="max-width:680px;padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Libre Baskerville',serif;font-size:1rem;font-weight:700">Drop a Pin on the Location</div>
+        <button onclick="closePinMap()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#888;padding:0;line-height:1">&times;</button>
+      </div>
+      <p style="font-size:.78rem;color:#888;margin:0 0 10px">Click anywhere on the map. We will auto-detect the address.</p>
+      <div id="pin-map-container" style="height:360px;border-radius:8px;overflow:hidden;border:1px solid #ddd"></div>
+      <div id="pin-map-result" style="display:none;margin-top:10px;background:#E6F5EE;border:1px solid #b6dfc9;border-radius:6px;padding:8px 12px;font-size:.82rem;color:#0D7A4E;font-weight:600;word-break:break-word"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button id="pin-confirm-btn" class="btn-primary" style="flex:1;justify-content:center;opacity:.4" disabled onclick="confirmPinLocation()">Confirm This Location</button>
+        <button onclick="closePinMap()" style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function companyModalHTML(){
+  return `<div class="modal-overlay" id="company-modal">
+    <div class="modal">
+      <h2 class="modal-title">Company Profile</h2>
+      <div id="co-alert" class="alert"></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Logo Upload -->
+      <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);margin-bottom:4px">
+        <div id="logo-preview" style="width:60px;height:60px;border-radius:8px;background:var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#aaa">?</div>
+        <div>
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:3px">Company Logo</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:7px">JPG, PNG or WEBP · Max 2MB</div>
+          <label style="background:var(--pink);color:#fff;padding:5px 13px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;display:inline-block">
+            Upload Logo
+            <input type="file" id="logo-input" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="uploadLogo(this)">
+          </label>
+          <span id="logo-status" style="font-size:.73rem;margin-left:8px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Company Name *</label><input class="form-input" id="co-name"/></div>
+        <div class="form-grid2">
+          <div class="form-group"><label class="form-label">Industry</label><input class="form-input" id="co-industry" placeholder="e.g. IT"/></div>
+          <div class="form-group"><label class="form-label">Company Size</label>
+            <select class="form-input" id="co-size">
+              <option value="1-10">1–10</option><option value="11-50">11–50</option>
+              <option value="51-200">51–200</option><option value="200-500">200–500</option><option value="500+">500+</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">City</label><input class="form-input" id="co-city"/></div>
+          <div class="form-group"><label class="form-label">State</label><input class="form-input" id="co-state"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">GST / CIN (for verified badge)</label><input class="form-input" id="co-gst" placeholder="Optional"/></div>
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="co-website" placeholder="https://..."/></div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn-primary" style="flex:1;justify-content:center" onclick="submitCompany()">Save Profile</button>
+          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600" onclick="closeModal('company-modal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openJobModal(){ editingJobId=null; clearLocation(); document.querySelector("#job-modal .modal-title").textContent="Post New Job"; document.getElementById("job-submit-btn").textContent="Post Job"; document.getElementById("job-modal").classList.add("open"); }
+function openCompanyModal(){
+  const d=_dash;
+  if(d.company_name){ document.getElementById("co-name").value=d.company_name||""; }
+  if(d.industry)    { document.getElementById("co-industry").value=d.industry||""; }
+  if(d.company_size){ document.getElementById("co-size").value=d.company_size||""; }
+  if(d.city)        { document.getElementById("co-city").value=d.city||""; }
+  if(d.state)       { document.getElementById("co-state").value=d.state||""; }
+  if(d.gst_cin)     { document.getElementById("co-gst").value=d.gst_cin||""; }
+  if(d.website)     { document.getElementById("co-website").value=d.website||""; }
+  if(d.logo_url)    { renderLogoPreview(d.logo_url); }
+  document.getElementById("company-modal").classList.add("open");
+}
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+
+async function submitJob(){
+  const title=document.getElementById("jf-title").value.trim();
+  const lat=document.getElementById("jf-lat").value;
+  const lng=document.getElementById("jf-lng").value;
+  const city=document.getElementById("jf-city").value;
+  const state=document.getElementById("jf-state").value;
+  if(!title){ alert("Job title is required"); return; }
+  if(!lat||!lng){ alert("Please select a location — type in the search box or drop a pin on the map."); return; }
+  const skills=document.getElementById("jf-skills").value.split(",").map(s=>s.trim()).filter(Boolean).map(s=>({skill_name:s.replace("*","").trim(),is_mandatory:s.includes("*")}));
+  const body={
+    title,
+    category:document.getElementById("jf-category").value,
+    role_type:document.getElementById("jf-role-type").value,
+    job_type:document.getElementById("jf-job-type").value,
+    work_mode:document.getElementById("jf-work-mode").value,
+    city, state,
+    district:document.getElementById("jf-district").value||null,
+    full_address:document.getElementById("jf-full-address").value||null,
+    latitude:parseFloat(lat)||null,
+    longitude:parseFloat(lng)||null,
+    min_experience:document.getElementById("jf-exp").value||"0",
+    openings:parseInt(document.getElementById("jf-openings").value)||1,
+    salary_min:parseInt(document.getElementById("jf-sal-min").value)||null,
+    salary_max:parseInt(document.getElementById("jf-sal-max").value)||null,
+    salary_type:"monthly",
+    description:document.getElementById("jf-desc").value,
+    skills
+  };
+  try{
+    if(editingJobId){ await apiFetch(`/hr/jobs/${editingJobId}`,{method:"PUT",body:JSON.stringify(body)}); editingJobId=null; }
+    else{ await apiFetch("/hr/jobs",{method:"POST",body:JSON.stringify(body)}); }
+    closeModal("job-modal"); clearLocation(); load();
+  }catch(e){ const al=document.getElementById("job-form-alert"); al.textContent=e.message; al.className="alert alert-error show"; }
+}
+
+async function openEditModal(jobId){
+  editingJobId=jobId;
+  // Fetch full job detail so we get lat/lng/full_address/description/skills
+  let job;
+  try{
+    const res = await apiFetch(`/hr/jobs/${jobId}`);
+    job = res.data;
+  }catch(e){
+    // Fallback to cached list data (no location fields but better than nothing)
+    job = window._jobs?.find(j=>j.id===jobId);
+    if(!job){ alert("Job not found"); return; }
+  }
+  document.getElementById("jf-title").value=job.title||"";
+  document.getElementById("jf-category").value=job.category||"";
+  document.getElementById("jf-role-type").value=job.role_type||"";
+  document.getElementById("jf-job-type").value=job.job_type||"";
+  document.getElementById("jf-work-mode").value=job.work_mode||"";
+  document.getElementById("jf-exp").value=job.min_experience||"0";
+  document.getElementById("jf-openings").value=job.openings||1;
+  document.getElementById("jf-sal-min").value=job.salary_min||"";
+  document.getElementById("jf-sal-max").value=job.salary_max||"";
+  document.getElementById("jf-desc").value=job.description||"";
+  document.getElementById("jf-skills").value=(job.skills||[]).map(s=>s.mandatory?s.name+"*":s.name).join(", ");
+  // Restore location — if job has coords, show confirmed pill; else show search box
+  if(job.latitude && job.longitude){
+    document.getElementById("jf-lat").value=job.latitude;
+    document.getElementById("jf-lng").value=job.longitude;
+    document.getElementById("jf-city").value=job.city||"";
+    document.getElementById("jf-state").value=job.state||"";
+    document.getElementById("jf-district").value=job.district||"";
+    document.getElementById("jf-full-address").value=job.full_address||"";
+    document.getElementById("jf-loc-text").textContent=[job.city,job.state].filter(Boolean).join(", ");
+    document.getElementById("jf-loc-confirmed").style.display="flex";
+    document.getElementById("jf-loc-fallback").style.display="none";
+  } else {
+    clearLocation();
+  }
+  document.querySelector("#job-modal .modal-title").textContent="Edit Job";
+  document.getElementById("job-submit-btn").textContent="Update Job";
+  document.getElementById("job-modal").classList.add("open");
+}
+
+async function submitCompany(){
+  const name=document.getElementById("co-name").value.trim();
+  if(!name){ alert("Company name is required"); return; }
+  const body={company_name:name,industry:document.getElementById("co-industry").value,company_size:document.getElementById("co-size").value,city:document.getElementById("co-city").value,state:document.getElementById("co-state").value,gst_cin:document.getElementById("co-gst").value,website:document.getElementById("co-website").value};
+  const method=_dash.company_exists?"PUT":"POST";
+  try{ await apiFetch("/hr/company",{method,body:JSON.stringify(body)}); closeModal("company-modal"); load(); }
+  catch(e){ const al=document.getElementById("co-alert"); al.textContent=e.message; al.className="alert alert-error show"; }
+}
+
+load();
+</script>
+{% endblock %}

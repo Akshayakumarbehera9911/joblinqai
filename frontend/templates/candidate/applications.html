@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}My Applications — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header { padding:36px 0 24px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+  .page-title { font-family:var(--font-serif); font-size:2rem; margin-bottom:4px; }
+  .page-sub { color:var(--muted); font-size:0.9rem; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
+  .stat-num { font-family:var(--font-serif); font-size:2rem; font-weight:700; margin-bottom:2px; }
+  .stat-label { font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+
+  .filter-bar { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; align-items:center; }
+  .filter-chip { padding:7px 16px; border-radius:999px; border:1.5px solid var(--border); font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--muted); background:var(--card); transition:all 0.15s; }
+  .filter-chip:hover { border-color:var(--pink); color:var(--pink); }
+  .filter-chip.active { background:var(--pink); border-color:var(--pink); color:#fff; }
+  .filter-count { font-size:0.7rem; background:rgba(255,255,255,0.25); border-radius:999px; padding:1px 6px; margin-left:4px; }
+  .filter-chip:not(.active) .filter-count { background:var(--bg); color:var(--muted); }
+
+  .app-grid { display:grid; gap:14px; }
+  .app-card { background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:20px 24px; transition:all 0.15s; }
+  .app-card:hover { border-color:var(--pink); box-shadow:0 4px 16px rgba(232,57,138,0.08); }
+  .app-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .app-job-title { font-family:var(--font-serif); font-size:1.15rem; margin-bottom:3px; }
+  .app-company { font-size:0.88rem; color:var(--muted); font-weight:500; }
+  .app-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+  .app-tag { font-size:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; color:var(--muted); font-weight:500; }
+  .app-date { font-size:0.75rem; color:var(--muted); margin-top:10px; }
+
+  .status-badge { border-radius:999px; padding:5px 14px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; flex-shrink:0; }
+  .status-applied     { background:#eef2ff; color:#4f6ef7; }
+  .status-viewed      { background:#fff8e1; color:#f59e0b; }
+  .status-shortlisted { background:#e8f5e9; color:var(--green); }
+  .status-rejected    { background:#fdecea; color:var(--red); }
+
+  .score-ring { width:52px; height:52px; flex-shrink:0; }
+  .score-ring svg { transform:rotate(-90deg); }
+  .score-ring-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; }
+  .score-wrap { position:relative; width:52px; height:52px; }
+
+  .timeline { padding:12px 0 0; border-top:1px solid var(--border); margin-top:16px; }
+  .timeline-steps { display:flex; gap:0; align-items:center; }
+  .tstep { flex:1; display:flex; flex-direction:column; align-items:center; position:relative; }
+  .tstep:not(:last-child)::after { content:''; position:absolute; top:11px; left:50%; width:100%; height:2px; background:var(--border); z-index:0; }
+  .tstep.done:not(:last-child)::after { background:var(--green); }
+  .tstep-dot { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); background:var(--card); z-index:1; display:flex; align-items:center; justify-content:center; font-size:0.65rem; }
+  .tstep.done .tstep-dot { background:var(--green); border-color:var(--green); color:#fff; }
+  .tstep.current .tstep-dot { background:var(--pink); border-color:var(--pink); color:#fff; }
+  .tstep-label { font-size:0.65rem; color:var(--muted); margin-top:5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; text-align:center; }
+  .tstep.done .tstep-label, .tstep.current .tstep-label { color:var(--black); }
+
+  .empty-state { text-align:center; padding:64px 20px; color:var(--muted); }
+  .empty-icon { font-size:3rem; margin-bottom:12px; }
+  .empty-title { font-family:var(--font-serif); font-size:1.3rem; color:var(--black); margin-bottom:6px; }
+
+  .skeleton { background:linear-gradient(90deg, var(--bg) 25%, #e8e3dc 50%, var(--bg) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  @media(max-width:600px) { .stats-row{grid-template-columns:1fr 1fr;} .app-card-top{flex-direction:column;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title">My Applications</div>
+        <div class="page-sub">Track every job you've applied for</div>
+      </div>
+      <a href="/jobs" style="background:var(--pink);color:#fff;padding:10px 20px;border-radius:999px;font-size:0.88rem;font-weight:700;text-decoration:none">Find More Jobs →</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-num skeleton" style="width:40px;height:32px"></div><div class="stat-label">Total Applied</div></div>
+    <div class="stat-card"><div class="stat-num skeleton" style="width:40px;height:32px"></div><div class="stat-label">Shortlisted</div></div>
+    <div class="stat-card"><div class="stat-num skeleton" style="width:40px;height:32px"></div><div class="stat-label">Under Review</div></div>
+    <div class="stat-card"><div class="stat-num skeleton" style="width:40px;height:32px"></div><div class="stat-label">Avg Match Score</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar" id="filter-bar">
+    <span style="font-size:0.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Filter:</span>
+    <button class="filter-chip active" onclick="filterApps('all',this)">All <span class="filter-count" id="cnt-all">0</span></button>
+    <button class="filter-chip" onclick="filterApps('applied',this)">Applied <span class="filter-count" id="cnt-applied">0</span></button>
+    <button class="filter-chip" onclick="filterApps('viewed',this)">Viewed <span class="filter-count" id="cnt-viewed">0</span></button>
+    <button class="filter-chip" onclick="filterApps('shortlisted',this)">Shortlisted <span class="filter-count" id="cnt-shortlisted">0</span></button>
+    <button class="filter-chip" onclick="filterApps('rejected',this)">Rejected <span class="filter-count" id="cnt-rejected">0</span></button>
+  </div>
+
+  <!-- App list -->
+  <div class="app-grid" id="app-grid">
+    <!-- skeleton -->
+    ${[1,2,3].map(()=>`<div class="app-card"><div class="skeleton" style="height:80px"></div></div>`).join('')}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = "http://127.0.0.1:8000/api";
+const token = localStorage.getItem("token");
+if (!token) { window.location.href = "/login?returnTo=" + encodeURIComponent(window.location.pathname); }
+
+let allApps = [];
+let currentFilter = "all";
+
+async function apiFetch(path) {
+  const r = await fetch(API+path, { headers:{ "Authorization":"Bearer "+token } });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail||"Error");
+  return j;
+}
+
+function getStatusSteps(status) {
+  const order = ["applied","viewed","shortlisted"];
+  const idx = order.indexOf(status);
+  return order.map((s,i) => ({
+    label: s.charAt(0).toUpperCase()+s.slice(1),
+    state: status==="rejected" ? (i===0?"done":"") : (i<idx?"done": i===idx?"current":"")
+  }));
+}
+
+function formatSalary(min, max) {
+  if (!min && !max) return null;
+  const fmt = n => n>=100000 ? (n/100000).toFixed(1)+"L" : (n/1000).toFixed(0)+"K";
+  if (min && max) return `₹${fmt(min)}–${fmt(max)}/mo`;
+  if (min) return `₹${fmt(min)}+/mo`;
+  return `Up to ₹${fmt(max)}/mo`;
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+}
+
+function renderCard(a) {
+  const steps = getStatusSteps(a.status);
+  const salary = formatSalary(a.salary_min, a.salary_max);
+  const score = a.match_score;
+  const scoreColor = score>=80?"var(--green)":score>=60?"var(--gold)":"var(--pink)";
+
+  const timelineHtml = a.status !== "rejected"
+    ? `<div class="timeline">
+        <div class="timeline-steps">
+          ${steps.map(s=>`
+            <div class="tstep ${s.state}">
+              <div class="tstep-dot">${s.state==="done"?"✓":s.state==="current"?"●":""}</div>
+              <div class="tstep-label">${s.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>`
+    : `<div style="margin-top:12px;padding:8px 12px;background:#fdecea;border-radius:8px;font-size:0.82rem;color:var(--red);font-weight:500">
+        Not selected for this role. Keep applying — the right job is ahead.
+      </div>`;
+
+  return `<div class="app-card">
+    <div class="app-card-top">
+      <div style="flex:1">
+        <div class="app-job-title">${a.job_title}</div>
+        <div class="app-company">${a.company_name}</div>
+        <div class="app-meta">
+          ${a.city ? `<span class="app-tag">📍 ${a.city}</span>` : ""}
+          ${a.work_mode ? `<span class="app-tag">${a.work_mode}</span>` : ""}
+          ${a.job_type ? `<span class="app-tag">${a.job_type}</span>` : ""}
+          ${salary ? `<span class="app-tag">${salary}</span>` : ""}
+        </div>
+        <div class="app-date">Applied on ${formatDate(a.applied_at)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+        <span class="status-badge status-${a.status}">${a.status}</span>
+        ${score ? `<div class="score-wrap">
+          <svg class="score-ring" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="22" fill="none" stroke="var(--border)" stroke-width="4"/>
+            <circle cx="26" cy="26" r="22" fill="none" stroke="${scoreColor}" stroke-width="4"
+              stroke-dasharray="${2*Math.PI*22}" stroke-dashoffset="${2*Math.PI*22*(1-score/100)}"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="score-ring-text" style="color:${scoreColor}">${score}%</div>
+        </div>` : ""}
+      </div>
+    </div>
+    ${timelineHtml}
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <a href="/jobs/${a.job_id}" style="font-size:0.8rem;color:var(--pink);font-weight:600;text-decoration:none">View Job →</a>
+    </div>
+  </div>`;
+}
+
+function filterApps(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll(".filter-chip").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  const filtered = status==="all" ? allApps : allApps.filter(a=>a.status===status);
+  renderList(filtered);
+}
+
+function renderList(apps) {
+  const grid = document.getElementById("app-grid");
+  if (!apps.length) {
+    grid.innerHTML = `<div style='text-align:center;padding:52px 20px'><img src="/static/icons/${currentFilter==='all' ? 'empty-apply' : 'empty-filter'}.png" width='170' height='170' style='display:block;margin:0 auto;object-fit:contain;margin-bottom:16px;opacity:.93' onerror="this.style.display='none'"><div style='font-family:var(--font-serif,serif);font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px'>${currentFilter==='all' ? 'No applications yet' : 'No '+currentFilter+' applications'}</div><div style='font-size:.85rem;color:#888;margin-bottom:${currentFilter==="all" ? "18px" : "0"}'>${currentFilter==='all' ? 'Start applying to jobs to track them here.' : 'Try a different filter.'}</div>${currentFilter==='all' ? `<a href='/jobs' style='background:var(--pink);color:#fff;padding:10px 22px;border-radius:999px;font-size:.88rem;font-weight:700;text-decoration:none'>Browse Jobs</a>` : ''}</div>`;
+    return;
+  }
+  grid.innerHTML = apps.map(renderCard).join("");
+}
+
+function renderStats(apps) {
+  const total = apps.length;
+  const shortlisted = apps.filter(a=>a.status==="shortlisted").length;
+  const inReview = apps.filter(a=>["applied","viewed"].includes(a.status)).length;
+  const scores = apps.filter(a=>a.match_score).map(a=>a.match_score);
+  const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+
+  document.getElementById("stats-row").innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Applied</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${shortlisted}</div><div class="stat-label">Shortlisted</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${inReview}</div><div class="stat-label">Under Review</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--pink)">${avgScore ? avgScore+"%" : "—"}</div><div class="stat-label">Avg Match Score</div></div>`;
+
+  // Update filter counts
+  document.getElementById("cnt-all").textContent        = apps.length;
+  document.getElementById("cnt-applied").textContent    = apps.filter(a=>a.status==="applied").length;
+  document.getElementById("cnt-viewed").textContent     = apps.filter(a=>a.status==="viewed").length;
+  document.getElementById("cnt-shortlisted").textContent= apps.filter(a=>a.status==="shortlisted").length;
+  document.getElementById("cnt-rejected").textContent   = apps.filter(a=>a.status==="rejected").length;
+}
+
+async function load() {
+  try {
+    const res = await apiFetch("/candidate/applications");
+    allApps = res.data || [];
+    renderStats(allApps);
+    renderList(allApps);
+  } catch(e) {
+    document.getElementById("app-grid").innerHTML = `<div class="empty-state"><div class="empty-title">Failed to load applications</div><div>${e.message}</div></div>`;
+  }
+}
+
+load();
+</script>
+{% endblock %}

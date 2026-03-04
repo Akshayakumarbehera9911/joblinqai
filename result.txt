@@ -1,0 +1,81 @@
+JobPortal/
+│
+├── backend/
+│   ├── main.py                 ← FastAPI app entry point
+│   ├── config.py               ← all env vars, DB URL, Cloudinary, Groq keys
+│   ├── database.py             ← PostgreSQL connection, session management
+│   │
+│   ├── models/                 ← database table definitions
+│   │   ├── __init__.py
+│   │   ├── user.py             ← candidates and HR users
+│   │   ├── company.py          ← company profiles
+│   │   ├── job.py              ← job postings
+│   │   ├── application.py      ← job applications
+│   │   └── score.py            ← readiness scores and gap analysis
+│   │
+│   ├── routes/                 ← API endpoints
+│   │   ├── __init__.py
+│   │   ├── auth.py             ← register, login, OTP, JWT
+│   │   ├── candidate.py        ← profile, resume upload, dashboard
+│   │   ├── hr.py               ← company profile, job posting, candidates list
+│   │   ├── jobs.py             ← job search, filters, map data
+│   │   └── scoring.py          ← trigger AI scoring, get results
+│   │
+│   ├── pipeline/               ← AI scoring engine
+│   │   ├── __init__.py
+│   │   ├── extractor.py        ← extract text from resume PDF
+│   │   ├── role_detector.py    ← detect tech/non-tech/blue collar
+│   │   ├── market_analyzer.py  ← analyze current market demand from job postings
+│   │   ├── profile_analyzer.py ← analyze candidate profile
+│   │   ├── gap_identifier.py   ← find skill gaps, map to Udemy links
+│   │   ├── scorer.py           ← calculate readiness score /100
+│   │   └── ranker.py           ← rank jobs for candidate, rank candidates for HR
+│   │
+│   ├── utils/
+│   │   ├── email.py            ← Gmail SMTP OTP sending
+│   │   ├── cloudinary.py       ← photo and resume upload/delete
+│   │   └── helpers.py          ← common reusable functions
+│   │
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── static/
+│   │   ├── css/
+│   │   │   ├── base.css        ← variables, reset, typography
+│   │   │   ├── components.css  ← buttons, cards, inputs, badges
+│   │   │   └── pages/
+│   │   │       ├── auth.css
+│   │   │       ├── dashboard.css
+│   │   │       ├── jobs.css
+│   │   │       └── profile.css
+│   │   ├── js/
+│   │   │   ├── api.js          ← all fetch calls to backend in one place
+│   │   │   ├── auth.js         ← login, register, OTP logic
+│   │   │   ├── dashboard.js    ← candidate and HR dashboard
+│   │   │   ├── profile.js      ← profile form, resume upload
+│   │   │   ├── jobs.js         ← job search, filters, list
+│   │   │   └── map.js          ← globe, street map, clustering, live updates
+│   │   └── images/
+│   │       └── logo.svg
+│   └── templates/
+│       ├── base.html           ← navbar, footer, common layout
+│       ├── auth/
+│       │   ├── login.html
+│       │   ├── register.html
+│       │   └── otp.html
+│       ├── candidate/
+│       │   ├── dashboard.html
+│       │   ├── profile.html
+│       │   └── onboarding.html
+│       ├── hr/
+│       │   ├── dashboard.html
+│       │   ├── company.html
+│       │   ├── post_job.html
+│       │   └── applicants.html
+│       └── jobs/
+│           ├── search.html
+│           └── detail.html
+│
+├── .env                        ← API keys, DB URL, never commit this
+├── .gitignore
+└── README.md

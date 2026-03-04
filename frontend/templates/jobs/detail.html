@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Job Detail — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: var(--bg); }
+  .job-detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 28px; padding: 36px 0 60px; }
+  .job-detail-title { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 8px; }
+  .jd-company { font-size: 1rem; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .jd-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .jd-tag { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 0.82rem; font-weight: 500; color: var(--muted); }
+  .jd-tag.pink { background: var(--pink-light); border-color: #f8c5e0; color: var(--pink); }
+  .section-heading { font-family: var(--font-serif); font-size: 1.2rem; margin: 24px 0 12px; color: var(--black); }
+  .jd-description { font-size: 0.95rem; line-height: 1.8; color: #444; white-space: pre-wrap; }
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .skill-tag { padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .skill-mandatory { background: var(--black); color: #fff; }
+  .skill-optional  { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+
+  /* Sticky apply card */
+  .apply-card { position: sticky; top: 76px; }
+  .salary-big { font-family: var(--font-serif); font-size: 1.8rem; color: var(--black); margin-bottom: 4px; }
+  .salary-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+  .apply-btn { width: 100%; padding: 14px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.15s; margin-bottom: 12px; }
+  .apply-btn:hover { background: var(--pink-hover); }
+  .apply-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .apply-btn.applied { background: var(--green); }
+  .meta-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .meta-row:last-child { border: none; }
+  .meta-key { color: var(--muted); }
+  .meta-val { font-weight: 600; color: var(--black); }
+  .login-nudge { background: var(--pink-light); border: 1px solid #f8c5e0; border-radius: var(--radius); padding: 14px; font-size: 0.85rem; color: var(--pink); text-align: center; margin-top: 12px; }
+
+  @media (max-width: 768px) { .job-detail-layout { grid-template-columns: 1fr; } .apply-card { position: static; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="jd-root" style="padding:60px 0;text-align:center;color:var(--muted)">Loading...</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API   = "http://127.0.0.1:8000/api";
+const token = Auth.getToken();
+const jobId = window.location.pathname.split("/").pop();
+
+async function load() {
+  try {
+    const res  = await fetch(`${API}/jobs/${jobId}`);
+    const json = await res.json();
+    if (!res.ok) throw new Error("Job not found");
+    render(json.data);
+  } catch(e) {
+    document.getElementById("jd-root").innerHTML = `<div style="padding:60px;text-align:center"><p>${e.message}</p><a href="/jobs" class="btn btn-outline" style="margin-top:16px">← Back to Jobs</a></div>`;
+  }
+}
+
+function render(j) {
+  const salary = j.salary_min && j.salary_max
+    ? `₹${(j.salary_min/1000).toFixed(0)}k – ₹${(j.salary_max/1000).toFixed(0)}k`
+    : "Not disclosed";
+  const mandatory = (j.skills || []).filter(s => s.mandatory);
+  const optional  = (j.skills || []).filter(s => !s.mandatory);
+
+  document.getElementById("jd-root").innerHTML = `
+    <div class="container">
+      <div style="margin-bottom:8px"><a href="/jobs" style="font-size:0.85rem;color:var(--muted)">← Back to Jobs</a></div>
+      <div class="job-detail-layout">
+        <div>
+          <div class="card">
+            <div class="job-detail-title">${j.title}</div>
+            <div class="jd-company">
+              ${j.company?.is_verified ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>' : ''}
+              ${j.company?.name || 'Unknown'}
+              ${j.company?.industry ? `<span style="color:var(--border)">·</span> ${j.company.industry}` : ''}
+            </div>
+            <div class="jd-tags">
+              ${j.work_mode  ? `<span class="jd-tag pink">${j.work_mode}</span>` : ''}
+              ${j.job_type   ? `<span class="jd-tag">${j.job_type}</span>` : ''}
+              ${j.role_type  ? `<span class="jd-tag">${j.role_type}</span>` : ''}
+              ${j.min_experience ? `<span class="jd-tag">${j.min_experience}+ yrs exp</span>` : ''}
+              ${j.openings   ? `<span class="jd-tag">${j.openings} opening${j.openings > 1 ? 's' : ''}</span>` : ''}
+              ${j.applicant_count != null ? `<span class="jd-tag">${j.applicant_count} applied</span>` : ''}
+            </div>
+
+            ${j.description ? `<div class="section-heading">About this role</div><div class="jd-description">${j.description}</div>` : ''}
+
+            ${mandatory.length ? `
+              <div class="section-heading">Required Skills</div>
+              <div class="skills-grid">${mandatory.map(s => `<span class="skill-tag skill-mandatory">${s.name}</span>`).join('')}</div>` : ''}
+
+            ${optional.length ? `
+              <div class="section-heading" style="margin-top:16px">Nice to Have</div>
+              <div class="skills-grid">${optional.map(s => `<span class="skill-tag skill-optional">${s.name}</span>`).join('')}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="apply-card">
+          <div class="card">
+            <div class="salary-big">${salary}</div>
+            <div class="salary-sub">${j.salary_type || 'per month'} · ${j.city || 'India'}</div>
+            <button class="apply-btn" id="apply-btn" onclick="applyJob()">
+              ${token ? 'Apply Now' : 'Login to Apply'}
+            </button>
+            <div id="apply-msg"></div>
+            <div class="meta-row"><span class="meta-key">Location</span><span class="meta-val">${j.city || '—'}, ${j.state || ''}</span></div>
+            <div class="meta-row"><span class="meta-key">Work Mode</span><span class="meta-val">${j.work_mode || '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Experience</span><span class="meta-val">${j.min_experience ? j.min_experience + '+ years' : 'Any'}</span></div>
+            <div class="meta-row"><span class="meta-key">Education</span><span class="meta-val">${j.education_required || 'Any'}</span></div>
+            ${j.deadline ? `<div class="meta-row"><span class="meta-key">Deadline</span><span class="meta-val" style="color:var(--red)">${j.deadline}</span></div>` : ''}
+            ${!token ? `<div class="login-nudge"><a href="/login" style="font-weight:700">Login</a> or <a href="/register" style="font-weight:700">Register</a> to apply</div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function applyJob() {
+  if (!token) { window.location.href = "/login"; return; }
+  const btn = document.getElementById("apply-btn");
+  const msg = document.getElementById("apply-msg");
+  btn.disabled = true;
+  btn.textContent = "Applying...";
+  try {
+    const res  = await fetch(`${API}/jobs/${jobId}/apply`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Failed");
+    btn.className = "apply-btn applied";
+    btn.textContent = "✓ Applied!";
+    msg.innerHTML = `<div style="text-align:center;font-size:0.85rem;color:var(--green);margin-top:8px">Application submitted successfully</div>`;
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = "Apply Now";
+    msg.innerHTML = `<div style="text-align:center;font-size:0.85rem;color:var(--red);margin-top:8px">${e.message}</div>`;
+  }
+}
+
+load();
+</script>
+{% endblock %}

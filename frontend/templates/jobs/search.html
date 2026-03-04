@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}Find Jobs — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: var(--bg); }
+  .jobs-hero { background: var(--card); border-bottom: 1px solid var(--border); padding: 48px 0 32px; }
+  .jobs-hero h1 { font-size: 2.4rem; margin-bottom: 8px; }
+  .jobs-hero h1 em { font-style: italic; color: var(--pink); }
+  .jobs-hero p { font-size: 1rem; color: var(--muted); margin-bottom: 28px; }
+
+  .search-bar { display: flex; background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px; overflow: hidden; max-width: 700px; transition: border-color 0.15s; }
+  .search-bar:focus-within { border-color: var(--pink); }
+  .search-bar input { flex: 1; padding: 14px 20px; border: none; background: transparent; font-size: 0.95rem; color: var(--black); outline: none; }
+  .search-bar input::placeholder { color: #c0bab4; }
+  .search-bar button { background: var(--pink); color: #fff; border: none; padding: 12px 28px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border-radius: 0 999px 999px 0; transition: background 0.15s; }
+  .search-bar button:hover { background: var(--pink-hover); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+  .filter-chip { padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--card); font-size: 0.82rem; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .filter-chip:hover, .filter-chip.active { border-color: var(--pink); color: var(--pink); background: var(--pink-light); }
+  .filter-label { font-size: 0.78rem; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px; }
+
+  .jobs-layout { display: grid; grid-template-columns: 260px 1fr; gap: 28px; padding: 32px 0 48px; }
+  .filters-panel { position: sticky; top: 76px; height: fit-content; }
+  .filter-group { margin-bottom: 20px; }
+  .filter-group-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
+  .filter-select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--black); font-size: 0.88rem; outline: none; cursor: pointer; }
+  .filter-select:focus { border-color: var(--pink); }
+  .salary-row { display: flex; gap: 6px; }
+  .salary-row input { flex: 1; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--black); font-size: 0.82rem; outline: none; }
+  .salary-row input:focus { border-color: var(--pink); }
+  .btn-apply-filters { width: 100%; padding: 10px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 0.88rem; cursor: pointer; margin-top: 8px; transition: background 0.15s; }
+  .btn-apply-filters:hover { background: var(--pink-hover); }
+  .btn-clear-filters { width: 100%; padding: 8px; background: transparent; color: var(--muted); border: 1.5px solid var(--border); border-radius: 999px; font-size: 0.82rem; cursor: pointer; margin-top: 8px; transition: all 0.15s; }
+  .btn-clear-filters:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* Autocomplete */
+  .ac-wrap { position: relative; margin-bottom: 8px; }
+  #ac-dropdown, #ac-state-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--pink); border-radius: var(--radius); z-index: 999; box-shadow: var(--shadow-md); display: none; }
+  .ac-item { padding: 9px 14px; font-size: 0.88rem; cursor: pointer; color: var(--black); border-bottom: 1px solid var(--border); }
+  .ac-item:last-child { border: none; }
+  .ac-item:hover { background: var(--pink-light); color: var(--pink); }
+
+  .jobs-results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .jobs-count { font-size: 0.88rem; color: var(--muted); }
+  .jobs-count strong { color: var(--black); }
+
+  .job-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr auto; gap: 16px; transition: all 0.15s; cursor: pointer; text-decoration: none; color: inherit; }
+  .job-card:hover { border-color: var(--pink); box-shadow: 0 4px 20px rgba(232,57,138,0.08); text-decoration: none; }
+  .job-title { font-family: var(--font-serif); font-size: 1.15rem; color: var(--black); margin-bottom: 4px; }
+  .job-company { font-size: 0.88rem; font-weight: 600; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .job-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .job-tag { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+  .job-tag.pink { background: var(--pink-light); border-color: #f8c5e0; color: var(--pink); }
+  .job-skills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .skill-pill { background: var(--bg); border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 500; color: var(--muted); }
+  .skill-pill.mandatory { color: var(--black); font-weight: 600; }
+  .job-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 110px; }
+  .salary-display { font-family: var(--font-serif); font-size: 1.05rem; color: var(--black); text-align: right; }
+  .salary-type { font-size: 0.72rem; color: var(--muted); font-family: var(--font); }
+  .job-location { font-size: 0.8rem; color: var(--muted); text-align: right; }
+  .days-ago { font-size: 0.75rem; color: var(--muted); }
+
+  .no-results { text-align: center; padding: 60px 20px; }
+  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 28px; }
+  .page-btn { padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+  .page-btn:hover, .page-btn.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .skel { background: linear-gradient(90deg,#ede8e3 25%,#f5f1ec 50%,#ede8e3 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:6px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .skel-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:12px; }
+
+  @media(max-width:768px) { .jobs-layout { grid-template-columns:1fr; } .filters-panel { position:static; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="jobs-hero">
+  <div class="container">
+    <h1>Find your next <em>great role</em></h1>
+    <p>Search from thousands of jobs across India</p>
+    <div class="search-bar">
+      <input type="text" id="search-q" placeholder="Job title, skill, or keyword…" />
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Quick:</span>
+      <span class="filter-chip" onclick="quickFilter('work_mode','remote',this)">Remote</span>
+      <span class="filter-chip" onclick="quickFilter('work_mode','hybrid',this)">Hybrid</span>
+      <span class="filter-chip" onclick="quickFilter('job_type','internship',this)">Internship</span>
+      <span class="filter-chip" onclick="quickFilter('role_type','technical',this)">Technical</span>
+      <span class="filter-chip" onclick="quickFilter('role_type','blue-collar',this)">Blue Collar</span>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="container">
+  <div class="jobs-layout">
+    <!-- Sidebar -->
+    <aside class="filters-panel card" style="padding:24px">
+      <div style="font-family:var(--font-serif);font-size:1.2rem;margin-bottom:20px">Filters</div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Location</div>
+        <div class="ac-wrap">
+          <input class="filter-select" type="text" id="f-city" placeholder="City" autocomplete="off" oninput="cityAC(this.value)" />
+          <div id="ac-dropdown"></div>
+        </div>
+        <div class="ac-wrap"><input class="filter-select" type="text" id="f-state" placeholder="State" autocomplete="off" oninput="stateAC(this.value)" /><div id="ac-state-dropdown"></div></div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Job Type</div>
+        <select class="filter-select" id="f-job-type">
+          <option value="">All</option>
+          <option value="full-time">Full Time</option>
+          <option value="part-time">Part Time</option>
+          <option value="contract">Contract</option>
+          <option value="internship">Internship</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Work Mode</div>
+        <select class="filter-select" id="f-work-mode">
+          <option value="">All</option>
+          <option value="onsite">Onsite</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Role Type</div>
+        <select class="filter-select" id="f-role-type">
+          <option value="">All</option>
+          <option value="technical">Technical</option>
+          <option value="non-technical">Non-Technical</option>
+          <option value="blue-collar">Blue Collar</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Salary (₹/month)</div>
+        <div class="salary-row">
+          <input type="number" id="f-sal-min" placeholder="Min" />
+          <input type="number" id="f-sal-max" placeholder="Max" />
+        </div>
+      </div>
+
+      <button class="btn-apply-filters" onclick="applyFilters()">Apply Filters</button>
+      <button class="btn-clear-filters" onclick="clearFilters()">Clear All</button>
+    </aside>
+
+    <!-- Results -->
+    <div>
+      <div class="jobs-results-header">
+        <div class="jobs-count" id="results-count">Loading...</div>
+        <a href="/jobs/map" style="font-size:0.85rem;font-weight:600;color:var(--pink)">🗺 View on Map</a>
+      </div>
+      <div id="jobs-list"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = "http://127.0.0.1:8000/api";
+let currentPage = 1;
+let currentFilters = {};
+let acTimer;
+
+// ── City autocomplete ──────────────────────────────────────────────────
+function cityAC(q) {
+  clearTimeout(acTimer);
+  const dd = document.getElementById("ac-dropdown");
+  if (!dd) return;
+  if (q.length < 2) { dd.style.display = "none"; return; }
+  acTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`${API}/jobs/cities/suggest?q=${encodeURIComponent(q)}`);
+      const j = await r.json();
+      const d = document.getElementById("ac-dropdown");
+      if (!d) return;
+      if (!j.data || !j.data.length) { d.style.display = "none"; return; }
+      d.innerHTML = j.data.map(city =>
+        `<div class="ac-item" onclick="pickCity('${city}')">${city}</div>`
+      ).join('');
+      d.style.display = "block";
+    } catch(e) {}
+  }, 250);
+}
+
+function pickCity(city) {
+  document.getElementById("f-city").value = city;
+  document.getElementById("ac-dropdown").style.display = "none";
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".ac-wrap")) {
+    const d1 = document.getElementById("ac-dropdown");
+    const d2 = document.getElementById("ac-state-dropdown");
+    if (d1) d1.style.display = "none";
+    if (d2) d2.style.display = "none";
+  }
+});
+
+let stateTimer;
+function stateAC(q) {
+  clearTimeout(stateTimer);
+  const dd = document.getElementById("ac-state-dropdown");
+  if (!dd) return;
+  if (q.length < 2) { dd.style.display = "none"; return; }
+  stateTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`${API}/jobs/states/suggest?q=${encodeURIComponent(q)}`);
+      const j = await r.json();
+      const d = document.getElementById("ac-state-dropdown");
+      if (!d || !j.data || !j.data.length) { if(d) d.style.display="none"; return; }
+      d.innerHTML = j.data.map(s => `<div class="ac-item" onclick="pickState('${s}')">${s}</div>`).join('');
+      d.style.display = "block";
+    } catch(e) {}
+  }, 250);
+}
+function pickState(s) {
+  document.getElementById("f-state").value = s;
+  document.getElementById("ac-state-dropdown").style.display = "none";
+}
+
+document.getElementById("search-q").addEventListener("keydown", e => {
+  if (e.key === "Enter") doSearch();
+});
+
+// ── Fetch & render jobs ────────────────────────────────────────────────
+async function fetchJobs(params={}, page=1) {
+  document.getElementById("jobs-list").innerHTML = skeletons();
+  const qp = new URLSearchParams({page, limit:15});
+  Object.entries(params).forEach(([k,v]) => { if (v) qp.set(k, v); });
+  try {
+    const res  = await fetch(`${API}/jobs/search?${qp}`);
+    const json = await res.json();
+    renderJobs(json.data);
+    renderPages(page, json.data.pages || 1);
+  } catch(e) {
+    document.getElementById("jobs-list").innerHTML = `<div class="no-results"><p>Failed to load. Please refresh.</p></div>`;
+  }
+}
+
+function renderJobs(data) {
+  document.getElementById("results-count").innerHTML = `<strong>${data.total}</strong> jobs found`;
+  if (!data.jobs.length) {
+    document.getElementById("jobs-list").innerHTML = `<div class="no-results"><img src="/static/icons/empty-search.png" width="170" height="170" style="display:block;margin:0 auto 16px;object-fit:contain;opacity:.92" onerror="this.style.display='none'"><div style="font-family:var(--font-serif,serif);font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px">No jobs found</div><div style="font-size:.85rem;color:#888">Try different keywords or clear some filters.</div></div>`;
+    return;
+  }
+  document.getElementById("jobs-list").innerHTML = data.jobs.map(j => {
+    const salary = j.salary_min && j.salary_max
+      ? `₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k` : "Hidden";
+    const daysAgo = Math.floor((Date.now() - new Date(j.created_at)) / 86400000);
+    const when = daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`;
+    const mandatory = (j.skills||[]).filter(s=>s.mandatory).slice(0,4);
+    const optional  = (j.skills||[]).filter(s=>!s.mandatory).slice(0,2);
+    return `<a class="job-card" href="/jobs/${j.id}">
+      <div>
+        <div class="job-title">${j.title}</div>
+        <div class="job-company">${j.is_verified?'<span class="verified-dot"></span>':''}${j.company_name}</div>
+        <div class="job-tags">
+          ${j.work_mode?`<span class="job-tag pink">${j.work_mode}</span>`:''}
+          ${j.job_type?`<span class="job-tag">${j.job_type}</span>`:''}
+          ${j.role_type?`<span class="job-tag">${j.role_type}</span>`:''}
+          ${j.min_experience?`<span class="job-tag">${j.min_experience}+ yrs</span>`:''}
+        </div>
+        <div class="job-skills">
+          ${mandatory.map(s=>`<span class="skill-pill mandatory">${s.name}</span>`).join('')}
+          ${optional.map(s=>`<span class="skill-pill">${s.name}</span>`).join('')}
+        </div>
+      </div>
+      <div class="job-card-right">
+        <div class="salary-display">${salary}</div>
+        <div class="salary-type">${j.salary_type||''}</div>
+        <div class="job-location">📍 ${j.city||'Remote'}</div>
+        <div class="days-ago">${when}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function skeletons() {
+  return Array(4).fill(0).map(()=>`<div class="skel-card">
+    <div class="skel" style="height:20px;width:50%;margin-bottom:10px"></div>
+    <div class="skel" style="height:13px;width:30%;margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px"><div class="skel" style="height:24px;width:70px;border-radius:999px"></div><div class="skel" style="height:24px;width:70px;border-radius:999px"></div></div>
+  </div>`).join('');
+}
+
+function renderPages(page, pages) {
+  if (pages <= 1) { document.getElementById("pagination").innerHTML=''; return; }
+  let h = `<button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>←</button>`;
+  for (let i=1;i<=pages;i++) {
+    if (i===1||i===pages||Math.abs(i-page)<=2)
+      h += `<button class="page-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    else if (Math.abs(i-page)===3)
+      h += `<span style="padding:8px 4px;color:var(--muted)">…</span>`;
+  }
+  h += `<button class="page-btn" onclick="goPage(${page+1})" ${page>=pages?'disabled':''}>→</button>`;
+  document.getElementById("pagination").innerHTML = h;
+}
+
+function goPage(p) { currentPage=p; fetchJobs(currentFilters,p); window.scrollTo({top:0,behavior:'smooth'}); }
+function doSearch() { currentFilters.q = document.getElementById("search-q").value.trim(); fetchJobs(currentFilters,1); }
+
+function applyFilters() {
+  currentFilters = {
+    q:         document.getElementById("search-q").value.trim(),
+    city:      document.getElementById("f-city").value.trim(),
+    state:     document.getElementById("f-state").value.trim(),
+    job_type:  document.getElementById("f-job-type").value,
+    work_mode: document.getElementById("f-work-mode").value,
+    role_type: document.getElementById("f-role-type").value,
+    salary_min: document.getElementById("f-sal-min").value,
+    salary_max: document.getElementById("f-sal-max").value,
+  };
+  fetchJobs(currentFilters, 1);
+}
+
+function clearFilters() {
+  currentFilters = {};
+  ["search-q","f-city","f-state","f-sal-min","f-sal-max"].forEach(id => document.getElementById(id).value='');
+  ["f-job-type","f-work-mode","f-role-type"].forEach(id => document.getElementById(id).value='');
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));
+  fetchJobs({},1);
+}
+
+function quickFilter(key, val, chip) {
+  const isActive = chip.classList.contains("active");
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));
+  // Always clear ALL quick-filter keys first so previous selection never leaks into new one
+  delete currentFilters.work_mode;
+  delete currentFilters.role_type;
+  delete currentFilters.job_type;
+  document.getElementById("f-work-mode").value='';
+  document.getElementById("f-role-type").value='';
+  document.getElementById("f-job-type").value='';
+  if (!isActive) {
+    chip.classList.add("active");
+    currentFilters[key] = val;
+    if (key==='work_mode') document.getElementById("f-work-mode").value=val;
+    if (key==='role_type') document.getElementById("f-role-type").value=val;
+    if (key==='job_type')  document.getElementById("f-job-type").value=val;
+  }
+  fetchJobs(currentFilters, 1);
+}
+
+fetchJobs({}, 1);
+</script>
+{% endblock %}

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Map — JobPortal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#F2EDE8; --pink:#E8398A; --pink-hover:#d42f7c;
+    --pink-light:#fdf0f7; --black:#111111; --muted:#888880;
+    --card:#ffffff; --border:#e0dbd4; --green:#2d9e6b; --red:#e03c3c;
+  }
+  body { background:var(--bg); color:var(--black); font-family:'DM Sans',sans-serif; height:100vh; width:100vw; overflow:hidden; display:flex; flex-direction:column; }
+
+  /* Navbar */
+  .navbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; justify-content:space-between; flex-shrink:0; position:relative; z-index:200; }
+  .navbar::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--pink); }
+  .brand { font-family:'Instrument Serif',serif; font-size:1.3rem; color:var(--black); text-decoration:none; }
+  .brand span { color:var(--pink); }
+  .nav-right { display:flex; align-items:center; gap:16px; font-size:0.88rem; }
+  .nav-right a { color:var(--muted); text-decoration:none; font-weight:500; }
+  .nav-right a:hover { color:var(--pink); }
+  .back-link { display:flex; align-items:center; gap:6px; color:var(--muted) !important; }
+
+  /* Main layout */
+  .map-layout { display:flex; flex:1; overflow:hidden; }
+
+  /* Sidebar */
+  .sidebar { width:300px; flex-shrink:0; height:100%; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; box-shadow:2px 0 12px rgba(0,0,0,0.06); }
+  .top-bar { height:4px; background:var(--pink); flex-shrink:0; }
+  .sidebar-inner { padding:20px; display:flex; flex-direction:column; gap:16px; flex:1; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+
+  .sidebar-title { font-family:'Instrument Serif',serif; font-size:1.4rem; color:var(--black); }
+  .sidebar-title span { color:var(--pink); }
+  .sidebar-sub { font-size:0.82rem; color:var(--muted); margin-top:2px; }
+
+  .section-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:1.8px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .count-badge { background:var(--pink); color:#fff; border-radius:20px; padding:1px 8px; font-size:10px; font-weight:700; }
+
+  /* Search */
+  .city-search { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--black); background:var(--bg); outline:none; transition:border-color 0.2s; }
+  .city-search:focus { border-color:var(--pink); background:#fff; }
+  .city-search::placeholder { color:#c0bab4; }
+
+  /* City list */
+  .cities-scroll { display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+  .city-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.15s; }
+  .city-card:hover, .city-card.active { border-color:var(--pink); background:var(--pink-light); }
+  .city-dot { width:10px; height:10px; background:var(--pink); border-radius:50%; flex-shrink:0; }
+  .city-dot.big { width:14px; height:14px; }
+  .city-info { flex:1; }
+  .city-name { font-size:13px; font-weight:600; }
+  .city-count { font-size:11px; color:var(--muted); margin-top:1px; }
+  .city-arrow { color:var(--muted); font-size:16px; }
+
+  .divider { height:1px; background:var(--border); flex-shrink:0; }
+
+  /* Job list in sidebar (when city selected) */
+  .job-mini { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:all 0.15s; margin-bottom:6px; }
+  .job-mini:hover { border-color:var(--pink); background:var(--pink-light); }
+  .job-mini-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+  .job-mini-co { font-size:11px; color:var(--muted); }
+  .job-mini-sal { font-size:11px; color:var(--pink); font-weight:600; margin-top:3px; }
+
+  /* Map area */
+  #map-area { flex:1; position:relative; }
+  #globe-view { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+  #globe-view svg { cursor:grab; }
+  #globe-view svg:active { cursor:grabbing; }
+  .drag-hint { position:absolute; bottom:16px; right:16px; font-size:11px; color:var(--muted); font-weight:500; background:var(--card); padding:6px 12px; border-radius:999px; border:1px solid var(--border); }
+
+  #street-view { position:absolute; inset:0; display:none; flex-direction:column; }
+  #leaflet-map { flex:1; }
+
+  .back-btn { position:absolute; top:14px; left:50px; z-index:1000; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; color:var(--black); cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 10px rgba(0,0,0,0.1); transition:all 0.15s; }
+  .back-btn:hover { border-color:var(--pink); color:var(--pink); }
+  .view-badge { position:absolute; top:14px; right:14px; z-index:1000; background:var(--pink); color:#fff; border-radius:20px; padding:5px 14px; font-size:11px; font-weight:700; letter-spacing:0.5px; pointer-events:none; }
+
+  /* Tooltip */
+  .globe-tooltip { position:absolute; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:12px; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.1); display:none; z-index:100; }
+  .globe-tooltip strong { display:block; margin-bottom:2px; }
+  .globe-tooltip span { color:var(--pink); font-weight:600; }
+  .globe-tooltip em { display:block; font-size:10px; color:var(--muted); margin-top:3px; font-style:normal; }
+
+  .empty-state { text-align:center; padding:24px 10px; color:var(--muted); font-size:13px; line-height:1.7; }
+
+  /* Leaflet tweaks */
+  .leaflet-tile-pane { filter:sepia(15%) saturate(0.75) brightness(1.03); }
+  .leaflet-popup-content-wrapper { border-radius:8px!important; border:1px solid var(--border)!important; font-family:'DM Sans',sans-serif!important; box-shadow:0 4px 20px rgba(0,0,0,0.1)!important; }
+  .leaflet-popup-content { margin:12px 16px!important; font-size:13px!important; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a class="brand" href="/">Job<span>Portal</span></a>
+  <div class="nav-right">
+    <a href="/jobs" class="back-link">← Back to Jobs</a>
+    <a href="/dashboard">Dashboard</a>
+  </div>
+</nav>
+
+<!-- Layout -->
+<div class="map-layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="top-bar"></div>
+    <div class="sidebar-inner">
+      <div>
+        <div class="sidebar-title">Job<span>Map</span></div>
+        <div class="sidebar-sub">Jobs across India — click a city to explore</div>
+      </div>
+
+      <input class="city-search" id="city-search" placeholder="Search city…" oninput="filterCities(this.value)" />
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label">Cities with Jobs <span class="count-badge" id="city-count">0</span></div>
+        <div class="cities-scroll" id="cities-list">
+          <div class="empty-state">Loading job locations…</div>
+        </div>
+      </div>
+
+      <!-- Job list appears here when city clicked -->
+      <div id="jobs-panel" style="display:none">
+        <div class="divider"></div>
+        <div class="section-label" id="jobs-panel-label">Jobs in City</div>
+        <div id="jobs-mini-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map area -->
+  <div id="map-area">
+
+    <!-- Globe -->
+    <div id="globe-view">
+      <svg id="globeSvg"></svg>
+      <div class="drag-hint">Drag to rotate · Scroll to zoom · Click city for street view</div>
+      <div class="globe-tooltip" id="globe-tooltip">
+        <strong id="tt-city"></strong>
+        <span id="tt-count"></span>
+        <em>Click to see street map →</em>
+      </div>
+    </div>
+
+    <!-- Street view -->
+    <div id="street-view">
+      <div id="leaflet-map"></div>
+      <button class="back-btn" onclick="showGlobe()">← Globe View</button>
+      <div class="view-badge" id="street-badge">Street View</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API = "http://127.0.0.1:8000/api";
+let mapData = [];      // city clusters from API
+let allCities = [];    // for filtering
+let leafletMap = null;
+let leafletMarkers = [];
+let rotation = [-78, -20]; // centered on India (D3 uses negative of target lng)
+let scale = 1;
+let isDragging = false, autoRotating = true, lastPos;
+let svg, projection, path, width, height;
+
+// ── Load map data ───────────────────────────────────────────────────────
+async function loadMapData() {
+  try {
+    const res  = await fetch(`${API}/jobs/map/data`);
+    const json = await res.json();
+    mapData  = json.data || [];
+    allCities = [...mapData];
+
+    // If no jobs have lat/long yet, show sample Indian cities
+    if (!mapData.length) {
+      mapData = [
+        {city:"Bangalore", state:"Karnataka", latitude:12.9716, longitude:77.5946, job_count:1},
+      ];
+      allCities = [...mapData];
+    }
+
+    renderCityList(allCities);
+  } catch(e) {
+    console.error("Map data error:", e);
+  }
+}
+
+// ── City list ────────────────────────────────────────────────────────────
+function renderCityList(cities) {
+  document.getElementById("city-count").textContent = cities.length;
+  const el = document.getElementById("cities-list");
+  if (!cities.length) {
+    el.innerHTML = `<div class="empty-state">No cities found</div>`;
+    return;
+  }
+  el.innerHTML = cities.map(c => `
+    <div class="city-card" onclick="selectCity(${c.latitude}, ${c.longitude}, '${c.city}', ${c.job_count})">
+      <div class="city-dot ${c.job_count > 5 ? 'big' : ''}"></div>
+      <div class="city-info">
+        <div class="city-name">${c.city}</div>
+        <div class="city-count">${c.job_count} job${c.job_count !== 1 ? 's' : ''} · ${c.state || ''}</div>
+      </div>
+      <span class="city-arrow">›</span>
+    </div>`).join('');
+}
+
+function filterCities(q) {
+  if (!q) { renderCityList(allCities); return; }
+  renderCityList(allCities.filter(c => c.city.toLowerCase().includes(q.toLowerCase())));
+}
+
+// ── Select city → fly globe + show street map ─────────────────────────
+async function selectCity(lat, lng, cityName, count) {
+  // Highlight matching city card in sidebar (works from both sidebar clicks and globe pin clicks)
+  document.querySelectorAll(".city-card").forEach(c => {
+    const name = c.querySelector(".city-name")?.textContent?.trim().toLowerCase();
+    if(name === cityName.toLowerCase()) c.classList.add("active");
+    else c.classList.remove("active");
+  });
+
+  // Fly globe to city
+  flyTo(lat, lng);
+
+  // Load street map
+  showStreetView(lat, lng, cityName);
+
+  // Load jobs for this city in sidebar
+  document.getElementById("jobs-panel").style.display = "block";
+  document.getElementById("jobs-panel-label").textContent = `Jobs in ${cityName}`;
+  document.getElementById("jobs-mini-list").innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px">Loading…</div>`;
+
+  try {
+    const res  = await fetch(`${API}/jobs/map/city/${encodeURIComponent(cityName)}`);
+    const json = await res.json();
+    const jobs = json.data || [];
+    if (!jobs.length) {
+      document.getElementById("jobs-mini-list").innerHTML = `<div style="text-align:center;padding:32px 12px"><img src="/static/icons/empty-map.png" width="120" height="120" style="display:block;margin:0 auto;object-fit:contain;margin-bottom:10px;opacity:.9"><div style="font-size:.85rem;font-weight:700;color:#111;margin-bottom:4px">No jobs here yet</div><div style="font-size:.78rem;color:#888">Check other cities or come back later.</div></div>`;
+    } else {
+      document.getElementById("jobs-mini-list").innerHTML = jobs.map(j => `
+        <div class="job-mini" onclick="window.location.href='/jobs/${j.id}'">
+          <div class="job-mini-title">${j.title}</div>
+          <div class="job-mini-co">${j.company_name}</div>
+          ${j.salary_min ? `<div class="job-mini-sal">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k</div>` : ''}
+        </div>`).join('');
+      // Add markers to leaflet
+      addJobMarkers(jobs, lat, lng);
+    }
+  } catch(e) {}
+}
+
+// ── Globe (D3) ────────────────────────────────────────────────────────
+function initGlobe(world) {
+  const el = document.getElementById("globeSvg");
+  width  = el.parentElement.clientWidth;
+  height = el.parentElement.clientHeight;
+
+  el.setAttribute("width",  width);
+  el.setAttribute("height", height);
+
+  projection = d3.geoOrthographic()
+    .scale(Math.min(width, height) * 0.44)
+    .translate([width/2, height/2])
+    .rotate(rotation)
+    .clipAngle(90);
+
+  path = d3.geoPath().projection(projection);
+  svg  = d3.select("#globeSvg");
+
+  const countries = topojson.feature(world, world.objects.countries);
+  const graticule = d3.geoGraticule();
+
+  svg.append("circle")
+    .attr("cx", width/2).attr("cy", height/2)
+    .attr("r", projection.scale())
+    .attr("fill", "#E8E3DC")
+    .attr("stroke", var_pink()).attr("stroke-width", 0.5);
+
+  svg.append("g").attr("class","grat")
+    .append("path").datum(graticule()).attr("fill","none")
+    .attr("stroke","#D5CFCA").attr("stroke-width",0.4);
+
+  svg.append("g").attr("class","countries")
+    .selectAll("path").data(countries.features).enter()
+    .append("path").attr("fill","#E0DAD3").attr("stroke","#C8C2BB").attr("stroke-width",0.5);
+
+  svg.append("g").attr("class","pins");
+
+  renderGlobe();
+  setupDrag();
+  setupZoom();
+
+  // Auto-rotate
+  const timer = d3.interval(() => {
+    if (autoRotating) {
+      rotation[0] += 0.15;
+      projection.rotate(rotation);
+      renderGlobe();
+    }
+  }, 30);
+}
+
+function var_pink() { return "#E8398A"; }
+
+function renderGlobe() {
+  projection.rotate(rotation);
+  const r = projection.scale();
+
+  svg.select("circle").attr("r", r);
+  svg.select(".grat path").attr("d", path(d3.geoGraticule()()));
+  svg.selectAll(".countries path").attr("d", path);
+
+  // Draw city pins
+  const tooltip = document.getElementById("globe-tooltip");
+  svg.select(".pins").selectAll("circle").remove();
+  svg.select(".pins").selectAll("circle")
+    .data(mapData)
+    .enter().append("circle")
+    .attr("cx", d => {
+      const p = projection([d.longitude, d.latitude]);
+      return p ? p[0] : -9999;
+    })
+    .attr("cy", d => {
+      const p = projection([d.longitude, d.latitude]);
+      return p ? p[1] : -9999;
+    })
+    .attr("visibility", d => {
+      // Use geoDistance to check if point is on front hemisphere
+      // If angular distance from view center > 90deg (PI/2 radians) → behind globe → hide
+      const r = projection.rotate();
+      const viewCenter = [-r[0], -r[1]];
+      const dist = d3.geoDistance([d.longitude, d.latitude], viewCenter);
+      return dist < Math.PI / 2 ? "visible" : "hidden";
+    })
+    .attr("r", d => Math.min(4 + Math.log(d.job_count + 1) * 3, 14))
+    .attr("fill-opacity", d => Math.min(0.5 + d.job_count * 0.12, 0.95))
+    .attr("fill", var_pink())
+    .attr("stroke","#fff")
+    .attr("stroke-width", 1.5)
+    .style("cursor","pointer")
+    .on("mouseover", (event, d) => {
+      autoRotating = false;
+      tooltip.style.display = "block";
+      document.getElementById("tt-city").textContent = d.city;
+      document.getElementById("tt-count").textContent = `${d.job_count} job${d.job_count !== 1 ? 's' : ''}`;
+      tooltip.style.left = (event.offsetX + 14) + "px";
+      tooltip.style.top  = (event.offsetY - 10) + "px";
+    })
+    .on("mouseout", () => { tooltip.style.display = "none"; })
+    .on("click", (event, d) => {
+      autoRotating = false;
+      selectCity(d.latitude, d.longitude, d.city, d.job_count);
+    });
+}
+
+function setupDrag() {
+  svg.on("mousedown", e => { isDragging=true; autoRotating=false; lastPos=[e.clientX,e.clientY]; });
+  window.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+    const dx=e.clientX-lastPos[0], dy=e.clientY-lastPos[1];
+    rotation[0] += dx*0.4;
+    rotation[1] = Math.max(-90, Math.min(90, rotation[1]-dy*0.4));
+    lastPos=[e.clientX,e.clientY];
+    renderGlobe();
+  });
+  window.addEventListener("mouseup", ()=>isDragging=false);
+}
+
+function setupZoom() {
+  svg.on("wheel", e => {
+    e.preventDefault();
+    scale *= e.deltaY>0 ? 0.92 : 1.08;
+    scale = Math.max(0.4, Math.min(4, scale));
+    projection.scale(Math.min(width,height)*0.44*scale);
+    renderGlobe();
+  });
+}
+
+function flyTo(lat, lng) {
+  autoRotating = false;
+  const target = [-lng, -lat];
+  const start  = [...rotation];
+  let step = 0;
+  const iv = setInterval(()=>{
+    step++;
+    const t = step/40;
+    const ease = t<0.5 ? 2*t*t : -1+(4-2*t)*t;
+    rotation[0] = start[0]+(target[0]-start[0])*ease;
+    rotation[1] = start[1]+(target[1]-start[1])*ease;
+    projection.rotate(rotation); renderGlobe();
+    if (step>=40) clearInterval(iv);
+  }, 16);
+}
+
+// ── Street view (Leaflet) ─────────────────────────────────────────────
+function showStreetView(lat, lng, cityName) {
+  document.getElementById("globe-view").style.display = "none";
+  const sv = document.getElementById("street-view");
+  sv.style.display = "flex";
+  document.getElementById("street-badge").textContent = cityName;
+
+  if (!leafletMap) {
+    leafletMap = L.map("leaflet-map").setView([lat, lng], 12);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution:"© CartoDB © OpenStreetMap", subdomains:"abcd", maxZoom:19
+    }).addTo(leafletMap);
+    // City center marker
+    L.circleMarker([lat, lng], {radius:8, color:var_pink(), fillColor:var_pink(), fillOpacity:0.5}).addTo(leafletMap);
+  } else {
+    leafletMap.flyTo([lat, lng], 12, {duration:1});
+  }
+  setTimeout(()=>leafletMap.invalidateSize(), 100);
+}
+
+function addJobMarkers(jobs, cityLat, cityLng) {
+  leafletMarkers.forEach(m=>leafletMap.removeLayer(m));
+  leafletMarkers=[];
+  const icon = L.divIcon({
+    className:'',
+    html:`<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26S28 24.5 28 14C28 6.27 21.73 0 14 0z" fill="#E8398A" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="14" cy="13" r="5" fill="#fff"/>
+    </svg>`,
+    iconSize:[28,40], iconAnchor:[14,40], popupAnchor:[0,-42]
+  });
+  jobs.forEach((j, idx)=>{
+    // Use job's own coordinates if available, else use city center + tiny offset
+    // Offset: spiral pattern so multiple jobs don't overlap exactly
+    const angle = idx * 2.4; // golden angle spread
+    const dist  = idx === 0 ? 0 : 0.008 + (idx * 0.003); // ~800m+ apart
+    const lat = j.latitude  || (cityLat + dist * Math.sin(angle));
+    const lng = j.longitude || (cityLng + dist * Math.cos(angle));
+    const m = L.marker([lat, lng],{icon})
+      .addTo(leafletMap)
+      .bindPopup(`<strong>${j.title}</strong><br><span style="color:#888;font-size:11px">${j.company_name}</span>${j.salary_min?`<br><span style="color:#E8398A;font-weight:600">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k</span>`:''}<br><a href="/jobs/${j.id}" style="color:#E8398A;font-size:11px;font-weight:600">View Job →</a>`);
+    leafletMarkers.push(m);
+  });
+}
+
+function showGlobe() {
+  document.getElementById("street-view").style.display="none";
+  document.getElementById("globe-view").style.display="flex";
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadMapData();
+fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
+  .then(r=>r.json())
+  .then(w=>initGlobe(w));
+</script>
+</body>
+</html>

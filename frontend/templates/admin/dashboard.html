@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — JobPortal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f5f2; --surface:#ffffff; --surface2:#f0f0ec;
+  --border:#e2e2e2; --pink:#E8398A; --pink-dim:#d42f7c;
+  --text:#111111; --muted:#666666; --green:#1A7A4A; --red:#e03c3c;
+  --amber:#B45309; --blue:#3b82f6;
+  --font:'DM Sans',sans-serif; --serif:'Instrument Serif',serif;
+  --radius:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.admin-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0}
+.brand{font-family:var(--serif);font-size:1.3rem;color:var(--text)}
+.brand span{color:var(--pink)}
+.admin-badge{background:var(--pink);color:#fff;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:1px;margin-left:8px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-user{font-size:0.82rem;color:var(--muted)}
+.btn-logout{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:var(--radius);cursor:pointer;font-size:0.78rem;transition:all 0.15s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* LAYOUT */
+.admin-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:0.85rem;color:var(--muted);transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--pink);color:#fff}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:#e03c3c;color:#fff;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:999px}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:28px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--pink))}
+.stat-value{font-size:2rem;font-weight:700;font-family:var(--serif);line-height:1}
+.stat-label{font-size:0.75rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.section-title{font-family:var(--serif);font-size:1.4rem}
+.search-box{padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:0.82rem;outline:none;width:220px}
+.search-box:focus{border-color:var(--pink)}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap}
+.filter-chip{padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:none;color:var(--muted);font-size:0.75rem;cursor:pointer;transition:all 0.15s}
+.filter-chip.active{background:var(--pink);border-color:var(--pink);color:#fff}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:11px 14px;text-align:left;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)}
+td{padding:11px 14px;font-size:0.82rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.empty-row td{text-align:center;padding:40px;color:var(--muted)}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px}
+.badge-active{background:rgba(45,184,125,0.15);color:var(--green)}
+.badge-inactive{background:rgba(224,60,60,0.15);color:var(--red)}
+.badge-verified{background:rgba(45,184,125,0.15);color:var(--green)}
+.badge-unverified{background:rgba(245,158,11,0.15);color:var(--amber)}
+.badge-open{background:rgba(224,60,60,0.15);color:var(--red)}
+.badge-resolved{background:rgba(45,184,125,0.15);color:var(--green)}
+.badge-reviewed{background:rgba(59,130,246,0.15);color:var(--blue)}
+.badge-dismissed{background:rgba(136,136,136,0.15);color:var(--muted)}
+.badge-candidate{background:rgba(59,130,246,0.15);color:var(--blue)}
+.badge-hr{background:rgba(232,57,138,0.15);color:var(--pink)}
+.badge-admin{background:rgba(245,158,11,0.15);color:var(--amber)}
+
+/* ACTION BUTTONS */
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-sm{padding:4px 10px;border-radius:6px;border:none;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn-sm:hover{opacity:0.8}
+.btn-edit{background:rgba(59,130,246,0.15);color:var(--blue)}
+.btn-toggle{background:rgba(245,158,11,0.15);color:var(--amber)}
+.btn-danger{background:rgba(224,60,60,0.15);color:var(--red)}
+.btn-success{background:rgba(45,184,125,0.15);color:var(--green)}
+.btn-primary{background:var(--pink);color:#fff;padding:6px 14px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--serif);font-size:1.3rem;margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.form-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted)}
+.form-input,.form-select,.form-textarea{padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:0.85rem;outline:none;transition:border-color 0.15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--pink)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-select option{background:var(--surface2)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border);padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:0.82rem}
+.btn-save{background:var(--pink);color:#fff;border:none;padding:8px 20px;border-radius:var(--radius);cursor:pointer;font-size:0.82rem;font-weight:600}
+
+/* ALERT */
+.flash{position:fixed;top:20px;right:20px;z-index:2000;padding:12px 18px;border-radius:var(--radius);font-size:0.82rem;font-weight:600;display:none;max-width:320px}
+.flash.show{display:block}
+.flash-success{background:#1a3d2b;color:var(--green);border:1px solid var(--green)}
+.flash-error{background:#3d1a1a;color:var(--red);border:1px solid var(--red)}
+
+/* REPORT CARD */
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:12px}
+.report-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.report-title{font-weight:600;font-size:0.9rem;margin-bottom:6px}
+.report-desc{font-size:0.82rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.report-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.report-by{font-size:0.75rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- FLASH -->
+<div id="flash" class="flash"></div>
+
+<!-- HEADER -->
+<header class="admin-header">
+  <div style="display:flex;align-items:center">
+    <span class="brand">Job<span>Portal</span></span>
+    <span class="admin-badge">Admin</span>
+  </div>
+  <div class="header-right">
+    <span class="header-user" id="admin-name">Loading...</span>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="admin-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <button class="nav-item active" onclick="showTab('overview')" id="nav-overview">
+      <span class="nav-icon"><img src="/static/icons/stats.png" width="18" height="18" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"></span> Overview
+    </button>
+    <button class="nav-item" onclick="showTab('users')" id="nav-users">
+      <span class="nav-icon"><img src="/static/icons/users.png" width="18" height="18" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"></span> Users
+    </button>
+    <button class="nav-item" onclick="showTab('companies')" id="nav-companies">
+      <span class="nav-icon"><img src="/static/icons/company.png" width="18" height="18" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"></span> Companies
+    </button>
+    <button class="nav-item" onclick="showTab('jobs')" id="nav-jobs">
+      <span class="nav-icon"><img src="/static/icons/jobs.png" width="18" height="18" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"></span> Jobs
+    </button>
+    <button class="nav-item" onclick="showTab('reports')" id="nav-reports">
+      <span class="nav-icon"><img src="/static/icons/alert.png" width="18" height="18" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"></span> Reports
+      <span class="nav-badge" id="report-badge" style="display:none">0</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <h2 style="font-family:var(--serif);font-size:1.6rem;margin-bottom:20px">Platform Overview</h2>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Total Users</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="table-wrap" style="padding:20px">
+          <div style="font-weight:700;margin-bottom:14px;font-size:0.9rem">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn-sm btn-edit" style="padding:8px 12px;text-align:left" onclick="showTab('users')"><img src="/static/icons/users.png" width="15" height="15" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"> Manage Users</button>
+            <button class="btn-sm btn-toggle" style="padding:8px 12px;text-align:left" onclick="showTab('companies')"><img src="/static/icons/company.png" width="15" height="15" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"> Review Companies</button>
+            <button class="btn-sm btn-success" style="padding:8px 12px;text-align:left" onclick="showTab('jobs')">💼 Review Jobs</button>
+            <button class="btn-sm btn-danger" style="padding:8px 12px;text-align:left" onclick="showTab('reports')"><img src="/static/icons/alert.png" width="15" height="15" style="object-fit:contain;vertical-align:middle" onerror="this.style.display='none'"> View Reports</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="padding:20px">
+          <div style="font-weight:700;margin-bottom:14px;font-size:0.9rem">How to Create Admin</div>
+          <div style="font-size:0.8rem;color:var(--muted);line-height:1.6">
+            Run this in MySQL Workbench:<br><br>
+            <code style="background:var(--surface2);padding:8px;border-radius:6px;display:block;font-size:0.75rem">
+              UPDATE users<br>SET role = 'admin'<br>WHERE email = 'your@email.com';
+            </code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="tab-panel" id="tab-users">
+      <div class="section-header">
+        <h2 class="section-title">Users</h2>
+        <input class="search-box" id="user-search" placeholder="Search name or email..." oninput="filterUsers()">
+      </div>
+      <div class="filter-row" style="margin-bottom:16px">
+        <button class="filter-chip active" onclick="setUserFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setUserFilter('candidate',this)">Candidates</button>
+        <button class="filter-chip" onclick="setUserFilter('hr',this)">HR</button>
+        <button class="filter-chip" onclick="setUserFilter('admin',this)">Admins</button>
+        <button class="filter-chip" onclick="setUserFilter('inactive',this)">Inactive</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="users-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPANIES TAB -->
+    <div class="tab-panel" id="tab-companies">
+      <div class="section-header">
+        <h2 class="section-title">Companies</h2>
+        <input class="search-box" id="co-search" placeholder="Search company..." oninput="filterCompanies()">
+      </div>
+      <div class="filter-row" style="margin-bottom:16px">
+        <button class="filter-chip active" onclick="setCoFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setCoFilter('verified',this)">Verified</button>
+        <button class="filter-chip" onclick="setCoFilter('unverified',this)">Unverified</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Company</th><th>HR Contact</th><th>Location</th><th>Type</th><th>Jobs</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="companies-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- JOBS TAB -->
+    <div class="tab-panel" id="tab-jobs">
+      <div class="section-header">
+        <h2 class="section-title">Jobs</h2>
+        <input class="search-box" id="job-search" placeholder="Search job title..." oninput="filterJobs()">
+      </div>
+      <div class="filter-row" style="margin-bottom:16px">
+        <button class="filter-chip active" onclick="setJobFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setJobFilter('active',this)">Active</button>
+        <button class="filter-chip" onclick="setJobFilter('closed',this)">Closed</button>
+        <button class="filter-chip" onclick="setJobFilter('draft',this)">Draft</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Title</th><th>Company</th><th>Location</th><th>Type</th><th>Applicants</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="jobs-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div class="tab-panel" id="tab-reports">
+      <div class="section-header">
+        <h2 class="section-title">Reports & Complaints</h2>
+      </div>
+      <div class="filter-row" style="margin-bottom:16px">
+        <button class="filter-chip active" onclick="setReportFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setReportFilter('open',this)">Open</button>
+        <button class="filter-chip" onclick="setReportFilter('reviewed',this)">Reviewed</button>
+        <button class="filter-chip" onclick="setReportFilter('resolved',this)">Resolved</button>
+        <button class="filter-chip" onclick="setReportFilter('dismissed',this)">Dismissed</button>
+      </div>
+      <div id="reports-list">Loading...</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-title">Edit User</div>
+    <input type="hidden" id="edit-user-id">
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input class="form-input" id="edit-name" placeholder="Full name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="edit-email" placeholder="Email address">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-select" id="edit-role">
+        <option value="candidate">Candidate</option>
+        <option value="hr">HR</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="edit-active">
+        <option value="true">Active</option>
+        <option value="false">Inactive (Banned)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveUser()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOLVE REPORT MODAL -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal">
+    <div class="modal-title">Update Report</div>
+    <input type="hidden" id="edit-report-id">
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="edit-report-status">
+        <option value="reviewed">Reviewed (looking into it)</option>
+        <option value="resolved">Resolved (action taken)</option>
+        <option value="dismissed">Dismissed (not valid)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin Note (optional)</label>
+      <textarea class="form-textarea" id="edit-report-note" placeholder="Add a note about the action taken..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('report-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveReport()">Update Report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000/api";
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+// Guard — only admin can access
+if (!token || role !== "admin") {
+  window.location.href = "/login";
+}
+
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+document.getElementById("admin-name").textContent = user.full_name || "Admin";
+
+// ── State ──────────────────────────────────────────────────────────────────
+let allUsers = [], allCompanies = [], allJobs = [], allReports = [];
+let userFilter = "all", coFilter = "all", jobFilter = "all", reportFilter = "all";
+
+// ── API helper ─────────────────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: { "Content-Type":"application/json", "Authorization":"Bearer "+token, ...(opts.headers||{}) }
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || "Request failed");
+  return j.data;
+}
+
+function flash(msg, type="success") {
+  const el = document.getElementById("flash");
+  el.textContent = msg;
+  el.className = `flash flash-${type} show`;
+  setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  document.getElementById("nav-"+name).classList.add("active");
+  if (name === "users")     loadUsers();
+  if (name === "companies") loadCompanies();
+  if (name === "jobs")      loadJobs();
+  if (name === "reports")   loadReports();
+}
+
+// ── OVERVIEW ───────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const s = await api("/admin/stats");
+    document.getElementById("stats-grid").innerHTML = `
+      <div class="stat-card" style="--accent:var(--blue)"><div class="stat-value">${s.total_users}</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card" style="--accent:var(--blue)"><div class="stat-value">${s.total_candidates}</div><div class="stat-label">Candidates</div></div>
+      <div class="stat-card" style="--accent:var(--pink)"><div class="stat-value">${s.total_hr}</div><div class="stat-label">HR Users</div></div>
+      <div class="stat-card" style="--accent:var(--green)"><div class="stat-value">${s.total_companies}</div><div class="stat-label">Companies</div></div>
+      <div class="stat-card" style="--accent:var(--green)"><div class="stat-value">${s.total_jobs}</div><div class="stat-label">Total Jobs</div></div>
+      <div class="stat-card" style="--accent:var(--amber)"><div class="stat-value">${s.active_jobs}</div><div class="stat-label">Active Jobs</div></div>
+      <div class="stat-card" style="--accent:var(--blue)"><div class="stat-value">${s.total_applications}</div><div class="stat-label">Applications</div></div>
+      <div class="stat-card" style="--accent:var(--red)"><div class="stat-value">${s.open_reports}</div><div class="stat-label">Open Reports</div></div>
+    `;
+    if (s.open_reports > 0) {
+      const badge = document.getElementById("report-badge");
+      badge.textContent = s.open_reports;
+      badge.style.display = "inline";
+    }
+  } catch(e) { flash(e.message, "error"); }
+}
+
+// ── USERS ──────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    allUsers = await api("/admin/users");
+    renderUsers();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+function filterUsers() { renderUsers(); }
+function setUserFilter(f, el) {
+  userFilter = f;
+  document.querySelectorAll("#tab-users .filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderUsers();
+}
+
+function renderUsers() {
+  const search = document.getElementById("user-search").value.toLowerCase();
+  let data = allUsers.filter(u => {
+    if (userFilter === "inactive") return !u.is_active;
+    if (userFilter !== "all") return u.role === userFilter;
+    return true;
+  }).filter(u =>
+    !search || u.full_name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)
+  );
+
+  const tbody = document.getElementById("users-tbody");
+  if (!data.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No users found</td></tr>'; return; }
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td><strong>${u.full_name}</strong></td>
+      <td style="color:var(--muted)">${u.email}</td>
+      <td style="color:var(--muted)">${u.phone}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge ${u.is_active ? 'badge-active' : 'badge-inactive'}">${u.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
+      <td><div class="actions">
+        <button class="btn-sm btn-edit" onclick="openUserModal(${JSON.stringify(u).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn-sm ${u.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleUser(${u.id},${u.is_active})">${u.is_active ? 'Ban' : 'Unban'}</button>
+      </div></td>
+    </tr>
+  `).join("");
+}
+
+function openUserModal(u) {
+  document.getElementById("edit-user-id").value = u.id;
+  document.getElementById("edit-name").value    = u.full_name;
+  document.getElementById("edit-email").value   = u.email;
+  document.getElementById("edit-role").value    = u.role;
+  document.getElementById("edit-active").value  = u.is_active ? "true" : "false";
+  document.getElementById("user-modal").classList.add("open");
+}
+
+async function saveUser() {
+  const id = document.getElementById("edit-user-id").value;
+  try {
+    await api(`/admin/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        full_name: document.getElementById("edit-name").value,
+        email:     document.getElementById("edit-email").value,
+        role:      document.getElementById("edit-role").value,
+        is_active: document.getElementById("edit-active").value === "true",
+      })
+    });
+    closeModal("user-modal");
+    flash("User updated successfully");
+    loadUsers();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+async function toggleUser(id, isActive) {
+  const action = isActive ? "ban" : "unban";
+  if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+  try {
+    await api(`/admin/users/${id}`, { method:"PUT", body: JSON.stringify({ is_active: !isActive }) });
+    flash(`User ${action}ned`);
+    loadUsers();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+// ── COMPANIES ──────────────────────────────────────────────────────────────
+async function loadCompanies() {
+  try {
+    allCompanies = await api("/admin/companies");
+    renderCompanies();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+function filterCompanies() { renderCompanies(); }
+function setCoFilter(f, el) {
+  coFilter = f;
+  document.querySelectorAll("#tab-companies .filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderCompanies();
+}
+
+function renderCompanies() {
+  const search = document.getElementById("co-search").value.toLowerCase();
+  let data = allCompanies.filter(c => {
+    if (coFilter === "verified")   return c.is_verified;
+    if (coFilter === "unverified") return !c.is_verified;
+    return true;
+  }).filter(c => !search || c.company_name.toLowerCase().includes(search));
+
+  const tbody = document.getElementById("companies-tbody");
+  if (!data.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No companies found</td></tr>'; return; }
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td><strong>${c.company_name}</strong><br><span style="font-size:0.72rem;color:var(--muted)">${c.industry||'—'}</span></td>
+      <td><span style="font-size:0.8rem">${c.hr_name}</span><br><span style="font-size:0.72rem;color:var(--muted)">${c.hr_email}</span></td>
+      <td style="color:var(--muted)">${c.city||'—'}, ${c.state||'—'}</td>
+      <td style="color:var(--muted)">${c.company_type||'—'}</td>
+      <td style="text-align:center">${c.job_count}</td>
+      <td><span class="badge ${c.is_verified ? 'badge-verified' : 'badge-unverified'}">${c.is_verified ? 'Verified' : 'Unverified'}</span></td>
+      <td><div class="actions">
+        <button class="btn-sm btn-toggle" onclick="toggleVerify(${c.id})">${c.is_verified ? 'Unverify' : 'Verify'}</button>
+        <button class="btn-sm btn-danger" onclick="deleteCompany(${c.id},'${c.company_name}')">Remove</button>
+      </div></td>
+    </tr>
+  `).join("");
+}
+
+async function toggleVerify(id) {
+  try {
+    const r = await api(`/admin/companies/${id}/verify`, { method:"PUT" });
+    flash(`Company ${r.is_verified ? 'verified' : 'unverified'}`);
+    loadCompanies();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+async function deleteCompany(id, name) {
+  if (!confirm(`Remove "${name}"? All their jobs will be closed.`)) return;
+  try {
+    await api(`/admin/companies/${id}`, { method:"DELETE" });
+    flash("Company removed and jobs closed");
+    loadCompanies();
+    loadStats();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+// ── JOBS ───────────────────────────────────────────────────────────────────
+async function loadJobs() {
+  try {
+    allJobs = await api("/admin/jobs");
+    renderJobs();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+function filterJobs() { renderJobs(); }
+function setJobFilter(f, el) {
+  jobFilter = f;
+  document.querySelectorAll("#tab-jobs .filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderJobs();
+}
+
+function renderJobs() {
+  const search = document.getElementById("job-search").value.toLowerCase();
+  let data = allJobs.filter(j => {
+    if (jobFilter !== "all") return j.status === jobFilter;
+    return true;
+  }).filter(j => !search || j.title.toLowerCase().includes(search));
+
+  const tbody = document.getElementById("jobs-tbody");
+  if (!data.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No jobs found</td></tr>'; return; }
+  tbody.innerHTML = data.map(j => `
+    <tr>
+      <td><strong>${j.title}</strong></td>
+      <td style="color:var(--muted)">${j.company_name}</td>
+      <td style="color:var(--muted)">${j.city||'—'}, ${j.state||'—'}</td>
+      <td style="color:var(--muted)">${j.job_type||'—'}</td>
+      <td style="text-align:center">${j.applicants}</td>
+      <td><span class="badge ${j.status === 'active' ? 'badge-active' : j.status === 'closed' ? 'badge-inactive' : 'badge-unverified'}">${j.status}</span></td>
+      <td><div class="actions">
+        ${j.status !== 'active'  ? `<button class="btn-sm btn-success" onclick="setJobStatus(${j.id},'active')">Activate</button>` : ''}
+        ${j.status !== 'closed'  ? `<button class="btn-sm btn-danger"  onclick="setJobStatus(${j.id},'closed')">Close</button>` : ''}
+      </div></td>
+    </tr>
+  `).join("");
+}
+
+async function setJobStatus(id, status) {
+  try {
+    await api(`/admin/jobs/${id}/status?status=${status}`, { method:"PUT" });
+    flash(`Job marked as ${status}`);
+    loadJobs();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+// ── REPORTS ────────────────────────────────────────────────────────────────
+async function loadReports() {
+  try {
+    allReports = await api("/admin/reports");
+    renderReports();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+function setReportFilter(f, el) {
+  reportFilter = f;
+  document.querySelectorAll("#tab-reports .filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderReports();
+}
+
+const REPORT_TYPE_LABELS = {
+  scam_job: "Scam Job",
+  fake_company: "Fake Company",
+  candidate_fraud: "Candidate Fraud",
+  bug: "🐛 Bug/Issue",
+  other: "📝 Other"
+};
+
+function renderReports() {
+  let data = allReports.filter(r => reportFilter === "all" || r.status === reportFilter);
+  const el = document.getElementById("reports-list");
+  if (!data.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">No reports found</div>'; return; }
+  el.innerHTML = data.map(r => `
+    <div class="report-card">
+      <div class="report-meta">
+        <span class="badge badge-${r.status}">${r.status}</span>
+        <span style="font-size:0.75rem;color:var(--muted)">${REPORT_TYPE_LABELS[r.report_type] || r.report_type}</span>
+        ${r.target_type && r.target_id ? `<span style="font-size:0.75rem;color:var(--blue)">Target: ${r.target_type} #${r.target_id}</span>` : ''}
+      </div>
+      <div class="report-title">${r.title}</div>
+      <div class="report-desc">${r.description}</div>
+      ${r.admin_note ? `<div style="background:rgba(59,130,246,0.08);border-left:2px solid var(--blue);padding:8px 12px;border-radius:4px;font-size:0.78rem;color:var(--muted);margin-bottom:10px">📝 Admin note: ${r.admin_note}</div>` : ''}
+      <div class="report-footer">
+        <div class="report-by">By <strong>${r.reporter_name}</strong> (${r.reporter_role}) · ${r.reporter_email} · ${r.created_at ? r.created_at.split('T')[0] : '—'}</div>
+        ${r.status === 'open' || r.status === 'reviewed' ? `<button class="btn-sm btn-edit" onclick="openReportModal(${r.id})">Update Status</button>` : ''}
+      </div>
+    </div>
+  `).join("");
+}
+
+function openReportModal(id) {
+  document.getElementById("edit-report-id").value = id;
+  document.getElementById("edit-report-note").value = "";
+  document.getElementById("report-modal").classList.add("open");
+}
+
+async function saveReport() {
+  const id     = document.getElementById("edit-report-id").value;
+  const status = document.getElementById("edit-report-status").value;
+  const note   = document.getElementById("edit-report-note").value;
+  try {
+    await api(`/admin/reports/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status, admin_note: note || null })
+    });
+    closeModal("report-modal");
+    flash("Report updated");
+    loadReports();
+    loadStats();
+  } catch(e) { flash(e.message, "error"); }
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-overlay").forEach(m => {
+  m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+});
+
+// ── LOGOUT ─────────────────────────────────────────────────────────────────
+function logout() {
+  localStorage.clear();
+  window.location.href = "/login";
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+loadStats();
+</script>
+</body>
+</html>

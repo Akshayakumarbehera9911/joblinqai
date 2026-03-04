@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}JobPortal{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/base.css" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="/">Job<span>Portal</span></a>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/jobs">Find Jobs</a></li>
+        <!-- Logged out links -->
+        <li id="nav-login"><a href="/login">Login</a></li>
+        <li id="nav-register"><a href="/register" class="btn-nav">Register</a></li>
+        <!-- Logged in links (hidden by default) -->
+        <li id="nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
+        <li id="nav-profile" style="display:none"><a href="/candidate/profile">Profile</a></li>
+        <li id="nav-apps" style="display:none"><a href="/candidate/applications">Applications</a></li>
+        <li id="nav-settings" style="display:none"><a href="/account/settings">Settings</a></li>
+        <li id="nav-report"   style="display:none"><a href="#" onclick="openReportModal()" style="color:#e03c3c">Report</a></li>
+        <li id="nav-logout"    style="display:none"><a href="#" onclick="logout()">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script>
+    // Show/hide nav links based on login state
+    (function () {
+      if (Auth.isLoggedIn()) {
+        document.getElementById("nav-login").style.display    = "none";
+        document.getElementById("nav-register").style.display = "none";
+        const _role = Auth.getRole();
+        document.getElementById("nav-dashboard").style.display = "list-item";
+        document.getElementById("nav-settings").style.display  = "list-item";
+        document.getElementById("nav-logout").style.display    = "list-item";
+
+        if (_role === "hr") {
+          document.getElementById("nav-dashboard").querySelector("a").href        = "/hr/dashboard";
+          document.getElementById("nav-dashboard").querySelector("a").textContent = "HR Dashboard";
+          document.getElementById("nav-report").style.display = "list-item";
+        } else if (_role === "admin") {
+          document.getElementById("nav-dashboard").querySelector("a").href        = "/admin/dashboard";
+          document.getElementById("nav-dashboard").querySelector("a").textContent = "Admin Panel";
+          // admin does not see Report or Profile/Applications
+        } else {
+          // candidate
+          document.getElementById("nav-profile").style.display = "list-item";
+          document.getElementById("nav-apps").style.display    = "list-item";
+          document.getElementById("nav-report").style.display  = "list-item";
+        }
+      }
+    })();
+
+    function logout() {
+      Auth.clear();
+      window.location.href = "/login";
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+
+<!-- GLOBAL REPORT MODAL -->
+<div id="global-report-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:440px">
+    <h3 style="margin-bottom:16px;font-family:var(--font-serif,serif)">Submit a Report</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <select id="gr-type" style="padding:9px;border:1.5px solid #e0dbd4;border-radius:8px;font-family:inherit">
+        <option value="">Select report type...</option>
+        <option value="scam_job">🚨 Scam / Fake Job</option>
+        <option value="fake_company">🏢 Fake Company</option>
+        <option value="candidate_fraud">👤 Candidate Fraud</option>
+        <option value="bug">🐛 Bug / Website Issue</option>
+        <option value="other">📝 Other</option>
+      </select>
+      <input id="gr-title" placeholder="Brief title" style="padding:9px;border:1.5px solid #e0dbd4;border-radius:8px;font-family:inherit">
+      <textarea id="gr-desc" placeholder="Describe the issue in detail..." rows="4" style="padding:9px;border:1.5px solid #e0dbd4;border-radius:8px;font-family:inherit;resize:vertical"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+      <button onclick="document.getElementById('global-report-modal').style.display='none'" style="padding:8px 16px;border:1px solid #e0dbd4;border-radius:8px;background:none;cursor:pointer">Cancel</button>
+      <button onclick="submitReport()" style="padding:8px 20px;background:#E8398A;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">Submit</button>
+    </div>
+    <div id="gr-msg" style="margin-top:10px;font-size:0.82rem;display:none"></div>
+  </div>
+</div>
+
+<script>
+function openReportModal() {
+  document.getElementById("global-report-modal").style.display = "flex";
+}
+async function submitReport() {
+  const type  = document.getElementById("gr-type").value;
+  const title = document.getElementById("gr-title").value.trim();
+  const desc  = document.getElementById("gr-desc").value.trim();
+  const msg   = document.getElementById("gr-msg");
+  if (!type || !title || !desc) { msg.style.display="block"; msg.style.color="red"; msg.textContent="Please fill all fields."; return; }
+  try {
+    const r = await fetch("http://127.0.0.1:8000/api/admin/reports", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},
+      body: JSON.stringify({report_type:type, title, description:desc})
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail);
+    msg.style.display="block"; msg.style.color="green"; msg.textContent="Report submitted! We will review it soon.";
+    setTimeout(() => document.getElementById("global-report-modal").style.display="none", 2000);
+  } catch(e) { msg.style.display="block"; msg.style.color="red"; msg.textContent=e.message; }
+}
+</script>
+</body>
+</html>

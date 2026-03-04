@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Register — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: var(--bg); }
+  .auth-wrap { max-width: 480px; margin: 48px auto; padding: 0 16px 48px; }
+  .auth-logo { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 8px; }
+  .auth-logo span { color: var(--pink); }
+  .auth-sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
+  .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+  .auth-card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 24px; }
+  .role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .role-tab { padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius); text-align: center; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--muted); transition: all 0.15s; }
+  .role-tab.active { border-color: var(--pink); background: var(--pink-light); color: var(--pink); }
+  .btn-register { width: 100%; padding: 13px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s; margin-top: 4px; }
+  .btn-register:hover { background: var(--pink-hover); }
+  .btn-register:disabled { background: #f0b8d8; cursor: not-allowed; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-logo">Job<span>Portal</span></div>
+  <div class="auth-sub">Join thousands finding their next role</div>
+  <div class="auth-card">
+    <h2>Create account</h2>
+    <div class="role-tabs">
+      <div class="role-tab active" id="tab-candidate" onclick="setRole('candidate')">🎓 Job Seeker</div>
+      <div class="role-tab" id="tab-hr" onclick="setRole('hr')">🏢 Hire Talent</div>
+    </div>
+    <div id="form-alert" class="alert"></div>
+    <form id="register-form" novalidate>
+      <input type="hidden" id="role" value="candidate" />
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="full_name" placeholder="Your full name" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="email" placeholder="you@example.com" required />
+      </div>
+          <div id="hr-email-hint" style="display:none;font-size:0.78rem;color:#d97706;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px 10px;margin-top:-8px">⚠️ HR must register with a <strong>company email</strong> (e.g. name@company.com). Gmail, Yahoo, and personal emails are not accepted.</div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" type="tel" id="phone" placeholder="10-digit number" maxlength="10" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="password" placeholder="Min 6 characters" required />
+      </div>
+      <button type="submit" class="btn-register">Create Account</button>
+    </form>
+    <hr class="divider" />
+    <p style="text-align:center;font-size:0.88rem;color:var(--muted)">
+      Already have an account? <a href="/login" style="font-weight:600;color:var(--pink)">Login</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setRole(role) {
+  document.getElementById("role").value = role;
+  document.getElementById("tab-candidate").className = "role-tab" + (role === "candidate" ? " active" : "");
+  document.getElementById("tab-hr").className         = "role-tab" + (role === "hr"        ? " active" : "");
+  
+  // Show company email warning for HR
+  const hint = document.getElementById("hr-email-hint");
+  if (hint) hint.style.display = role === "hr" ? "block" : "none";
+}
+</script>
+<script src="/static/js/auth.js"></script>
+{% endblock %}
