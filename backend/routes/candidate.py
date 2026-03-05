@@ -441,8 +441,9 @@ def dashboard(current_user: User = Depends(require_candidate), db: Session = Dep
 @router.get("/applications")
 def get_my_applications(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     from backend.models.application import Application
-    from backend.models.job import Job
+    from backend.models.job import Job, JobSkill
     from backend.models.company import Company
+    from backend.pipeline.ranker import rank_jobs_for_candidate
 
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
     if not profile:
@@ -451,11 +452,28 @@ def get_my_applications(current_user: User = Depends(require_candidate), db: Ses
     apps = db.query(Application).filter(Application.candidate_id == profile.id)\
              .order_by(Application.applied_at.desc()).all()
 
+    # Load candidate skills once outside loop
+    cand_skills = [s.skill_name for s in db.query(CandidateSkill).filter(
+        CandidateSkill.candidate_id == profile.id).all()]
+
     result = []
     for a in apps:
         job = db.query(Job).filter(Job.id == a.job_id).first()
         if not job: continue
         company = db.query(Company).filter(Company.id == job.company_id).first()
+
+        # Calculate match score live if not stored
+        match_score = a.match_score
+        if match_score is None:
+            job_skills = db.query(JobSkill).filter(JobSkill.job_id == job.id).all()
+            mandatory = [s.skill_name for s in job_skills if s.is_mandatory]
+            optional  = [s.skill_name for s in job_skills if not s.is_mandatory]
+            ranked = rank_jobs_for_candidate(cand_skills, [{
+                "job": job, "mandatory_skills": mandatory, "optional_skills": optional
+            }])
+            if ranked:
+                match_score = ranked[0]["match_score"]
+
         result.append({
             "application_id": a.id,
             "job_id":         job.id,
@@ -467,7 +485,7 @@ def get_my_applications(current_user: User = Depends(require_candidate), db: Ses
             "salary_min":     job.salary_min,
             "salary_max":     job.salary_max,
             "status":         a.status,
-            "match_score":    a.match_score,
+            "match_score":    match_score,
             "applied_at":     a.applied_at.isoformat() if a.applied_at else None,
         })
     return {"success": True, "data": result, "error": None}

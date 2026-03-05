@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+/* ── Brand Variables ───────────────────────────────────────────────────── */
+:root {
+  --pink:        #E8398A;
+  --pink-light:  #fdf0f7;
+  --pink-hover:  #d4307d;
+  --bg:          #F5F5F0;
+  --card:        #FFFFFF;
+  --border:      #E8E3DC;
+  --black:       #111111;
+  --muted:       #888880;
+  --green:       #2d9e6b;
+  --red:         #e03c3c;
+  --gold:        #f59e0b;
+  --font-serif:  'Instrument Serif', serif;
+  --font-sans:   'DM Sans', sans-serif;
+  --radius:      10px;
+  --nav-height:  64px;
+  --topbar-height: 56px;
+}
+
+/* ── Base Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollbar hide (mobile feel) ──────────────────────────────────────── */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* ── Page wrapper (content area between topbar and bottom nav) ─────────── */
+.page {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: var(--topbar-height);
+  padding-bottom: calc(var(--nav-height) + 16px);
+  background: var(--bg);
+}
+
+/* ── Page without bottom nav (login/register) ──────────────────────────── */
+.page-no-nav {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+/* ── Input ─────────────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  background: var(--card);
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--pink); }
+.input::placeholder { color: var(--muted); }
+
+/* ── Button primary ────────────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: var(--pink);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--pink-hover); }
+.btn-primary:disabled { background: #f0b8d8; cursor: not-allowed; }
+
+/* ── Button outline ────────────────────────────────────────────────────── */
+.btn-outline {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--pink);
+  border: 1.5px solid var(--pink);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-outline:hover { background: var(--pink-light); }
+
+/* ── Label ─────────────────────────────────────────────────────────────── */
+.label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ── Alert ─────────────────────────────────────────────────────────────── */
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.alert-error   { background: #fdecea; color: var(--red); }
+.alert-success { background: #e8f5e9; color: var(--green); }
+
+/* ── Bottom sheet overlay ──────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ── Bottom sheet ──────────────────────────────────────────────────────── */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 40px;
+  z-index: 101;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  margin: 0 auto 20px;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────── */
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
