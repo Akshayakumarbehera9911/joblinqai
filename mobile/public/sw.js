@@ -1,8 +1,16 @@
 const CACHE_NAME = "jobportal-cdn-v1";
 
-/* ── Install ── */
+/* ── Install: cache icons immediately ── */
 self.addEventListener("install", event => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll([
+        "/icons/icon-192.png",
+        "/icons/icon-512.png",
+      ]);
+    })
+  );
 });
 
 /* ── Activate: wipe all old caches ── */
@@ -18,6 +26,14 @@ self.addEventListener("activate", event => {
 /* ── Fetch ── */
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
+
+  /* Icons → serve from cache */
+  if (url.pathname.startsWith("/icons/")) {
+    event.respondWith(
+      caches.match(event.request).then(cached => cached || fetch(event.request))
+    );
+    return;
+  }
 
   /* CDN assets only → cache forever (unpkg, cdnjs, google fonts — never change) */
   if (
