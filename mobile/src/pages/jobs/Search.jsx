@@ -4,6 +4,7 @@ import TopBar     from "../../components/TopBar";
 import JobCard    from "../../components/JobCard";
 import Spinner    from "../../components/Spinner";
 import EmptyState from "../../components/EmptyState";
+import { useAuth } from "../../context/AuthContext";
 import { searchJobs } from "../../api/jobs";
 
 function GlobeIcon() {
@@ -42,6 +43,7 @@ export default function Search() {
   const [applied, setApplied] = useState({});
 
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
 
   async function fetchJobs(params, pageNum = 1) {
     setLoading(true);
@@ -84,7 +86,16 @@ export default function Search() {
 
   return (
     <>
-      <TopBar title="Find Jobs" />
+      <TopBar title="Find Jobs" right={
+        !isLoggedIn ? (
+          <button onClick={() => navigate("/login")} style={{
+            padding: "6px 14px",
+            background: "var(--pink)", color: "#fff",
+            border: "none", borderRadius: 999,
+            fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+          }}>Login</button>
+        ) : null
+      } />
 
       <div className="page" style={{ padding: "calc(var(--topbar-height) + 12px) 14px calc(var(--nav-height) + 20px)" }}>
 
