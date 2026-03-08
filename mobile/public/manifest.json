@@ -2,12 +2,12 @@
   "name": "JobPortal",
   "short_name": "JobPortal",
   "description": "Find jobs across India",
-  "start_url": "https://jobportal-mobile.onrender.com/login",
+  "start_url": "https://al-mobile.onrender.com/login",
   "display": "standalone",
   "background_color": "#F5F5F0",
   "theme_color": "#E8398A",
   "orientation": "portrait",
-  "scope": "https://jobportal-mobile.onrender.com/",
+  "scope": "https://al-mobile.onrender.com/",
   "icons": [
     {
       "src": "/icons/icon-192.png",

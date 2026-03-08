@@ -7,7 +7,7 @@ import EmptyState from "../../components/EmptyState";
 import { getDashboard, runPipeline } from "../../api/candidate";
 import { useAuth } from "../../context/AuthContext";
 
-const STATIC = "https://jobportal-q9ii.onrender.com/static/icons/";
+const STATIC = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/static/icons/";
 
 export default function CandidateDashboard() {
   const [data,    setData]    = useState(null);

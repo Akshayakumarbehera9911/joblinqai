@@ -1,4 +1,4 @@
-const ICON_BASE = "https://jobportal-q9ii.onrender.com/static/icons/";
+const ICON_BASE = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/static/icons/";
 
 export default function EmptyState({ icon, title, subtitle, action = null }) {
   return (
