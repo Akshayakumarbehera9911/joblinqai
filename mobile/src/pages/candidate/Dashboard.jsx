@@ -118,20 +118,44 @@ export default function CandidateDashboard() {
           </div>
         </div>
 
-        {/* ── Skill Gaps ── */}
+        {/* ── Skill Gaps summary card ── */}
         <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", margin: "14px 0 8px" }}>Skill Gaps</div>
         {gaps.length === 0 ? (
           <EmptyState icon="empty-score.png" title="No gaps found" subtitle="Upload resume and re-analyze to see gaps" />
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 14 }}>
-            {gaps.map((g, i) => (
-              <span key={g.skill_name || i} style={{
-                padding: "5px 12px", borderRadius: 999, fontSize: "0.75rem", fontWeight: 600,
-                background: g.gap_level === "high" ? "#fdecea" : g.gap_level === "medium" ? "#fffbeb" : "var(--bg)",
-                color: g.gap_level === "high" ? "var(--red)" : g.gap_level === "medium" ? "var(--gold)" : "var(--muted)",
-                border: `1px solid ${g.gap_level === "high" ? "#fca5a5" : g.gap_level === "medium" ? "#fcd34d" : "var(--border)"}`,
-              }}>{g.skill_name}</span>
-            ))}
+          <div
+            onClick={() => navigate("/gaps")}
+            style={{
+              background: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: 12, marginBottom: 14, cursor: "pointer", overflow: "hidden",
+            }}
+          >
+            {/* Count row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid var(--border)" }}>
+              {[
+                { level: "critical", label: "Critical", color: "var(--pink)", bg: "var(--pink-light)" },
+                { level: "moderate", label: "Moderate", color: "var(--black)", bg: "#f5f5f2" },
+                { level: "minor",    label: "Minor",    color: "var(--muted)", bg: "var(--bg)" },
+              ].map(({ level, label, color, bg }, idx, arr) => {
+                const count = gaps.filter(g => g.gap_level === level).length;
+                return (
+                  <div key={level} style={{
+                    padding: "12px 8px", textAlign: "center", background: bg,
+                    borderRight: idx < arr.length - 1 ? "1px solid var(--border)" : "none",
+                  }}>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color, fontFamily: "var(--font-sans)" }}>{count}</div>
+                    <div style={{ fontSize: "0.62rem", color, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>{label}</div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* View all row */}
+            <div style={{ padding: "9px 14px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--pink)" }}>View all</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
           </div>
         )}
 

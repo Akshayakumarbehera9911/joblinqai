@@ -13,6 +13,7 @@ from backend.pipeline.market_analyzer  import analyze_market_demand
 from backend.pipeline.profile_analyzer import analyze_profile
 from backend.pipeline.gap_identifier   import identify_gaps
 from backend.pipeline.scorer           import calculate_score
+from backend.pipeline.resume_parser    import extract_skills_from_resume
 
 
 def run_pipeline(candidate_id: int, db: Session) -> dict:
@@ -39,8 +40,17 @@ def run_pipeline(candidate_id: int, db: Session) -> dict:
     structured = analyze_profile(profile, skills, certs, projects)
     structured["role_type"] = role_type
 
-    # Step 4 — Identify gaps
-    gaps = identify_gaps(structured["skills"], market_demand, profile.target_role)
+    # Step 3b — Enrich skills with resume text (if available)
+    existing_skill_names = [s.skill_name for s in skills]
+    if profile.resume_text:
+        resume_skills = extract_skills_from_resume(profile.resume_text, existing_skill_names)
+        # Merge: profile skills + resume-extracted skills (no duplicates)
+        enriched_skills = list(set(existing_skill_names + resume_skills))
+    else:
+        enriched_skills = existing_skill_names
+
+    # Step 4 — Identify gaps (using enriched skills)
+    gaps = identify_gaps(enriched_skills, market_demand, profile.target_role)
 
     # Step 5 — Calculate score
     score_result = calculate_score(structured, market_demand, weights)

@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import BottomNav from "./components/BottomNav";
-
 import Login    from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Search   from "./pages/jobs/Search";
@@ -10,6 +9,7 @@ import MapPage  from "./pages/jobs/Map";
 import CandidateDashboard    from "./pages/candidate/Dashboard";
 import CandidateApplications from "./pages/candidate/Applications";
 import CandidateProfile      from "./pages/candidate/Profile";
+import CandidateGaps         from "./pages/candidate/Gaps";
 import HRDashboard  from "./pages/hr/Dashboard";
 import HRPostJob    from "./pages/hr/PostJob";
 import HRApplicants from "./pages/hr/Applicants";
@@ -60,6 +60,7 @@ export default function App() {
         <Route path="/dashboard"    element={<Protected allowedRoles={["candidate"]}><CandidateDashboard /></Protected>} />
         <Route path="/applications" element={<Protected allowedRoles={["candidate"]}><CandidateApplications /></Protected>} />
         <Route path="/profile"      element={<Protected allowedRoles={["candidate"]}><CandidateProfile /></Protected>} />
+        <Route path="/gaps"         element={<Protected allowedRoles={["candidate"]}><CandidateGaps /></Protected>} />
         <Route path="/hr/dashboard"      element={<Protected allowedRoles={["hr"]}><HRDashboard /></Protected>} />
         <Route path="/hr/post-job"       element={<Protected allowedRoles={["hr"]}><HRPostJob /></Protected>} />
         <Route path="/hr/profile"        element={<Protected allowedRoles={["hr"]}><HRProfile /></Protected>} />
