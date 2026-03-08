@@ -51,7 +51,7 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/"         element={<Navigate to="/login" replace />} />
+        <Route path="/"         element={<Navigate to="/jobs" replace />} />
         <Route path="/login"    element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
         <Route path="/jobs"     element={<Search />} />
@@ -66,7 +66,7 @@ export default function App() {
         <Route path="/hr/profile"        element={<Protected allowedRoles={["hr"]}><HRProfile /></Protected>} />
         <Route path="/hr/applicants/:id" element={<Protected allowedRoles={["hr"]}><HRApplicants /></Protected>} />
         <Route path="/admin/dashboard"   element={<Protected allowedRoles={["admin"]}><AdminDashboard /></Protected>} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/jobs" replace />} />
       </Routes>
       <BottomNav />
     </>
