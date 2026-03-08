@@ -321,7 +321,7 @@ function render(data){
 
     <div class="t hero">
       <div>
-        <div class="h-name" style="display:flex;align-items:center;gap:8px">Hello, ${data.full_name?.split(' ')[0]||'there'} <img src="/static/icons/hi.png" width="42" height="42" style="display:inline-block;vertical-align:middle;flex-shrink:0" onerror="this.outerHTML='👋'"></div>
+        <div class="h-name" style="display:flex;align-items:center;gap:8px">Hello, ${data.full_name?.split(' ')[0]||'there'} <img src="/static/icons/hi.png?v=2" width="42" height="42" style="display:inline-block;vertical-align:middle;flex-shrink:0" onerror="this.outerHTML='👋'"></div>
         <div class="h-sub">${data.target_role?`Searching for: <strong>${data.target_role}</strong>`:'Complete your profile to unlock job matches'}</div>
       </div>
       <div class="h-btns">
