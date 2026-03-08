@@ -129,16 +129,21 @@ export default function Search() {
       <TopBar title="Find Jobs" right={
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {installPrompt && (
-            <button onClick={handleInstall} title="Install App" style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: 4, display: "flex", alignItems: "center", justifyContent: "center",
+            <button onClick={handleInstall} style={{
+              padding: "0 14px", height: 36,
+              background: "var(--pink)", color: "#fff",
+              border: "none", borderRadius: 12,
+              fontWeight: 700, fontSize: "0.85rem", cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
+              fontFamily: "var(--font-sans)",
             }}>
               <img
                 src="https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/static/icons/install.png"
-                width={22} height={22}
-                style={{ opacity: 0.75 }}
+                width={16} height={16}
+                style={{ filter: "invert(1)", flexShrink: 0 }}
                 onError={e => e.target.style.display = "none"}
               />
+              Install
             </button>
           )}
           {!isLoggedIn && (
