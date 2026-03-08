@@ -61,11 +61,10 @@ export default function Search() {
 
   useEffect(() => {
     const dismissed = localStorage.getItem("pwa-install-dismissed");
-    if (dismissed) return;
     const handler = (e) => {
       e.preventDefault();
       setInstallPrompt(e);
-      setShowInstallBanner(true);
+      if (!dismissed) setShowInstallBanner(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -128,14 +127,29 @@ export default function Search() {
   return (
     <>
       <TopBar title="Find Jobs" right={
-        !isLoggedIn ? (
-          <button onClick={() => navigate("/login")} style={{
-            padding: "6px 14px",
-            background: "var(--pink)", color: "#fff",
-            border: "none", borderRadius: 999,
-            fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-          }}>Login</button>
-        ) : null
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {installPrompt && (
+            <button onClick={handleInstall} title="Install App" style={{
+              background: "none", border: "none", cursor: "pointer",
+              padding: 4, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <img
+                src="https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/static/icons/install.png"
+                width={22} height={22}
+                style={{ opacity: 0.75 }}
+                onError={e => e.target.style.display = "none"}
+              />
+            </button>
+          )}
+          {!isLoggedIn && (
+            <button onClick={() => navigate("/login")} style={{
+              padding: "6px 14px",
+              background: "var(--pink)", color: "#fff",
+              border: "none", borderRadius: 999,
+              fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+            }}>Login</button>
+          )}
+        </div>
       } />
 
       <div className="page" style={{ padding: "calc(var(--topbar-height) + 12px) 14px calc(var(--nav-height) + 20px)" }}>
