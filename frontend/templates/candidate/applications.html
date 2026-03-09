@@ -95,14 +95,14 @@
   <!-- App list -->
   <div class="app-grid" id="app-grid">
     <!-- skeleton -->
-    ${[1,2,3].map(()=>`<div class="app-card"><div class="skeleton" style="height:80px"></div></div>`).join('')}
+    <div class="app-card"><div class="skeleton" style="height:80px"></div></div><div class="app-card"><div class="skeleton" style="height:80px"></div></div><div class="app-card"><div class="skeleton" style="height:80px"></div></div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const API = "https://jobportal-q9ii.onrender.com/api";
+const API = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
 const token = localStorage.getItem("token");
 if (!token) { window.location.href = "/login?returnTo=" + encodeURIComponent(window.location.pathname); }
 
@@ -244,3 +244,4 @@ async function load() {
 load();
 </script>
 {% endblock %}
+
