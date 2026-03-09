@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from backend.database import get_db
 from backend.models.candidate import CandidateProfile, CandidateSkill
 from backend.models.score import ReadinessScore, SkillGap
@@ -11,40 +10,42 @@ from backend.pipeline.ranker import get_ranked_jobs
 
 router = APIRouter()
 
-
 def get_profile_or_404(user_id: int, db: Session) -> CandidateProfile:
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user_id).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile
 
-
-# ── POST /api/scoring/calculate ───────────────────────────────────────────
+# ── POST /api/scoring/calculate ─────────────────────────────────────────────
 @router.post("/calculate")
 def calculate(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     profile = get_profile_or_404(current_user.id, db)
-
     if not profile.target_role:
         raise HTTPException(status_code=400, detail="Please set your target role before scoring")
-
     result = run_pipeline(profile.id, db)
-
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    return {
+        "success": True,
+        "data": {
+            "role_type":     result["role_type"],
+            "overall_score": result["overall_score"],
+            "breakdown":     result["breakdown"],
+            "gaps_count":    result["gaps_count"],
+            "gaps":          result["gaps"],
+            "ml_verdict":    result["ml_verdict"],  # None if profile incomplete
+        },
+        "error": None
+    }
 
-    return {"success": True, "data": result, "error": None}
-
-
-# ── GET /api/scoring/score ────────────────────────────────────────────────
+# ── GET /api/scoring/score ───────────────────────────────────────────────────
 @router.get("/score")
 def get_score(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     profile = get_profile_or_404(current_user.id, db)
-
     score = db.query(ReadinessScore).filter(
         ReadinessScore.candidate_id == profile.id,
         ReadinessScore.target_role  == profile.target_role
     ).first()
-
     if not score:
         return {
             "success": True,
@@ -54,7 +55,6 @@ def get_score(current_user: User = Depends(require_candidate), db: Session = Dep
             },
             "error": None
         }
-
     return {
         "success": True,
         "data": {
@@ -71,17 +71,14 @@ def get_score(current_user: User = Depends(require_candidate), db: Session = Dep
         "error": None
     }
 
-
-# ── GET /api/scoring/gaps ─────────────────────────────────────────────────
+# ── GET /api/scoring/gaps ────────────────────────────────────────────────────
 @router.get("/gaps")
 def get_gaps(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     profile = get_profile_or_404(current_user.id, db)
-
     gaps = db.query(SkillGap).filter(
         SkillGap.candidate_id == profile.id,
         SkillGap.target_role  == profile.target_role
     ).all()
-
     return {
         "success": True,
         "data": [
@@ -95,14 +92,11 @@ def get_gaps(current_user: User = Depends(require_candidate), db: Session = Depe
         "error": None
     }
 
-
-# ── GET /api/scoring/ranked-jobs ──────────────────────────────────────────
+# ── GET /api/scoring/ranked-jobs ─────────────────────────────────────────────
 @router.get("/ranked-jobs")
 def ranked_jobs(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     profile = get_profile_or_404(current_user.id, db)
     skills  = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
     skill_names = [s.skill_name for s in skills]
-
     ranked = get_ranked_jobs(profile, skill_names, db)
-
     return {"success": True, "data": ranked[:20], "error": None}  # top 20

@@ -10,10 +10,11 @@ import { useAuth } from "../../context/AuthContext";
 const STATIC = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/static/icons/";
 
 export default function CandidateDashboard() {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
-  const [runMsg,  setRunMsg]  = useState("");
+  const [data,      setData]      = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [running,   setRunning]   = useState(false);
+  const [runMsg,    setRunMsg]    = useState("");
+  const [mlVerdict, setMlVerdict] = useState(null);   // ← NEW
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ export default function CandidateDashboard() {
     try {
       const res = await getDashboard();
       setData(res.data);
+      setMlVerdict(res.data?.score?.ml_verdict ?? null);   // ← persist across refresh
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }
@@ -31,7 +33,8 @@ export default function CandidateDashboard() {
   async function handleRunPipeline() {
     setRunning(true); setRunMsg("");
     try {
-      await runPipeline();
+      const res = await runPipeline();
+      setMlVerdict(res.data?.ml_verdict ?? null);     // ← NEW
       setRunMsg("Score updated!");
       await load();
     } catch (e) { setRunMsg(e.message); }
@@ -50,6 +53,14 @@ export default function CandidateDashboard() {
   const matches = data?.top_jobs || [];
   const photoUrl = data?.photo_url;
   const name    = data?.full_name || user?.full_name || "there";
+
+  // ── ML verdict config ──────────────────────────────────────────────────────
+  const VERDICT_CONFIG = {
+    green:  { bg: "#9d174d", border: "#831240", text: "#fff",     imgIcon: "verdict-strong.png",      tagline: "You're well-positioned. Recruiters are likely to shortlist you." },
+    yellow: { bg: "#E8398A", border: "#d42f7c", text: "#fff",     imgIcon: "verdict-competitive.png", tagline: "You have a real shot. A few more skills could push you to the top." },
+    orange: { bg: "#f9a8d4", border: "#f472b6", text: "#831240",  imgIcon: "verdict-borderline.png",  tagline: "You may get interviews but face tough competition. Focus on your skill gaps now." },
+    red:    { bg: "#fce7f3", border: "#fbcfe8", text: "#9d174d",  imgIcon: "verdict-notyet.png",      tagline: "Significant gaps exist. Build your skills before applying actively." },
+  };
 
   return (
     <>
@@ -93,7 +104,7 @@ export default function CandidateDashboard() {
                     <span style={{ color: "var(--muted)" }}>{label} </span>
                     <span style={{
                       fontWeight: 700,
-                      color: val >= 70 ? "var(--green)" : val >= 40 ? "var(--gold)" : val == null ? "var(--muted)" : "var(--red)",
+                      color: val >= 70 ? "#9d174d" : val >= 40 ? "#E8398A" : val == null ? "var(--muted)" : "#f9a8d4",
                     }}>{val ?? "—"}</span>
                   </div>
                 ))}
@@ -101,10 +112,35 @@ export default function CandidateDashboard() {
             </div>
           </div>
 
+          {/* ── Market Verdict stacked inside score card ── */}
+          {mlVerdict && (() => {
+            const vc = VERDICT_CONFIG[mlVerdict.color] || VERDICT_CONFIG.red;
+            return (
+              <div style={{ borderTop: "1px solid var(--border)", padding: "10px 14px" }}>
+                <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                  Market Verdict
+                </div>
+                <div style={{
+                  background: vc.bg, border: `1px solid ${vc.border}`,
+                  borderRadius: 10, padding: "10px 12px",
+                  display: "flex", alignItems: "center", gap: 12,
+                }}>
+                  <img src={`${STATIC}${vc.imgIcon}`} width={52} height={52} style={{ objectFit: "contain", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: vc.text, opacity: 0.75, marginBottom: 2 }}>AI Market Prediction</div>
+                    <div style={{ fontFamily: "var(--font-serif)", fontSize: "0.9rem", fontWeight: 900, color: vc.text, marginBottom: 3 }}>{mlVerdict.label}</div>
+                    <div style={{ fontSize: "0.7rem", color: vc.text, opacity: 0.85, lineHeight: 1.45 }}>{vc.tagline}</div>
+                    {mlVerdict.note && <div style={{ fontSize: "0.66rem", color: vc.text, opacity: 0.7, marginTop: 5 }}>{mlVerdict.note}</div>}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Re-analyze button row */}
           <div style={{ borderTop: "1px solid var(--border)", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-              {runMsg ? <span style={{ color: "var(--green)" }}>✓ {runMsg}</span> : "Keep your profile updated for better matches"}
+              {runMsg ? <span style={{ color: "#9d174d" }}>✓ {runMsg}</span> : "Keep your profile updated for better matches"}
             </span>
             <button onClick={handleRunPipeline} disabled={running} style={{
               padding: "6px 14px", flexShrink: 0,
@@ -186,7 +222,6 @@ export default function CandidateDashboard() {
                     fontWeight: 700, fontSize: "0.82rem", color: "var(--muted)",
                   }}>{i + 1}</div>
                 )}
-
                 {/* Job info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
@@ -202,7 +237,6 @@ export default function CandidateDashboard() {
                     </div>
                   )}
                 </div>
-
                 {/* Match score ring */}
                 <ScoreRing score={job.match_score} size={46} strokeWidth={4} />
               </div>

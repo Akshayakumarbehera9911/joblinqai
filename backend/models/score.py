@@ -16,6 +16,7 @@ class ReadinessScore(Base):
     skills_score     = Column(Integer)
     education_score  = Column(Integer)
     score_breakdown  = Column(JSON)
+    ml_verdict       = Column(JSON, nullable=True)
     calculated_at    = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint("candidate_id", "target_role", name="uq_score"),)

@@ -1,5 +1,5 @@
 // ── Base URL ───────────────────────────────────────────────────────────────
-const API_BASE = "https://jobportal-q9ii.onrender.com/api";
+const API_BASE = "http://localhost:8000/api";
 
 // ── Token helpers ──────────────────────────────────────────────────────────
 const Auth = {

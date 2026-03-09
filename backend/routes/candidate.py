@@ -411,6 +411,7 @@ def dashboard(current_user: User = Depends(require_candidate), db: Session = Dep
                 "skills":     score.skills_score,
                 "education":  score.education_score,
                 "breakdown":  score.score_breakdown,
+                "ml_verdict": score.ml_verdict,
             } if score else None,
             "gaps": [
                 {"skill_name": g.skill_name, "gap_level": g.gap_level, "udemy_link": g.udemy_link}
