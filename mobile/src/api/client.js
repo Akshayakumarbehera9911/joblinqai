@@ -1,4 +1,4 @@
-const API=`https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api`
+const BASE = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
 
 function getToken() {
   return localStorage.getItem("token");
