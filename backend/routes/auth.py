@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,13 +8,16 @@ from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import jwt
+from typing import Optional
 
 from backend.database import get_db
-from backend.models.user import User
+from backend.models.user import User, OTPToken
 from backend.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_HOURS
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+OTP_EXPIRE_MINUTES = 10
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────
@@ -27,6 +32,13 @@ class LoginRequest(BaseModel):
     email:    EmailStr
     password: str
 
+class VerifyOTPRequest(BaseModel):
+    email:    EmailStr
+    otp_code: str
+
+class ResendOTPRequest(BaseModel):
+    email: EmailStr
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 def create_token(user_id: int, role: str) -> str:
@@ -39,6 +51,30 @@ def create_token(user_id: int, role: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
+def generate_otp() -> str:
+    return "".join(random.choices(string.digits, k=6))
+
+
+def create_and_save_otp(user_id: int, db: Session) -> str:
+    """Invalidate old OTPs, create new one, return the code."""
+    # Mark all previous OTPs for this user as used
+    db.query(OTPToken).filter(
+        OTPToken.user_id == user_id,
+        OTPToken.is_used == False
+    ).update({"is_used": True})
+
+    code = generate_otp()
+    otp  = OTPToken(
+        user_id    = user_id,
+        otp_code   = code,
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES),
+        is_used    = False,
+    )
+    db.add(otp)
+    db.commit()
+    return code
+
+
 # ── POST /api/auth/register ────────────────────────────────────────────────
 @router.post("/register")
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
@@ -46,7 +82,6 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     if body.role not in ("candidate", "hr"):
         raise HTTPException(status_code=400, detail="role must be 'candidate' or 'hr'")
 
-    # SRS: HR must use company email, not personal email
     if body.role == "hr":
         personal_domains = ["gmail.com","yahoo.com","hotmail.com","outlook.com","rediffmail.com","ymail.com","icloud.com","live.com"]
         email_domain = body.email.lower().split("@")[-1] if "@" in body.email else ""
@@ -67,7 +102,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
         phone         = body.phone.strip(),
         password_hash = hashed,
         role          = body.role,
-        is_verified   = True,
+        is_verified   = False,   # ← requires OTP verification now
     )
 
     try:
@@ -83,14 +118,102 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="This phone number is already registered")
         raise HTTPException(status_code=400, detail="Registration failed — duplicate entry")
 
+    # Generate OTP and send email
+    otp_code = create_and_save_otp(user.id, db)
+
+    from backend.utils.email import send_otp_email
+    email_sent = send_otp_email(user.email, otp_code, user.full_name)
+
     return {
         "success": True,
         "data": {
-            "user_id": user.id,
-            "email":   user.email,
-            "role":    user.role,
-            "message": "Registration successful."
+            "user_id":    user.id,
+            "email":      user.email,
+            "role":       user.role,
+            "email_sent": email_sent,
+            "message":    "Account created. Please check your email for the verification code."
+                          if email_sent else
+                          "Account created but email could not be sent. Contact support."
         },
+        "error": None
+    }
+
+
+# ── POST /api/auth/verify-otp ──────────────────────────────────────────────
+@router.post("/verify-otp")
+def verify_otp(body: VerifyOTPRequest, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(
+        User.email == body.email.lower().strip()
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Account is already verified")
+
+    # Find latest unused valid OTP for this user
+    now = datetime.now(timezone.utc)
+    otp = db.query(OTPToken).filter(
+        OTPToken.user_id  == user.id,
+        OTPToken.otp_code == body.otp_code.strip(),
+        OTPToken.is_used  == False,
+        OTPToken.expires_at > now,
+    ).first()
+
+    if not otp:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP. Try resending.")
+
+    # Mark OTP as used
+    otp.is_used = True
+
+    # Mark user as verified
+    user.is_verified = True
+    db.commit()
+
+    # Auto-login — return token immediately
+    token = create_token(user.id, user.role)
+
+    return {
+        "success": True,
+        "data": {
+            "access_token": token,
+            "token_type":   "bearer",
+            "user_id":      user.id,
+            "full_name":    user.full_name,
+            "role":         user.role,
+            "message":      "Email verified successfully!"
+        },
+        "error": None
+    }
+
+
+# ── POST /api/auth/resend-otp ──────────────────────────────────────────────
+@router.post("/resend-otp")
+def resend_otp(body: ResendOTPRequest, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(
+        User.email == body.email.lower().strip()
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Account is already verified")
+
+    otp_code = create_and_save_otp(user.id, db)
+
+    from backend.utils.email import send_otp_email
+    email_sent = send_otp_email(user.email, otp_code, user.full_name)
+
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Could not send email. Check Gmail credentials.")
+
+    return {
+        "success": True,
+        "data": {"message": "New OTP sent to your email."},
         "error": None
     }
 
@@ -99,7 +222,6 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(body: LoginRequest, db: Session = Depends(get_db)):
 
-    # Find user by email
     user = db.query(User).filter(
         User.email == body.email.lower().strip()
     ).first()
@@ -107,15 +229,19 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # Check password
     if not pwd_context.verify(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # Check account is active
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
 
-    # Generate token
+    # Block unverified users
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Please verify your email before logging in. Check your inbox for the OTP."
+        )
+
     token = create_token(user.id, user.role)
 
     return {
@@ -131,7 +257,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
-# ── GET /api/auth/me — test protected route ────────────────────────────────
+# ── GET /api/auth/me ───────────────────────────────────────────────────────
 from backend.utils.dependencies import get_current_user
 
 @router.get("/me")
@@ -148,12 +274,11 @@ def me(current_user: User = Depends(get_current_user)):
     }
 
 
-# ── PUT /api/auth/account ─ update name/phone ──────────────────────────────
+# ── PUT /api/auth/account ──────────────────────────────────────────────────
 from pydantic import BaseModel as _BM
-from typing import Optional as _Opt
 class AccountUpdate(_BM):
-    full_name: _Opt[str] = None
-    phone:     _Opt[str] = None
+    full_name: Optional[str] = None
+    phone:     Optional[str] = None
 
 @router.put("/account")
 def update_account(body: AccountUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

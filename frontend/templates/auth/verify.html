@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Verify Email — JobPortal{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: var(--bg); }
+  .auth-wrap  { max-width: 420px; margin: 48px auto; padding: 0 16px 48px; }
+  .auth-logo  { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 8px; }
+  .auth-logo span { color: var(--pink); }
+  .auth-sub   { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
+  .auth-card  { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+  .auth-card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 6px; }
+  .auth-card .desc { font-size: 0.86rem; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+
+  /* OTP input row */
+  .otp-row  { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+  .otp-digit {
+    width: 48px; height: 58px;
+    text-align: center; font-size: 1.4rem; font-weight: 700;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    background: var(--bg); color: var(--text);
+    outline: none; transition: border-color 0.15s;
+  }
+  .otp-digit:focus { border-color: var(--pink); }
+
+  .btn-verify  { width: 100%; padding: 13px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s; }
+  .btn-verify:hover    { background: var(--pink-hover); }
+  .btn-verify:disabled { background: #f0b8d8; cursor: not-allowed; }
+
+  .resend-row { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
+  .resend-btn { color: var(--pink); font-weight: 700; cursor: pointer; background: none; border: none; font-size: 0.85rem; }
+  .resend-btn:disabled { color: var(--muted); cursor: default; }
+
+  .timer { color: var(--pink); font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-logo">Job<span>Portal</span></div>
+  <div class="auth-sub">One step away</div>
+
+  <div class="auth-card">
+    <h2>Verify your email</h2>
+    <p class="desc">
+      We sent a 6-digit code to <strong id="email-display">your email</strong>.<br>
+      Enter it below to activate your account.
+    </p>
+
+    <div id="form-alert" class="alert"></div>
+
+    <!-- OTP digits -->
+    <div class="otp-row">
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d1" />
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d2" />
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d3" />
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d4" />
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d5" />
+      <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="d6" />
+    </div>
+
+    <button class="btn-verify" id="verify-btn" onclick="submitOTP()">Verify Email</button>
+
+    <div class="resend-row">
+      Didn't get the code?
+      <button class="resend-btn" id="resend-btn" onclick="resendOTP()">Resend</button>
+      <span id="timer-wrap" style="display:none"> in <span class="timer" id="timer">60</span>s</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API   = "{{ request.url.scheme }}://{{ request.url.netloc }}/api";
+const email = new URLSearchParams(window.location.search).get("email") || "";
+
+document.getElementById("email-display").textContent = email || "your email";
+
+// ── OTP digit auto-advance ────────────────────────────────────────────────
+const digits = ["d1","d2","d3","d4","d5","d6"].map(id => document.getElementById(id));
+
+digits.forEach((el, i) => {
+  el.addEventListener("input", () => {
+    el.value = el.value.replace(/\D/g, "").slice(-1);
+    if (el.value && i < 5) digits[i + 1].focus();
+    if (el.value && i === 5) document.getElementById("verify-btn").focus();
+  });
+  el.addEventListener("keydown", e => {
+    if (e.key === "Backspace" && !el.value && i > 0) digits[i - 1].focus();
+  });
+  el.addEventListener("paste", e => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 6);
+    pasted.split("").forEach((ch, j) => { if (digits[j]) digits[j].value = ch; });
+    const last = Math.min(pasted.length, 5);
+    digits[last].focus();
+  });
+});
+
+function getOTP() {
+  return digits.map(d => d.value).join("");
+}
+
+// ── Submit OTP ─────────────────────────────────────────────────────────────
+async function submitOTP() {
+  const code = getOTP();
+  if (code.length < 6) {
+    showAlert("form-alert", "Please enter all 6 digits.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("verify-btn");
+  btn.disabled = true;
+  btn.textContent = "Verifying…";
+  hideAlert("form-alert");
+
+  try {
+    const res = await fetch(`${API}/auth/verify-otp`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, otp_code: code }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.detail || json.error || "Verification failed");
+
+    // Save token and auto-login
+    const d = json.data;
+    Auth.setToken(d.access_token);
+    Auth.setRole(d.role);
+    Auth.setUser({ user_id: d.user_id, full_name: d.full_name, role: d.role });
+
+    showAlert("form-alert", "Email verified! Redirecting…", "success");
+    setTimeout(() => {
+      window.location.href = d.role === "hr" ? "/hr/dashboard" : "/dashboard";
+    }, 1200);
+  } catch (err) {
+    showAlert("form-alert", err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Verify Email";
+  }
+}
+
+// ── Resend OTP ─────────────────────────────────────────────────────────────
+let timerInterval = null;
+
+async function resendOTP() {
+  const btn = document.getElementById("resend-btn");
+  btn.disabled = true;
+  hideAlert("form-alert");
+
+  try {
+    const res = await fetch(`${API}/auth/resend-otp`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.detail || json.error || "Could not resend");
+
+    showAlert("form-alert", "New code sent to your email.", "success");
+    startTimer();
+  } catch (err) {
+    showAlert("form-alert", err.message, "error");
+    btn.disabled = false;
+  }
+}
+
+function startTimer() {
+  let secs = 60;
+  document.getElementById("timer-wrap").style.display = "inline";
+  document.getElementById("timer").textContent = secs;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    secs--;
+    document.getElementById("timer").textContent = secs;
+    if (secs <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById("timer-wrap").style.display = "none";
+      document.getElementById("resend-btn").disabled = false;
+    }
+  }, 1000);
+}
+
+// ── Alert helpers ──────────────────────────────────────────────────────────
+function showAlert(id, msg, type = "error") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `alert alert-${type} show`;
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.className = "alert";
+}
+
+// Focus first digit on load
+digits[0].focus();
+</script>
+{% endblock %}

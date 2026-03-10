@@ -39,8 +39,11 @@ if (registerForm) {
 
     try {
       const res = await AuthAPI.register(body);
-      showAlert("form-alert", "Registration successful! Redirecting to login...", "success");
-      setTimeout(() => window.location.href = "/login", 1500);
+      showAlert("form-alert", "Account created! Sending verification code…", "success");
+      // Redirect to verify page with email as query param
+      setTimeout(() => {
+        window.location.href = `/verify?email=${encodeURIComponent(body.email)}`;
+      }, 1200);
     } catch (err) {
       showAlert("form-alert", err.message);
     } finally {
@@ -71,7 +74,6 @@ if (loginForm) {
 
       showAlert("form-alert", "Login successful! Redirecting...", "success");
 
-      // Redirect to intended page or default dashboard
       setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
         const returnTo = params.get("returnTo");
@@ -86,7 +88,19 @@ if (loginForm) {
         }
       }, 1000);
     } catch (err) {
-      showAlert("form-alert", err.message);
+      // If unverified — offer to go to verify page
+      if (err.message && err.message.toLowerCase().includes("verify your email")) {
+        const email = body.email;
+        showAlert("form-alert",
+          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#9d174d;font-weight:700">Verify now →</a>`,
+          "error"
+        );
+        document.getElementById("form-alert").innerHTML =
+          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#9d174d;font-weight:700">Verify now →</a>`;
+        document.getElementById("form-alert").className = "alert alert-error show";
+      } else {
+        showAlert("form-alert", err.message);
+      }
     } finally {
       setLoading(btn, false);
     }

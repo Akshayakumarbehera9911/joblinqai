@@ -51,7 +51,9 @@ def health():
 @app.get("/register")
 def page_register(request: Request):
     return templates.TemplateResponse("auth/register.html", {"request": request})
-
+@app.get("/verify")
+def page_verify(request: Request):
+    return templates.TemplateResponse("auth/verify.html", {"request": request})
 @app.get("/login")
 def page_login(request: Request):
     return templates.TemplateResponse("auth/login.html", {"request": request})

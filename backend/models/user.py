@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from backend.database import Base
 
@@ -22,7 +22,7 @@ class OTPToken(Base):
     __tablename__ = "otp_tokens"
 
     id         = Column(Integer, primary_key=True, index=True)
-    user_id    = Column(Integer, nullable=False)
+    user_id    = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     otp_code   = Column(String(6), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_used    = Column(Boolean, default=False)
