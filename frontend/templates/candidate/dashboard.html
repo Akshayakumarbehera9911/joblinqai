@@ -157,6 +157,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .recalc-btn:hover { background: #d42f7c; }
 .recalc-btn:disabled { opacity: .5; cursor: not-allowed; }
 
+.mode-toggle { display:flex; background:var(--bg); border-radius:999px; padding:3px; border:1px solid var(--border); gap:2px; }
+.mode-btn { padding:4px 12px; border-radius:999px; border:none; cursor:pointer; font-size:.72rem; font-weight:700; font-family:'DM Sans',sans-serif; transition:all .15s; }
+.mode-btn.active { background:#E8398A; color:#fff; }
+.mode-btn.inactive { background:transparent; color:var(--muted); }
 .empty { text-align: center; padding: 18px 10px; color: var(--muted); font-size: .82rem; }
 .empty strong { display: block; font-size: .84rem; color: var(--ink); margin-bottom: 3px; }
 
@@ -191,6 +195,7 @@ const IC = path => `/static/icons/${path}`;
 
 // ── ML verdict stored after recalculate ─────────────────────────────────────
 let _mlVerdict = null;
+let _jobMode = 'all';
 
 const VERDICT_CONFIG = {
   green: {
@@ -215,9 +220,11 @@ const VERDICT_CONFIG = {
   },
 };
 
-async function loadDashboard(){
+async function loadDashboard(mode){
+  mode = mode || _jobMode;
+  _jobMode = mode;
   try{
-    const res=await fetch(`${API}/candidate/dashboard`,{headers:{Authorization:`Bearer ${token}`}});
+    const res=await fetch(`${API}/candidate/dashboard?mode=${mode}`,{headers:{Authorization:`Bearer ${token}`}});
     const json=await res.json();
     if(!res.ok) throw new Error(json.detail||'Failed to load');
     _mlVerdict = json.data?.score?.ml_verdict ?? null;
@@ -314,7 +321,13 @@ function render(data){
     <div class="t c8">
       <div class="th">
         <div class="th-left">${icon('jobs')} <span class="th-title">Top Job Matches</span></div>
-        <a href="/jobs">See all →</a>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="mode-toggle">
+            <button class="mode-btn ${_jobMode==='targeted'?'active':'inactive'}" onclick="switchMode('targeted')">My Role</button>
+            <button class="mode-btn ${_jobMode==='all'?'active':'inactive'}" onclick="switchMode('all')">All Jobs</button>
+          </div>
+          <a href="/jobs">See all →</a>
+        </div>
       </div>
       ${jobs.length?renderJobs(jobs):`<div style="text-align:center;padding:28px 12px"><img src="/static/icons/empty-match.png" width="120" height="120" style="display:block;margin:0 auto;object-fit:contain;margin-bottom:10px;opacity:.93" onerror="this.style.display='none'"><div style="font-weight:700;font-size:.85rem;color:#111;margin-bottom:4px">No matches yet</div><div style="font-size:.78rem;color:#888">Calculate your score to see ranked jobs</div></div>`}
     </div>
@@ -446,6 +459,11 @@ async function recalculate(){
     alert('Error: '+err.message);
     btns.forEach(b=>{if(b){b.disabled=false;b.innerHTML=icon('refresh',15)+' Recalculate Score';}});
   }
+}
+
+function switchMode(mode){
+  _jobMode = mode;
+  loadDashboard(mode);
 }
 
 loadDashboard();
