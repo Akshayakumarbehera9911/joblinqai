@@ -225,6 +225,16 @@
         <div class="section-title">Skills</div>
         <div class="section-sub">Select your skills — these power your job match score</div>
 
+        <!-- ── Resume skill suggestions (from API) ── -->
+        <div id="resume-suggestions-card" style="display:none; background:#fdf0f7; border:1.5px solid #f8c5e0; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+            <span style="font-size:0.82rem; font-weight:700; color:var(--pink);">📄 Found in your resume</span>
+            <button onclick="dismissResumeSuggestions()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;color:var(--muted);font-weight:600;">Dismiss all</button>
+          </div>
+          <div style="font-size:0.77rem;color:var(--muted);margin-bottom:10px;">These skills were detected in your resume but aren't in your profile yet. Add the ones that apply.</div>
+          <div id="resume-suggestions-list" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+        </div>
+
         <div class="skill-categories" id="skill-cats">
           <span class="cat-chip active" onclick="setCategory('Technology & IT', this)">Technology & IT</span>
           <span class="cat-chip" onclick="setCategory('Business & Management', this)">Business</span>
@@ -425,6 +435,7 @@ async function loadProfile() {
     const { profile, skills, certs, projects } = res.data;
     if (profile)  fillProfile(profile);
     if (skills)   { mySkills = skills.map(s=>({...s, skill_name:s.skill_name})); renderSkillTags(); }
+    loadResumeSuggestions();
     if (certs)    { myCerts = certs; renderCerts(); }
     if (projects) { myProjects = projects; renderProjects(); }
     // Populate _saved so completeness bar reflects DB data on load
@@ -656,6 +667,44 @@ async function saveSkills() {
     _saved.skills = [...mySkills]; showAlert(`${mySkills.length} skills saved!`);
     updateDot("skills"); refreshCompleteness();
   } catch(e) { showAlert(e.message,"error"); }
+}
+
+// ── Resume Skill Suggestions ─────────────────────────────────────────────
+let _resumeSuggestions = [];
+
+async function loadResumeSuggestions() {
+  try {
+    const res = await apiFetch("/candidate/skill-suggestions");
+    const suggested = res.data || [];
+    const existing = new Set(mySkills.map(s => s.skill_name.toLowerCase()));
+    _resumeSuggestions = suggested.filter(s => !existing.includes || !existing.has(s.toLowerCase()));
+    renderResumeSuggestions();
+  } catch(e) { /* non-critical */ }
+}
+
+function renderResumeSuggestions() {
+  const card = document.getElementById("resume-suggestions-card");
+  const list = document.getElementById("resume-suggestions-list");
+  if (!_resumeSuggestions.length) { card.style.display = "none"; return; }
+  card.style.display = "block";
+  list.innerHTML = _resumeSuggestions.map(skill => `
+    <button onclick="addResumeSuggestion('${skill}')" style="
+      padding:5px 12px; background:#fff; border:1.5px solid #f8c5e0;
+      border-radius:999px; cursor:pointer; font-size:0.78rem; font-weight:700;
+      color:var(--pink); transition:background 0.15s;
+    ">+ ${skill}</button>
+  `).join('');
+}
+
+function addResumeSuggestion(skillName) {
+  addSkill(skillName);
+  _resumeSuggestions = _resumeSuggestions.filter(s => s !== skillName);
+  renderResumeSuggestions();
+}
+
+function dismissResumeSuggestions() {
+  _resumeSuggestions = [];
+  renderResumeSuggestions();
 }
 
 // ── Certifications ────────────────────────────────────────────────────────
