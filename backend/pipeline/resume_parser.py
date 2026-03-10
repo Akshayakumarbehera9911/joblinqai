@@ -63,6 +63,12 @@ Extract ONLY skills that are:
 2. NOT already in the known skills list above
 3. Technical skills, tools, frameworks, languages, methodologies, or domain expertise
 
+STRICT RULES — do NOT include:
+- Project names, product names, or company names (e.g. "JobPortal", "Amazon", "Netflix")
+- Personal names or university/college names
+- Generic words that are not skills (e.g. "Experience", "Projects", "Resume")
+- Degree names (e.g. "B.Tech CSE", "MBA") — these are qualifications, not skills
+
 Return ONLY a JSON array of skill name strings. No explanation, no markdown.
 Example: ["Docker", "Kubernetes", "Agile", "REST APIs"]
 
