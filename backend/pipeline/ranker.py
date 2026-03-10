@@ -81,3 +81,42 @@ def get_ranked_jobs(candidate_profile, candidate_skills: list, db: Session) -> l
         })
 
     return rank_jobs_for_candidate(candidate_skills, jobs_with_skills)
+
+def get_ranked_jobs_targeted(candidate_profile, candidate_skills: list, db: Session) -> list:
+    """Fetch only jobs in candidate's target role family and rank them."""
+    from backend.models.job import Job, JobSkill
+    from backend.models.score import RoleSynonymCache
+    from sqlalchemy import or_
+
+    target_role = candidate_profile.target_role or ""
+
+    # Get matched titles from cache
+    cache = db.query(RoleSynonymCache).filter(
+        RoleSynonymCache.target_role == target_role
+    ).first()
+
+    if cache and cache.matched_titles:
+        matched_titles = cache.matched_titles
+    else:
+        # No cache yet — fall back to keyword match on first word
+        matched_titles = [target_role]
+
+    title_filters = [Job.title.ilike(f"%{t}%") for t in matched_titles]
+
+    jobs = db.query(Job).filter(
+        Job.status == "active",
+        or_(*title_filters)
+    ).limit(100).all()
+
+    jobs_with_skills = []
+    for job in jobs:
+        skills    = db.query(JobSkill).filter(JobSkill.job_id == job.id).all()
+        mandatory = [s.skill_name for s in skills if s.is_mandatory]
+        optional  = [s.skill_name for s in skills if not s.is_mandatory]
+        jobs_with_skills.append({
+            "job":             job,
+            "mandatory_skills": mandatory,
+            "optional_skills":  optional,
+        })
+
+    return rank_jobs_for_candidate(candidate_skills, jobs_with_skills)

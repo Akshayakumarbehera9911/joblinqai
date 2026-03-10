@@ -15,17 +15,18 @@ export default function CandidateDashboard() {
   const [running,   setRunning]   = useState(false);
   const [runMsg,    setRunMsg]    = useState("");
   const [mlVerdict, setMlVerdict] = useState(null);   // ← NEW
+  const [jobMode,   setJobMode]   = useState("all");  // "all" | "targeted"
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(jobMode); }, []);
 
-  async function load() {
+  async function load(mode = "all") {
     setLoading(true);
     try {
-      const res = await getDashboard();
+      const res = await getDashboard(mode);
       setData(res.data);
-      setMlVerdict(res.data?.score?.ml_verdict ?? null);   // ← persist across refresh
+      setMlVerdict(res.data?.score?.ml_verdict ?? null);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }
@@ -36,7 +37,7 @@ export default function CandidateDashboard() {
       const res = await runPipeline();
       setMlVerdict(res.data?.ml_verdict ?? null);     // ← NEW
       setRunMsg("Score updated!");
-      await load();
+      await load(jobMode);
     } catch (e) { setRunMsg(e.message); }
     finally { setRunning(false); }
   }
@@ -196,7 +197,23 @@ export default function CandidateDashboard() {
         )}
 
         {/* ── Top Matched Jobs ── */}
-        <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", margin: "4px 0 8px" }}>Top Matched Jobs</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 8px" }}>
+          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem" }}>Top Matched Jobs</div>
+          <div style={{ display: "flex", background: "var(--bg)", borderRadius: 999, padding: 3, border: "1px solid var(--border)", gap: 2 }}>
+            {[
+              { key: "targeted", label: "My Role" },
+              { key: "all",      label: "All Jobs" },
+            ].map(opt => (
+              <button key={opt.key} onClick={() => { setJobMode(opt.key); load(opt.key); }} style={{
+                padding: "4px 11px", borderRadius: 999, border: "none", cursor: "pointer",
+                fontSize: "0.72rem", fontWeight: 700,
+                background: jobMode === opt.key ? "var(--pink)" : "transparent",
+                color: jobMode === opt.key ? "#fff" : "var(--muted)",
+                transition: "all 0.15s",
+              }}>{opt.label}</button>
+            ))}
+          </div>
+        </div>
         {matches.length === 0 ? (
           <EmptyState icon="empty-match.png" title="No matches yet" subtitle="Complete your profile to see matching jobs" />
         ) : (

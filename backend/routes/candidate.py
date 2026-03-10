@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import Query, APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -360,9 +360,9 @@ async def upload_photo(
 
 # ── GET /api/candidate/dashboard ──────────────────────────────────────────
 @router.get("/dashboard")
-def dashboard(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
+def dashboard(mode: str = Query(default="all"), current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     from backend.models.score import ReadinessScore, SkillGap
-    from backend.pipeline.ranker import get_ranked_jobs
+    from backend.pipeline.ranker import get_ranked_jobs, get_ranked_jobs_targeted
     from backend.models.candidate import CandidateSkill
 
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
@@ -395,7 +395,10 @@ def dashboard(current_user: User = Depends(require_candidate), db: Session = Dep
     # Fetch top matching jobs
     skills     = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
     skill_names = [s.skill_name for s in skills]
-    top_jobs   = get_ranked_jobs(profile, skill_names, db)[:5]
+    if mode == "targeted":
+        top_jobs = get_ranked_jobs_targeted(profile, skill_names, db)[:5]
+    else:
+        top_jobs = get_ranked_jobs(profile, skill_names, db)[:5]
 
     return {
         "success": True,

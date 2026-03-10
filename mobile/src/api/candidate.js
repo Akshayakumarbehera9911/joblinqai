@@ -1,6 +1,6 @@
 import { apiFetch, apiUpload } from "./client";
 
-export const getDashboard      = () => apiFetch("/candidate/dashboard");
+export const getDashboard      = (mode = "all") => apiFetch(`/candidate/dashboard?mode=${mode}`);
 export const getProfile        = () => apiFetch("/candidate/profile");
 export const updateProfile     = (data) => apiFetch("/candidate/profile", { method: "PUT", body: JSON.stringify(data) });
 export const getApplications   = () => apiFetch("/candidate/applications");
@@ -22,4 +22,4 @@ export const uploadResume      = (formData) => apiUpload("/candidate/resume", fo
 export const uploadPhoto       = (formData) => apiUpload("/candidate/photo", formData);
 // Correct pipeline route (not /candidate/run-pipeline)
 export const runPipeline       = () => apiFetch("/scoring/calculate", { method: "POST" });
-export const deletePhoto = () => apiFetch("/candidate/photo/remove", { method: "POST" });
+export const deletePhoto = () => apiFetch("/candidate/photo", { method: "DELETE" });
