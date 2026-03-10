@@ -3,6 +3,7 @@ import { useAuth } from "./context/AuthContext";
 import BottomNav from "./components/BottomNav";
 import Login    from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import Verify   from "./pages/auth/Verify";
 import Search   from "./pages/jobs/Search";
 import Detail   from "./pages/jobs/Detail";
 import MapPage  from "./pages/jobs/Map";
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/"         element={<Navigate to="/jobs" replace />} />
         <Route path="/login"    element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
+        <Route path="/verify"   element={<Verify />} />
         <Route path="/jobs"     element={<Search />} />
         <Route path="/jobs/map" element={<MapPage />} />
         <Route path="/jobs/:id" element={<Detail />} />

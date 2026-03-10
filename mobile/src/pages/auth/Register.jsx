@@ -21,7 +21,8 @@ export default function Register() {
     try {
       await register(fullName.trim(), email.trim(), phone.trim(), password, role);
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 1800);
+      // Redirect to verify page with email passed as state
+      setTimeout(() => navigate("/verify", { state: { email: email.trim() } }), 1200);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -91,7 +92,7 @@ export default function Register() {
         )}
 
         {error   && <div className="alert alert-error"   style={{ marginBottom: "14px", borderRadius: "10px" }}>{error}</div>}
-        {success && <div className="alert alert-success" style={{ marginBottom: "14px", borderRadius: "10px" }}>Account created! Redirecting to login…</div>}
+        {success && <div className="alert alert-success" style={{ marginBottom: "14px", borderRadius: "10px" }}>Account created! Sending verification code…</div>}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "12px" }}>
