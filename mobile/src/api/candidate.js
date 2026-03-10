@@ -5,10 +5,10 @@ export const getProfile        = () => apiFetch("/candidate/profile");
 export const updateProfile     = (data) => apiFetch("/candidate/profile", { method: "PUT", body: JSON.stringify(data) });
 export const getApplications   = () => apiFetch("/candidate/applications");
 
-export const getSkills         = () => apiFetch("/candidate/skills");
-// Backend expects array of skills: [{skill_name, category, level}]
-export const addSkill          = (skillsArray) => apiFetch("/candidate/skills", { method: "POST", body: JSON.stringify(skillsArray) });
-export const deleteSkill       = (id) => apiFetch(`/candidate/skills/${id}`, { method: "DELETE" });
+export const getSkills           = () => apiFetch("/candidate/skills");
+export const addSkill            = (skillsArray) => apiFetch("/candidate/skills", { method: "POST", body: JSON.stringify(skillsArray) });
+export const deleteSkill         = (id) => apiFetch(`/candidate/skills/${id}`, { method: "DELETE" });
+export const getSkillSuggestions = () => apiFetch("/candidate/skill-suggestions");
 
 export const getProjects       = () => apiFetch("/candidate/projects");
 export const addProject        = (data) => apiFetch("/candidate/projects", { method: "POST", body: JSON.stringify(data) });

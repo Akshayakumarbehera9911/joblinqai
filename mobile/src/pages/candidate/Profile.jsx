@@ -3,9 +3,11 @@ import TopBar    from "../../components/TopBar";
 import Spinner   from "../../components/Spinner";
 import SkillTag  from "../../components/SkillTag";
 import { useAuth } from "../../context/AuthContext";
+import { setSkillSuggestionsCount } from "../../components/BottomNav";
 import {
   getProfile, updateProfile,
   getSkills, addSkill, deleteSkill,
+  getSkillSuggestions,
   getProjects, addProject, deleteProject,
   getCertifications, addCertification, deleteCertification,
   uploadResume, uploadPhoto, deletePhoto,
@@ -32,6 +34,8 @@ export default function CandidateProfile() {
   const [skills,   setSkills]   = useState([]);
   const [projects, setProjects] = useState([]);
   const [certs,    setCerts]    = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [addingSkill, setAddingSkill] = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [msg,      setMsg]      = useState("");
@@ -50,11 +54,42 @@ export default function CandidateProfile() {
         getProfile(), getSkills(), getProjects(), getCertifications()
       ]);
       setProfile(p.data?.profile || null);
-      setSkills(s.data || []);
+      const skillData = s.data || [];
+      setSkills(skillData);
       setProjects(pr.data || []);
       setCerts(c.data || []);
+      loadSuggestions(skillData);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  }
+
+  async function loadSuggestions(currentSkills) {
+    try {
+      const res = await getSkillSuggestions();
+      const suggested = res.data || [];
+      const currentNames = new Set(currentSkills.map(s => s.skill_name.toLowerCase()));
+      const filtered = suggested.filter(s => !currentNames.has(s.toLowerCase()));
+      setSuggestions(filtered);
+      setSkillSuggestionsCount(filtered.length);
+    } catch (e) { /* non-critical */ }
+  }
+
+  async function handleAddSuggestedSkill(skillName) {
+    setAddingSkill(skillName);
+    try {
+      await addSkill([{ skill_name: skillName, category: "", level: "intermediate" }]);
+      const res = await getSkills();
+      setSkills(res.data || []);
+      const remaining = suggestions.filter(s => s !== skillName);
+      setSuggestions(remaining);
+      setSkillSuggestionsCount(remaining.length);
+    } catch (e) { alert(e.message); }
+    finally { setAddingSkill(null); }
+  }
+
+  function handleDismissSuggestions() {
+    setSuggestions([]);
+    setSkillSuggestionsCount(0);
   }
 
   async function saveProfile() {
@@ -137,8 +172,13 @@ export default function CandidateProfile() {
   async function handleResumeUpload(e) {
     const file = e.target.files[0]; if (!file) return;
     const fd = new FormData(); fd.append("file", file);
-    try { await uploadResume(fd); setMsg("Resume uploaded!"); }
-    catch (e) { setMsg(e.message); }
+    try {
+      await uploadResume(fd);
+      setMsg("Resume uploaded!");
+      const s = await getSkills();
+      setSkills(s.data || []);
+      loadSuggestions(s.data || []);
+    } catch (e) { setMsg(e.message); }
   }
 
   async function handlePhotoUpload(e) {
@@ -234,20 +274,30 @@ export default function CandidateProfile() {
 
         {/* ── Tab switcher ── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px", marginBottom: "18px" }}>
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{
-              padding: "8px 4px",
-              border: `1.5px solid ${tab === t.key ? "var(--pink)" : "var(--border)"}`,
-              borderRadius: "10px",
-              background: tab === t.key ? "var(--pink-light)" : "var(--card)",
-              color: tab === t.key ? "var(--pink)" : "var(--muted)",
-              fontSize: "0.7rem", fontWeight: tab === t.key ? 700 : 500,
-              cursor: "pointer",
-              transition: "border-color 0.15s, background 0.15s, color 0.15s",
-            }}>
-              {t.label}
-            </button>
-          ))}
+          {TABS.map(t => {
+            const hasSkillDot = t.key === "skills" && suggestions.length > 0 && tab !== "skills";
+            return (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                padding: "8px 4px",
+                border: `1.5px solid ${tab === t.key ? "var(--pink)" : "var(--border)"}`,
+                borderRadius: "10px",
+                background: tab === t.key ? "var(--pink-light)" : "var(--card)",
+                color: tab === t.key ? "var(--pink)" : "var(--muted)",
+                fontSize: "0.7rem", fontWeight: tab === t.key ? 700 : 500,
+                cursor: "pointer", position: "relative",
+                transition: "border-color 0.15s, background 0.15s, color 0.15s",
+              }}>
+                {t.label}
+                {hasSkillDot && (
+                  <span style={{
+                    position: "absolute", top: 4, right: 6,
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: "var(--pink)", border: "1.5px solid var(--card)",
+                  }} />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Inline message ── */}
@@ -377,6 +427,41 @@ export default function CandidateProfile() {
         {/* ══ Skills tab ══ */}
         {tab === "skills" && (
           <div>
+            {/* ── Resume Skill Suggestions ── */}
+            {suggestions.length > 0 && (
+              <div style={{
+                background: "var(--pink-light)", border: "1.5px solid #f8c5e0",
+                borderRadius: 12, padding: "12px 14px", marginBottom: 16,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--pink)" }}>
+                    📄 Found in your resume
+                  </span>
+                  <button onClick={handleDismissSuggestions} style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "0.7rem", color: "var(--muted)", fontWeight: 600,
+                  }}>Dismiss all</button>
+                </div>
+                <div style={{ fontSize: "0.73rem", color: "var(--muted)", marginBottom: 10 }}>
+                  These skills were detected in your resume but aren't in your profile yet. Add the ones that apply.
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {suggestions.map(skill => (
+                    <button key={skill} onClick={() => handleAddSuggestedSkill(skill)}
+                      disabled={addingSkill === skill}
+                      style={{
+                        padding: "5px 11px",
+                        background: addingSkill === skill ? "#f0b8d8" : "#fff",
+                        border: "1.5px solid #f8c5e0", borderRadius: 999,
+                        cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
+                        color: "var(--pink)",
+                      }}>
+                      {addingSkill === skill ? "Adding…" : `+ ${skill}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Existing skills */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px", minHeight: "32px" }}>
               {skills.length === 0
@@ -396,9 +481,19 @@ export default function CandidateProfile() {
               value={newSkill.skill_name}
               onChange={e => setNewSkill(s => ({ ...s, skill_name: e.target.value }))} />
 
-            <input className="input" type="text" placeholder="Category (e.g. Programming)" style={{ marginBottom: "8px" }}
+            <select className="input" style={{ marginBottom: "8px" }}
               value={newSkill.category}
-              onChange={e => setNewSkill(s => ({ ...s, category: e.target.value }))} />
+              onChange={e => setNewSkill(s => ({ ...s, category: e.target.value }))}>
+              <option value="">Category (optional)</option>
+              <option value="Programming">Programming Language</option>
+              <option value="Framework">Framework / Library</option>
+              <option value="Database">Database</option>
+              <option value="Tool">Tool / Software</option>
+              <option value="Cloud">Cloud / DevOps</option>
+              <option value="Soft Skill">Soft Skill</option>
+              <option value="Domain">Domain Knowledge</option>
+              <option value="Other">Other</option>
+            </select>
 
             <select className="input" style={{ marginBottom: "14px" }}
               value={newSkill.level}

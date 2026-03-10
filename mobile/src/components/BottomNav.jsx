@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState, useEffect } from "react";
 
 function SearchIcon({ active }) {
   return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "var(--pink)" : "var(--muted)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>;
@@ -44,11 +45,40 @@ const ADMIN_TABS = [
 
 const NO_NAV_PATHS = ["/login", "/register"];
 
+// ── Suggestions dot helpers ────────────────────────────────────────────────
+export function setSkillSuggestionsCount(count) {
+  if (count > 0) {
+    localStorage.setItem("skill_suggestions_count", String(count));
+    localStorage.removeItem("skill_suggestions_seen");
+  } else {
+    localStorage.removeItem("skill_suggestions_count");
+  }
+  window.dispatchEvent(new Event("skill-suggestions-update"));
+}
+
+export function clearSkillSuggestionsDot() {
+  localStorage.setItem("skill_suggestions_seen", "1");
+  window.dispatchEvent(new Event("skill-suggestions-update"));
+}
+
+function hasSuggestionsDot() {
+  const count = parseInt(localStorage.getItem("skill_suggestions_count") || "0");
+  const seen  = localStorage.getItem("skill_suggestions_seen") === "1";
+  return count > 0 && !seen;
+}
+
 export default function BottomNav() {
   const { role, isLoggedIn } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const path      = location.pathname;
+  const [showDot, setShowDot] = useState(hasSuggestionsDot);
+
+  useEffect(() => {
+    const handler = () => setShowDot(hasSuggestionsDot());
+    window.addEventListener("skill-suggestions-update", handler);
+    return () => window.removeEventListener("skill-suggestions-update", handler);
+  }, []);
 
   if (!isLoggedIn || NO_NAV_PATHS.includes(path)) return null;
 
@@ -56,6 +86,11 @@ export default function BottomNav() {
     role === "hr"    ? HR_TABS :
     role === "admin" ? ADMIN_TABS :
     CANDIDATE_TABS;
+
+  function handleTabClick(tabPath) {
+    if (tabPath === "/profile") clearSkillSuggestionsDot();
+    navigate(tabPath);
+  }
 
   return (
     <div style={{
@@ -66,19 +101,30 @@ export default function BottomNav() {
       zIndex: 50, paddingBottom: "env(safe-area-inset-bottom)",
     }}>
       {tabs.map(tab => {
-        // /jobs/map should not match as active for /jobs
         const active =
           tab.path === "/jobs"
             ? path === "/jobs"
             : path === tab.path || path.startsWith(tab.path + "/");
         const Icon = tab.icon;
+        const isProfile = tab.path === "/profile";
         return (
-          <button key={tab.path} onClick={() => navigate(tab.path)} style={{
+          <button key={tab.path} onClick={() => handleTabClick(tab.path)} style={{
             flex: 1, display: "flex", flexDirection: "column",
             alignItems: "center", gap: 3,
             background: "none", border: "none", cursor: "pointer", padding: "8px 0",
           }}>
-            <Icon active={active} />
+            <div style={{ position: "relative", display: "inline-flex" }}>
+              <Icon active={active} />
+              {isProfile && showDot && (
+                <span style={{
+                  position: "absolute", top: -2, right: -2,
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: "var(--pink)",
+                  border: "1.5px solid var(--card)",
+                  boxShadow: "0 0 0 2px rgba(232,57,138,0.25)",
+                }} />
+              )}
+            </div>
             <span style={{
               fontSize: "0.62rem", fontWeight: active ? 700 : 500,
               color: active ? "var(--pink)" : "var(--muted)",

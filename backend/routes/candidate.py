@@ -1,4 +1,4 @@
-from fastapi import Query, APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -360,9 +360,9 @@ async def upload_photo(
 
 # ── GET /api/candidate/dashboard ──────────────────────────────────────────
 @router.get("/dashboard")
-def dashboard(mode: str = Query(default="all"), current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
+def dashboard(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     from backend.models.score import ReadinessScore, SkillGap
-    from backend.pipeline.ranker import get_ranked_jobs, get_ranked_jobs_targeted
+    from backend.pipeline.ranker import get_ranked_jobs
     from backend.models.candidate import CandidateSkill
 
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
@@ -395,10 +395,7 @@ def dashboard(mode: str = Query(default="all"), current_user: User = Depends(req
     # Fetch top matching jobs
     skills     = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
     skill_names = [s.skill_name for s in skills]
-    if mode == "targeted":
-        top_jobs = get_ranked_jobs_targeted(profile, skill_names, db)[:5]
-    else:
-        top_jobs = get_ranked_jobs(profile, skill_names, db)[:5]
+    top_jobs   = get_ranked_jobs(profile, skill_names, db)[:5]
 
     return {
         "success": True,
@@ -440,6 +437,25 @@ def dashboard(mode: str = Query(default="all"), current_user: User = Depends(req
         "error": None
     }
 
+
+
+# ── GET /api/candidate/skill-suggestions ────────────────────────────────────
+@router.get("/skill-suggestions")
+def get_skill_suggestions(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
+    """Returns skills found in candidate resume not yet in their DB skills."""
+    from backend.models.candidate import CandidateSkill
+    from backend.pipeline.resume_parser import extract_skills_from_resume
+
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
+    if not profile or not profile.resume_text:
+        return {"success": True, "data": [], "error": None}
+
+    existing = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
+    existing_names = [s.skill_name for s in existing]
+
+    suggested = extract_skills_from_resume(profile.resume_text, existing_names)
+
+    return {"success": True, "data": suggested, "error": None}
 
 # ── GET /api/candidate/applications ────────────────────────────────────────
 @router.get("/applications")

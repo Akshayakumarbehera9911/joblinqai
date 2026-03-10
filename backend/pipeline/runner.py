@@ -36,14 +36,17 @@ def run_pipeline(candidate_id: int, db: Session) -> dict:
 
     # Step 3b — Enrich skills with resume text (if available)
     existing_skill_names = [s.skill_name for s in skills]
+
+    # Resume enrichment — only used for scoring, NOT for gap analysis
+    # Gap analysis uses only DB skills (what candidate has manually confirmed)
     if profile.resume_text:
         resume_skills = extract_skills_from_resume(profile.resume_text, existing_skill_names)
         enriched_skills = list(set(existing_skill_names + resume_skills))
     else:
         enriched_skills = existing_skill_names
 
-    # Step 4 — Identify gaps (using enriched skills)
-    gaps = identify_gaps(enriched_skills, market_demand, profile.target_role)
+    # Step 4 — Identify gaps (using ONLY DB skills — resume skills are suggestions, not confirmed)
+    gaps = identify_gaps(existing_skill_names, market_demand, profile.target_role)
 
     # Step 5 — Calculate score
     score_result = calculate_score(structured, market_demand, weights)
