@@ -32,3 +32,13 @@ class SkillGap(Base):
     gap_level    = Column(String(20))   # critical/moderate/minor
     udemy_link   = Column(String(500))
     created_at   = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class RoleSynonymCache(Base):
+    __tablename__ = "role_synonym_cache"
+
+    id                 = Column(Integer, primary_key=True, index=True)
+    target_role        = Column(String(100), unique=True, nullable=False, index=True)
+    matched_titles     = Column(JSON, nullable=False)
+    job_count_snapshot = Column(Integer, default=0)
+    created_at         = Column(DateTime(timezone=True), server_default=func.now())
