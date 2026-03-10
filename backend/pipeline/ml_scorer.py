@@ -158,6 +158,10 @@ def get_ml_verdict(
         num_certifications = 0
 
     # ── Clamp values to safe ranges ──────────────────────────────────────────
+    if isinstance(experience_years, str):
+        import re as _re
+        nums = _re.findall(r"\d+", experience_years)
+        experience_years = int(nums[0]) if nums else 0
     experience_years     = max(0, min(15, int(experience_years)))
     skills_match_percent = max(0, min(100, int(skills_match_percent)))
     num_projects         = max(0, min(6, int(num_projects)))
