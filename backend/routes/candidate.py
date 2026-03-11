@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date
+import hashlib
 
 from backend.database import get_db
 from backend.models.candidate import CandidateProfile, CandidateSkill, CandidateCertification, CandidateProject
@@ -10,6 +11,9 @@ from backend.models.user import User
 from backend.utils.dependencies import require_candidate
 
 router = APIRouter()
+
+# In-memory cache: {user_id: {"hash": str, "suggestions": list}}
+_skill_suggestions_cache: dict = {}
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────
@@ -442,7 +446,7 @@ def dashboard(current_user: User = Depends(require_candidate), db: Session = Dep
 # ── GET /api/candidate/skill-suggestions ────────────────────────────────────
 @router.get("/skill-suggestions")
 def get_skill_suggestions(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
-    """Returns skills found in candidate resume not yet in their DB skills."""
+    """Returns skills found in resume not yet in DB. Cached by resume hash — Groq only on change."""
     from backend.models.candidate import CandidateSkill
     from backend.pipeline.resume_parser import extract_skills_from_resume
 
@@ -451,10 +455,21 @@ def get_skill_suggestions(current_user: User = Depends(require_candidate), db: S
         return {"success": True, "data": [], "error": None}
 
     existing = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
-    existing_names = [s.skill_name for s in existing]
+    existing_names = [s.skill_name.lower() for s in existing]
 
+    # Cache keyed by resume content + existing skills — only call Groq when something changes
+    cache_input = (profile.resume_text or "") + "|" + ",".join(sorted(existing_names))
+    resume_hash = hashlib.md5(cache_input.encode()).hexdigest()
+
+    cached = _skill_suggestions_cache.get(current_user.id)
+    if cached and cached["hash"] == resume_hash:
+        return {"success": True, "data": cached["suggestions"], "error": None}
+
+    # Cache miss — call Groq
     suggested = extract_skills_from_resume(profile.resume_text, existing_names)
+    suggested = [s for s in suggested if s.lower() not in set(existing_names)]
 
+    _skill_suggestions_cache[current_user.id] = {"hash": resume_hash, "suggestions": suggested}
     return {"success": True, "data": suggested, "error": None}
 
 # ── GET /api/candidate/applications ────────────────────────────────────────

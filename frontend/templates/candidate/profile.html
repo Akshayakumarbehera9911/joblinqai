@@ -417,6 +417,7 @@ function showAlert(msg, type="success") {
 }
 
 // ── Section nav ─────────────────────────────────────────────────────────
+let _suggestionsLoaded = false;
 function showSection(id, btn) {
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
@@ -424,6 +425,11 @@ function showSection(id, btn) {
   btn.classList.add("active");
   document.querySelectorAll(".nav-dot").forEach(d=>d.classList.remove("active"));
   document.getElementById("dot-"+id)?.classList.add("active");
+  // Lazy load suggestions only when Skills tab opened
+  if (id === "skills" && !_suggestionsLoaded) {
+    _suggestionsLoaded = true;
+    loadResumeSuggestions();
+  }
 }
 
 // ── Load existing profile ────────────────────────────────────────────────
@@ -435,7 +441,6 @@ async function loadProfile() {
     const { profile, skills, certs, projects } = res.data;
     if (profile)  fillProfile(profile);
     if (skills)   { mySkills = skills.map(s=>({...s, skill_name:s.skill_name})); renderSkillTags(); }
-    loadResumeSuggestions();
     if (certs)    { myCerts = certs; renderCerts(); }
     if (projects) { myProjects = projects; renderProjects(); }
     // Populate _saved so completeness bar reflects DB data on load
