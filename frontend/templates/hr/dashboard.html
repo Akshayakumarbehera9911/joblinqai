@@ -145,7 +145,7 @@ document.querySelector('.page-content').style.padding='0';
 document.querySelector('.page-content > .container').style.maxWidth='none';
 document.querySelector('.page-content > .container').style.padding='0';
 
-const API=`https://jobportal-q9ii.onrender.com/api`, token=Auth.getToken();
+const API=`https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api`, token=Auth.getToken();
 if(!token||Auth.getRole()!=='hr') window.location.href='/login';
 
 function ic(name,size=16){ return `<img src="/static/icons/${name}.png" width="${size}" height="${size}" style="object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">`; }
