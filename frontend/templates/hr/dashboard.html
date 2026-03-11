@@ -81,6 +81,41 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .app-drawer.open { transform:translateX(0); }
 .drawer-head { background:var(--off); padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; flex-shrink:0; }
 .drawer-body { flex:1; overflow-y:auto; }
+.panel-title { font-family:'Libre Baskerville',serif; font-size:1rem; font-weight:700; color:var(--black); }
+.panel-sub   { font-size:.75rem; color:var(--gray-lt); margin-top:2px; }
+
+/* APPLICANT CARDS */
+.app-row { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border); transition:background .12s; }
+.app-row:last-child { border-bottom:none; }
+.app-row:hover { background:var(--off); }
+.app-rank { font-family:'Libre Baskerville',serif; font-size:1.1rem; font-weight:700; color:var(--border); width:24px; text-align:center; flex-shrink:0; }
+.app-rank.r1 { color:var(--pink); }
+.app-rank.r2 { color:#C47A00; }
+.app-rank.r3 { color:#888; }
+.app-photo { width:40px; height:40px; border-radius:50%; flex-shrink:0; background:var(--off2); border:1px solid var(--border); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.app-photo img { width:100%; height:100%; object-fit:cover; }
+.app-photo-placeholder { width:40px; height:40px; border-radius:50%; background:var(--pink-lt); border:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; color:var(--pink); }
+.app-info { flex:1; min-width:0; }
+.app-name { font-weight:700; font-size:.88rem; color:var(--black); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.app-meta { font-size:.72rem; color:var(--gray-lt); display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px; }
+.app-meta img { opacity:.5; }
+.app-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+.app-actions { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+.match-badge { font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+.mb-high { background:#E6F5EE; color:#0D7A4E; }
+.mb-mid  { background:#FFF3DC; color:#9A5C00; }
+.mb-low  { background:var(--pink-lt); color:var(--pink); }
+.mb-neu  { background:var(--off2); color:var(--gray-lt); }
+.status-badge { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:4px; text-transform:capitalize; white-space:nowrap; }
+.sb-applied     { background:var(--off2);    color:var(--gray); }
+.sb-viewed      { background:#EEF4FF;        color:#3B5BDB; }
+.sb-shortlisted { background:#E6F5EE;        color:#0D7A4E; }
+.sb-rejected    { background:var(--pink-lt); color:var(--pink); }
+.sb-withdrawn   { background:#F5F5F0;        color:#aaa; }
+.btn-shortlist { background:var(--good-lt); color:var(--good); border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:opacity .15s; }
+.btn-reject    { background:var(--pink-lt);  color:var(--pink);  border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:opacity .15s; }
+.btn-view-cand { background:var(--off2); color:var(--black); border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-shortlist:hover,.btn-reject:hover,.btn-view-cand:hover { opacity:.8; }
 
 /* MODAL */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
@@ -269,6 +304,8 @@ function renderJobsTable(jobs){
 }
 
 async function viewApplicants(jobId, jobTitle){
+  window._currentDrawerJobId = jobId;
+  window._currentDrawerJobTitle = jobTitle;
   document.getElementById('drawer-title').textContent = 'Loading...';
   document.getElementById('drawer-sub').textContent = '';
   document.getElementById('drawer-body').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#aaa">Loading...</div>';
@@ -287,6 +324,80 @@ function closeDrawer(){
   document.getElementById('app-drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function viewCandModal(a){
+  // Auto-mark as viewed if still 'applied'
+  if(a.status === 'applied'){
+    apiFetch(`/hr/applicants/${a.application_id}`, {method:'PATCH', body:JSON.stringify({status:'viewed'})})
+      .then(() => {
+        // Update the status badge in the drawer row silently
+        const rows = document.querySelectorAll('.app-row');
+        rows.forEach(row => {
+          const badge = row.querySelector('.status-badge');
+          if(badge && badge.classList.contains('sb-applied')){
+            // find the row with matching shortlist/reject buttons for this app
+            const shortlistBtn = row.querySelector(`[onclick*="${a.application_id},'shortlisted'"]`);
+            if(shortlistBtn){
+              badge.textContent = 'viewed';
+              badge.className = 'status-badge sb-viewed';
+            }
+          }
+        });
+      }).catch(()=>{});
+  }
+  // Remove existing modal if any
+  document.getElementById('cand-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'cand-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center';
+  m.onclick = e => { if(e.target===m) m.remove(); };
+  const initials = (a.full_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  m.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:28px;width:90%;max-width:460px;max-height:85vh;overflow-y:auto;position:relative">
+      <button onclick="document.getElementById('cand-modal').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#888">✕</button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        ${a.photo_url
+          ? `<img src="${a.photo_url}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--border)">`
+          : `<div style="width:56px;height:56px;border-radius:50%;background:var(--pink-lt);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:var(--pink);flex-shrink:0">${initials}</div>`}
+        <div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:1.1rem;font-weight:700">${a.full_name||'—'}</div>
+          <div style="font-size:.8rem;color:var(--gray-lt);margin-top:2px">${a.target_role||''}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.85rem">
+        <div style="background:var(--off);border-radius:8px;padding:12px">
+          <div style="font-size:.68rem;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Location</div>
+          <div style="font-weight:600">${a.city||'—'}</div>
+        </div>
+        <div style="background:var(--off);border-radius:8px;padding:12px">
+          <div style="font-size:.68rem;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Experience</div>
+          <div style="font-weight:600">${a.experience||'—'}</div>
+        </div>
+        <div style="background:var(--off);border-radius:8px;padding:12px">
+          <div style="font-size:.68rem;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Availability</div>
+          <div style="font-weight:600">${a.availability||'—'}</div>
+        </div>
+        <div style="background:var(--off);border-radius:8px;padding:12px">
+          <div style="font-size:.68rem;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Match Score</div>
+          <div style="font-weight:700;color:var(--pink)">${a.match_score?a.match_score+'%':'Not scored'}</div>
+        </div>
+      </div>
+      ${a.email ? `
+      <div style="margin-top:12px;background:var(--off);border-radius:8px;padding:12px;font-size:.85rem">
+        <div style="font-size:.68rem;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Contact (Shortlisted)</div>
+        <div style="font-weight:600">${a.email}</div>
+        ${a.phone?`<div style="color:var(--gray-lt);margin-top:2px">${a.phone}</div>`:''}
+      </div>` : `
+      <div style="margin-top:12px;background:var(--off);border-radius:8px;padding:12px;font-size:.82rem;color:var(--gray-lt);text-align:center">
+        Shortlist this candidate to reveal contact details
+      </div>`}
+      <div style="display:flex;gap:8px;margin-top:18px">
+        ${a.status!=='shortlisted'?`<button class="btn-shortlist" style="flex:1;padding:9px" onclick="updateAppFromModal(${a.application_id},'shortlisted','${a.full_name||''}')">✓ Shortlist</button>`:''}
+        ${a.status!=='rejected'?`<button class="btn-reject" style="flex:1;padding:9px" onclick="updateAppFromModal(${a.application_id},'rejected','${a.full_name||''}')">✗ Reject</button>`:''}
+      </div>
+    </div>`;
+  document.body.appendChild(m);
 }
 
 function renderApplicants(apps, jobId, jobTitle){
@@ -327,7 +438,8 @@ function renderApplicants(apps, jobId, jobTitle){
         <div class="app-right">
           ${m?`<span class="match-badge ${mcls}">${m}% match</span>`:'<span class="match-badge mb-neu">Not scored</span>'}
           <span class="status-badge ${scls}">${a.status}</span>
-          <div style="display:flex;gap:6px">
+          <div class="app-actions">
+            <button class="btn-view-cand" onclick="viewCandModal(${JSON.stringify(a).replace(/"/g,'&quot;')})">View</button>
             ${a.status!=='shortlisted'?`<button class="btn-shortlist" onclick="updateApp(${a.application_id},'shortlisted',this)">Shortlist</button>`:''}
             ${a.status!=='rejected'?`<button class="btn-reject" onclick="updateApp(${a.application_id},'rejected',this)">Reject</button>`:''}
           </div>
@@ -335,6 +447,42 @@ function renderApplicants(apps, jobId, jobTitle){
       </div>`;
     }).join('');
 }
+async function updateAppFromModal(appId, status, name){
+  const modal = document.getElementById('cand-modal');
+  // Show loading state on buttons
+  modal.querySelectorAll('button').forEach(b => b.disabled = true);
+  try{
+    await apiFetch(`/hr/applicants/${appId}`, {method:'PATCH', body:JSON.stringify({status})});
+    // Re-fetch fresh applicant list to get contact info if just shortlisted
+    if(window._currentDrawerJobId){
+      const res = await apiFetch(`/hr/jobs/${window._currentDrawerJobId}/applicants`);
+      const fresh = (res.data||[]).find(a => a.application_id === appId);
+      if(fresh){
+        // Re-render modal with fresh data (contact now visible)
+        document.getElementById('cand-modal')?.remove();
+        viewCandModal(fresh);
+        // Also silently update the drawer row badge
+        const rows = document.querySelectorAll('.app-row');
+        rows.forEach(row => {
+          const btn = row.querySelector(`[onclick*="${appId},'shortlisted'"]`) ||
+                      row.querySelector(`[onclick*="${appId},'rejected'"]`);
+          if(btn){
+            const badge = row.querySelector('.status-badge');
+            if(badge){ badge.textContent = status; badge.className = `status-badge sb-${status}`; }
+            if(status==='shortlisted') row.querySelector('.btn-shortlist')?.remove();
+            if(status==='rejected')    row.querySelector('.btn-reject')?.remove();
+          }
+        });
+        return;
+      }
+    }
+    // Fallback — just close and refresh drawer
+    document.getElementById('cand-modal')?.remove();
+    if(window._currentDrawerJobId)
+      viewApplicants(window._currentDrawerJobId, window._currentDrawerJobTitle);
+  }catch(e){ alert(e.message); modal.querySelectorAll('button').forEach(b => b.disabled = false); }
+}
+
 async function updateApp(appId, status, btn){
   btn.disabled = true;
   try{
