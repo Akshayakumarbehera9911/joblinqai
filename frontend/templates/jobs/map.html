@@ -87,13 +87,6 @@
 
   .empty-state { text-align:center; padding:24px 10px; color:var(--muted); font-size:13px; line-height:1.7; }
 
-  /* Globe pulse animation */
-  @keyframes pulse-ring {
-    0% { transform: scale(1); opacity: 0.4; }
-    70% { transform: scale(1.8); opacity: 0; }
-    100% { transform: scale(1.8); opacity: 0; }
-  }
-
   /* Leaflet tweaks */
   .leaflet-tile-pane { filter:sepia(15%) saturate(0.75) brightness(1.03); }
   .leaflet-popup-content-wrapper { border-radius:8px!important; border:1px solid var(--border)!important; font-family:'DM Sans',sans-serif!important; box-shadow:0 4px 20px rgba(0,0,0,0.1)!important; }
@@ -149,7 +142,7 @@
     <!-- Globe -->
     <div id="globe-view">
       <svg id="globeSvg"></svg>
-      <div class="drag-hint">Drag to rotate · Scroll to zoom · Click a state for jobs</div>
+      <div class="drag-hint">Drag to rotate · Scroll to zoom · Click city for street view</div>
       <div class="globe-tooltip" id="globe-tooltip">
         <strong id="tt-city"></strong>
         <span id="tt-count"></span>
@@ -228,29 +221,27 @@ function filterCities(q) {
 }
 
 // ── Select city → fly globe + show street map ─────────────────────────
-async function selectCity(lat, lng, cityName, count, isState=false) {
+async function selectCity(lat, lng, cityName, count) {
+  // Highlight matching city card in sidebar (works from both sidebar clicks and globe pin clicks)
   document.querySelectorAll(".city-card").forEach(c => {
     const name = c.querySelector(".city-name")?.textContent?.trim().toLowerCase();
     if(name === cityName.toLowerCase()) c.classList.add("active");
     else c.classList.remove("active");
   });
 
+  // Fly globe to city
   flyTo(lat, lng);
 
-  // Zoom out a bit for states, in for cities
-  const zoomLevel = isState ? 7 : 12;
-  showStreetView(lat, lng, cityName, zoomLevel);
+  // Load street map
+  showStreetView(lat, lng, cityName);
 
+  // Load jobs for this city in sidebar
   document.getElementById("jobs-panel").style.display = "block";
   document.getElementById("jobs-panel-label").textContent = `Jobs in ${cityName}`;
   document.getElementById("jobs-mini-list").innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px">Loading…</div>`;
 
   try {
-    // State click → load all jobs in state; city click → load by city
-    const endpoint = isState
-      ? `${API}/jobs/map/state/${encodeURIComponent(cityName)}`
-      : `${API}/jobs/map/city/${encodeURIComponent(cityName)}`;
-    const res  = await fetch(endpoint);
+    const res  = await fetch(`${API}/jobs/map/city/${encodeURIComponent(cityName)}`);
     const json = await res.json();
     const jobs = json.data || [];
     if (!jobs.length) {
@@ -262,6 +253,7 @@ async function selectCity(lat, lng, cityName, count, isState=false) {
           <div class="job-mini-co">${j.company_name}</div>
           ${j.salary_min ? `<div class="job-mini-sal">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k</div>` : ''}
         </div>`).join('');
+      // Add markers to leaflet
       addJobMarkers(jobs, lat, lng);
     }
   } catch(e) {}
@@ -272,6 +264,7 @@ function initGlobe(world) {
   const el = document.getElementById("globeSvg");
   width  = el.parentElement.clientWidth;
   height = el.parentElement.clientHeight;
+
   el.setAttribute("width",  width);
   el.setAttribute("height", height);
 
@@ -287,71 +280,19 @@ function initGlobe(world) {
   const countries = topojson.feature(world, world.objects.countries);
   const graticule = d3.geoGraticule();
 
-  const defs = svg.append("defs");
-
-  // Globe sphere gradient — light from top-left
-  const sg = defs.append("radialGradient").attr("id","sphere-grad")
-    .attr("cx","35%").attr("cy","32%").attr("r","60%");
-  sg.append("stop").attr("offset","0%").attr("stop-color","#ffffff");
-  sg.append("stop").attr("offset","55%").attr("stop-color","#F5F0EB");
-  sg.append("stop").attr("offset","100%").attr("stop-color","#DDD6CC");
-
-  // Shine overlay
-  const shg = defs.append("radialGradient").attr("id","shine-grad")
-    .attr("cx","32%").attr("cy","28%").attr("r","40%");
-  shg.append("stop").attr("offset","0%").attr("stop-color","rgba(255,255,255,0.35)");
-  shg.append("stop").attr("offset","100%").attr("stop-color","rgba(255,255,255,0)");
-
-  // Shadow on right-bottom edge
-  const edg = defs.append("radialGradient").attr("id","edge-shadow")
-    .attr("cx","60%").attr("cy","65%").attr("r","55%");
-  edg.append("stop").attr("offset","60%").attr("stop-color","rgba(0,0,0,0)");
-  edg.append("stop").attr("offset","100%").attr("stop-color","rgba(0,0,0,0.18)");
-
-  // Pink gradient for India states with jobs
-  const pg = defs.append("linearGradient").attr("id","india-active")
-    .attr("x1","0%").attr("y1","0%").attr("x2","100%").attr("y2","100%");
-  pg.append("stop").attr("offset","0%").attr("stop-color","#E8398A").attr("stop-opacity","1");
-  pg.append("stop").attr("offset","100%").attr("stop-color","#c02070").attr("stop-opacity","1");
-
-  // Globe base sphere
-  svg.append("circle").attr("id","base-sphere")
+  svg.append("circle")
     .attr("cx", width/2).attr("cy", height/2)
     .attr("r", projection.scale())
-    .attr("fill","url(#sphere-grad)")
-    .attr("stroke","#C8C0B8").attr("stroke-width","0.8");
+    .attr("fill", "#E8E3DC")
+    .attr("stroke", var_pink()).attr("stroke-width", 0.5);
 
-  // Graticule
   svg.append("g").attr("class","grat")
     .append("path").datum(graticule()).attr("fill","none")
-    .attr("stroke","rgba(180,170,160,0.35)").attr("stroke-width",0.4);
+    .attr("stroke","#D5CFCA").attr("stroke-width",0.4);
 
-  // Countries
   svg.append("g").attr("class","countries")
     .selectAll("path").data(countries.features).enter()
-    .append("path")
-    .attr("fill","#E8E2DB")
-    .attr("stroke","#C8C0B8").attr("stroke-width",0.4);
-
-  // India states layer (on top of countries)
-  svg.append("g").attr("class","india-states");
-
-  // Labels layer
-  svg.append("g").attr("class","state-labels");
-
-  // Shine overlay (pointer-events: none so it doesn't block clicks)
-  svg.append("circle").attr("id","shine")
-    .attr("cx", width/2).attr("cy", height/2)
-    .attr("r", projection.scale())
-    .attr("fill","url(#shine-grad)")
-    .attr("pointer-events","none");
-
-  // Edge shadow
-  svg.append("circle").attr("id","edge-shad")
-    .attr("cx", width/2).attr("cy", height/2)
-    .attr("r", projection.scale())
-    .attr("fill","url(#edge-shadow)")
-    .attr("pointer-events","none");
+    .append("path").attr("fill","#E0DAD3").attr("stroke","#C8C2BB").attr("stroke-width",0.5);
 
   svg.append("g").attr("class","pins");
 
@@ -359,9 +300,10 @@ function initGlobe(world) {
   setupDrag();
   setupZoom();
 
+  // Auto-rotate
   const timer = d3.interval(() => {
     if (autoRotating) {
-      rotation[0] += 0.12;
+      rotation[0] += 0.15;
       projection.rotate(rotation);
       renderGlobe();
     }
@@ -370,126 +312,55 @@ function initGlobe(world) {
 
 function var_pink() { return "#E8398A"; }
 
-// Color scale: 0 jobs = very light pink, max jobs = deep pink
-function stateColor(count, maxCount) {
-  if (!count || count === 0) return null; // no jobs — use default beige
-  const t = Math.min(count / Math.max(maxCount, 1), 1);
-  // interpolate from #fce4f0 (light pink) to #E8398A (deep pink)
-  const r = Math.round(252 + (232 - 252) * t);
-  const g = Math.round(228 + (57  - 228) * t);
-  const b = Math.round(240 + (138 - 240) * t);
-  return `rgb(${r},${g},${b})`;
-}
-
 function renderGlobe() {
   projection.rotate(rotation);
   const r = projection.scale();
 
-  svg.select("#base-sphere").attr("r", r);
-  svg.select("#shine").attr("r", r);
-  svg.select("#edge-shad").attr("r", r);
+  svg.select("circle").attr("r", r);
   svg.select(".grat path").attr("d", path(d3.geoGraticule()()));
   svg.selectAll(".countries path").attr("d", path);
 
+  // Draw city pins
   const tooltip = document.getElementById("globe-tooltip");
-
-  // ── India states choropleth ─────────────────────────────────────────
-  if (window._indiaStates && window._stateJobs) {
-    const maxCount = Math.max(...Object.values(window._stateJobs).map(s => s.job_count), 1);
-    const statesG  = svg.select(".india-states");
-    const labelsG  = svg.select(".state-labels");
-    statesG.selectAll("*").remove();
-    labelsG.selectAll("*").remove();
-
-    window._indiaStates.features.forEach(feature => {
-      const stateName  = feature.properties.NAME_1 || feature.properties.name || "";
-      const key        = stateName.toLowerCase().trim();
-      const stateData  = window._stateJobs[key];
-      const count      = stateData ? stateData.job_count : 0;
-      const fill       = stateColor(count, maxCount) || "#EDE7DF";
-      const strokeCol  = count > 0 ? "#E8398A" : "#C0B8B0";
-      const strokeW    = count > 0 ? 0.8 : 0.5;
-
-      // Check if centroid is on front hemisphere
-      const centroid   = d3.geoCentroid(feature);
-      const viewCenter = [-projection.rotate()[0], -projection.rotate()[1]];
-      const dist       = d3.geoDistance(centroid, viewCenter);
-      const visible    = dist < Math.PI / 2;
-
-      statesG.append("path")
-        .datum(feature)
-        .attr("d", path)
-        .attr("fill", fill)
-        .attr("stroke", strokeCol)
-        .attr("stroke-width", strokeW)
-        .style("cursor", count > 0 ? "pointer" : "default")
-        .on("mouseover", (event) => {
-          autoRotating = false;
-          tooltip.style.display = "block";
-          document.getElementById("tt-city").textContent = stateName;
-          document.getElementById("tt-count").textContent =
-            count > 0 ? `${count} job${count !== 1 ? "s" : ""}` : "No jobs yet";
-          tooltip.style.left = (event.offsetX + 14) + "px";
-          tooltip.style.top  = (event.offsetY - 10) + "px";
-        })
-        .on("mouseout", () => { tooltip.style.display = "none"; })
-        .on("click", () => {
-          if (!count) return;
-          autoRotating = false;
-          const sd = window._stateJobs[key];
-          if (sd) selectCity(sd.latitude, sd.longitude, stateName, count, true);
-        });
-
-      // State name + count label (only if visible + large enough on screen)
-      if (visible) {
-        const projected = projection(centroid);
-        if (!projected) return;
-        const [lx, ly] = projected;
-
-        // Only render label if centroid is well inside the sphere
-        const cx = width/2, cy = height/2, sr = projection.scale();
-        const dx = lx - cx, dy = ly - cy;
-        if (Math.sqrt(dx*dx + dy*dy) > sr * 0.92) return;
-
-        // Short state name
-        const shortName = stateName
-          .replace("Andhra Pradesh","AP")
-          .replace("Arunachal Pradesh","Arunachal")
-          .replace("Himachal Pradesh","HP")
-          .replace("Madhya Pradesh","MP")
-          .replace("Uttar Pradesh","UP")
-          .replace("Uttarakhand","Uttarakhand")
-          .replace("West Bengal","W. Bengal")
-          .replace("Jammu and Kashmir","J&K")
-          .replace("Tamil Nadu","Tamil Nadu");
-
-        // State name
-        labelsG.append("text")
-          .attr("x", lx).attr("y", ly - (count > 0 ? 5 : 0))
-          .attr("text-anchor","middle")
-          .attr("font-size", count > 0 ? "7.5px" : "6.5px")
-          .attr("font-weight", count > 0 ? "700" : "400")
-          .attr("fill", count > 0 ? "#7A0040" : "#888")
-          .attr("pointer-events","none")
-          .text(shortName);
-
-        // Job count badge below name
-        if (count > 0) {
-          labelsG.append("text")
-            .attr("x", lx).attr("y", ly + 7)
-            .attr("text-anchor","middle")
-            .attr("font-size","7px")
-            .attr("font-weight","800")
-            .attr("fill","#E8398A")
-            .attr("pointer-events","none")
-            .text(`${count} job${count !== 1 ? "s" : ""}`);
-        }
-      }
+  svg.select(".pins").selectAll("circle").remove();
+  svg.select(".pins").selectAll("circle")
+    .data(mapData)
+    .enter().append("circle")
+    .attr("cx", d => {
+      const p = projection([d.longitude, d.latitude]);
+      return p ? p[0] : -9999;
+    })
+    .attr("cy", d => {
+      const p = projection([d.longitude, d.latitude]);
+      return p ? p[1] : -9999;
+    })
+    .attr("visibility", d => {
+      // Use geoDistance to check if point is on front hemisphere
+      // If angular distance from view center > 90deg (PI/2 radians) → behind globe → hide
+      const r = projection.rotate();
+      const viewCenter = [-r[0], -r[1]];
+      const dist = d3.geoDistance([d.longitude, d.latitude], viewCenter);
+      return dist < Math.PI / 2 ? "visible" : "hidden";
+    })
+    .attr("r", d => Math.min(4 + Math.log(d.job_count + 1) * 3, 14))
+    .attr("fill-opacity", d => Math.min(0.5 + d.job_count * 0.12, 0.95))
+    .attr("fill", var_pink())
+    .attr("stroke","#fff")
+    .attr("stroke-width", 1.5)
+    .style("cursor","pointer")
+    .on("mouseover", (event, d) => {
+      autoRotating = false;
+      tooltip.style.display = "block";
+      document.getElementById("tt-city").textContent = d.city;
+      document.getElementById("tt-count").textContent = `${d.job_count} job${d.job_count !== 1 ? 's' : ''}`;
+      tooltip.style.left = (event.offsetX + 14) + "px";
+      tooltip.style.top  = (event.offsetY - 10) + "px";
+    })
+    .on("mouseout", () => { tooltip.style.display = "none"; })
+    .on("click", (event, d) => {
+      autoRotating = false;
+      selectCity(d.latitude, d.longitude, d.city, d.job_count);
     });
-  }
-
-  // ── Regular city pins (for non-India jobs if any) ────────────────────
-  svg.select(".pins").selectAll("*").remove();
 }
 
 function setupDrag() {
@@ -508,9 +379,9 @@ function setupDrag() {
 function setupZoom() {
   svg.on("wheel", e => {
     e.preventDefault();
-    scale *= e.deltaY > 0 ? 0.88 : 1.13;
-    scale = Math.max(0.5, Math.min(5, scale));
-    projection.scale(Math.min(width, height) * 0.44 * scale);
+    scale *= e.deltaY>0 ? 0.92 : 1.08;
+    scale = Math.max(0.4, Math.min(4, scale));
+    projection.scale(Math.min(width,height)*0.44*scale);
     renderGlobe();
   });
 }
@@ -532,19 +403,21 @@ function flyTo(lat, lng) {
 }
 
 // ── Street view (Leaflet) ─────────────────────────────────────────────
-function showStreetView(lat, lng, cityName, zoomLevel=12) {
+function showStreetView(lat, lng, cityName) {
   document.getElementById("globe-view").style.display = "none";
   const sv = document.getElementById("street-view");
   sv.style.display = "flex";
   document.getElementById("street-badge").textContent = cityName;
 
   if (!leafletMap) {
-    leafletMap = L.map("leaflet-map").setView([lat, lng], zoomLevel);
+    leafletMap = L.map("leaflet-map").setView([lat, lng], 12);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution:"© CartoDB © OpenStreetMap", subdomains:"abcd", maxZoom:19
     }).addTo(leafletMap);
+    // City center marker
+    L.circleMarker([lat, lng], {radius:8, color:var_pink(), fillColor:var_pink(), fillOpacity:0.5}).addTo(leafletMap);
   } else {
-    leafletMap.flyTo([lat, lng], zoomLevel, {duration:1});
+    leafletMap.flyTo([lat, lng], 12, {duration:1});
   }
   setTimeout(()=>leafletMap.invalidateSize(), 100);
 }
@@ -580,51 +453,10 @@ function showGlobe() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────
-// India states GeoJSON from public source (GADM level-1)
-const INDIA_STATES_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json";
-
-window._indiaStates = null;
-window._stateJobs   = {};
-
-async function loadAllData() {
-  // Load all in parallel
-  const [worldRes, indiaRes, stateJobsRes, cityRes] = await Promise.all([
-    fetch("https://unpkg.com/world-atlas@2/countries-110m.json"),
-    fetch(INDIA_STATES_URL),
-    fetch(`${API}/jobs/map/states`),
-    fetch(`${API}/jobs/map/data`)
-  ]);
-
-  const world      = await worldRes.json();
-  const indiaTopoJson = await indiaRes.json();
-  const stateJobsData = await stateJobsRes.json();
-  const cityData   = await cityRes.json();
-
-  // Parse India states topojson → geojson
-  const key = Object.keys(indiaTopoJson.objects)[0];
-  window._indiaStates = topojson.feature(indiaTopoJson, indiaTopoJson.objects[key]);
-
-  // Build state jobs lookup: lowercase state name → {job_count, latitude, longitude}
-  window._stateJobs = {};
-  (stateJobsData.data || []).forEach(s => {
-    window._stateJobs[s.state.toLowerCase().trim()] = s;
-  });
-
-  // City data for sidebar
-  mapData   = cityData.data || [];
-  allCities = [...mapData];
-  renderCityList(allCities);
-
-  initGlobe(world);
-}
-
-loadAllData().catch(e => {
-  console.error("Map load error:", e);
-  // Fallback — load just world atlas
-  fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
-    .then(r=>r.json())
-    .then(w=>initGlobe(w));
-});
+loadMapData();
+fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
+  .then(r=>r.json())
+  .then(w=>initGlobe(w));
 </script>
 </body>
 </html>
