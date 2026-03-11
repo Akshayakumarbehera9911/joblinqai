@@ -36,12 +36,12 @@
 {% endblock %}
 
 {% block content %}
-<div id="jd-root" style="padding:60px 0;text-align:center;color:var(--muted)">Loading...</div>
+<div id="jd-root"><div style="padding:60px 0;text-align:center;color:var(--muted)">Loading...</div></div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const API   = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
+const API   = "https://jobportal-q9ii.onrender.com/api";
 const token = Auth.getToken();
 const jobId = window.location.pathname.split("/").pop();
 
@@ -78,8 +78,7 @@ function render(j) {
             <div class="jd-tags">
               ${j.work_mode  ? `<span class="jd-tag pink">${j.work_mode}</span>` : ''}
               ${j.job_type   ? `<span class="jd-tag">${j.job_type}</span>` : ''}
-              ${j.role_type  ? `<span class="jd-tag">${j.role_type}</span>` : ''}
-              ${j.min_experience ? `<span class="jd-tag">${j.min_experience}+ yrs exp</span>` : ''}
+              ${j.min_experience ? `<span class="jd-tag">${j.min_experience} exp</span>` : ''}
               ${j.openings   ? `<span class="jd-tag">${j.openings} opening${j.openings > 1 ? 's' : ''}</span>` : ''}
               ${j.applicant_count != null ? `<span class="jd-tag">${j.applicant_count} applied</span>` : ''}
             </div>
