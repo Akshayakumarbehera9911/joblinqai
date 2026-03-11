@@ -218,6 +218,7 @@ export default function HRPostJob() {
   async function postJob() {
     if (!company) { setMsg("Create a company profile first (go to Profile tab)"); return; }
     if (!job.title.trim()) { setMsg("Job title is required"); return; }
+    if (!job.state || !job.state.trim()) { setMsg("State is required — please pick a location on the map"); return; }
     setSaving(true); setMsg("");
     try {
       const payload = {

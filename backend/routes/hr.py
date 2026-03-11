@@ -42,7 +42,7 @@ class JobCreate(BaseModel):
     job_type:           Optional[str] = None
     work_mode:          Optional[str] = None
     openings:           Optional[int] = 1
-    state:              Optional[str] = None
+    state:              str  # required — needed for map choropleth
     district:           Optional[str] = None
     city:               Optional[str] = None
     full_address:       Optional[str] = None
@@ -208,6 +208,9 @@ def get_jobs(current_user: User = Depends(require_hr), db: Session = Depends(get
 def create_job(body: JobCreate, current_user: User = Depends(require_hr), db: Session = Depends(get_db)):
     company = get_company_or_404(current_user.id, db)
 
+    if not body.state or not body.state.strip():
+        raise HTTPException(status_code=400, detail="State is required when posting a job.")
+
     skills_data = body.skills or []
     job_data = body.model_dump(exclude={"skills"}, exclude_none=True)
 
@@ -266,6 +269,10 @@ def get_job_for_edit(job_id: int, current_user: User = Depends(require_hr), db: 
 @router.put("/jobs/{job_id}")
 def update_job(job_id: int, body: JobCreate, current_user: User = Depends(require_hr), db: Session = Depends(get_db)):
     company = get_company_or_404(current_user.id, db)
+
+    if not body.state or not body.state.strip():
+        raise HTTPException(status_code=400, detail="State is required when posting a job.")
+
     job = db.query(Job).filter(Job.id == job_id, Job.company_id == company.id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
