@@ -4,6 +4,7 @@ export const getDashboard      = (mode = "all") => apiFetch(`/candidate/dashboar
 export const getProfile        = () => apiFetch("/candidate/profile");
 export const updateProfile     = (data) => apiFetch("/candidate/profile", { method: "PUT", body: JSON.stringify(data) });
 export const getApplications   = () => apiFetch("/candidate/applications");
+export const withdrawApplication = (id) => apiFetch(`/candidate/applications/${id}`, { method: "DELETE" });
 
 export const getSkills           = () => apiFetch("/candidate/skills");
 export const addSkill            = (skillsArray) => apiFetch("/candidate/skills", { method: "POST", body: JSON.stringify(skillsArray) });

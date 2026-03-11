@@ -34,6 +34,7 @@
   .status-viewed      { background:#fff8e1; color:#f59e0b; }
   .status-shortlisted { background:#e8f5e9; color:var(--green); }
   .status-rejected    { background:#fdecea; color:var(--red); }
+  .status-withdrawn   { background:#f5f5f5; color:#999; }
 
   .score-ring { width:52px; height:52px; flex-shrink:0; }
   .score-ring svg { transform:rotate(-90deg); }
@@ -87,6 +88,7 @@
     <span style="font-size:0.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Filter:</span>
     <button class="filter-chip active" onclick="filterApps('all',this)">All <span class="filter-count" id="cnt-all">0</span></button>
     <button class="filter-chip" onclick="filterApps('applied',this)">Applied <span class="filter-count" id="cnt-applied">0</span></button>
+    <button class="filter-chip" onclick="filterApps('withdrawn',this)">Withdrawn <span class="filter-count" id="cnt-withdrawn">0</span></button>
     <button class="filter-chip" onclick="filterApps('viewed',this)">Viewed <span class="filter-count" id="cnt-viewed">0</span></button>
     <button class="filter-chip" onclick="filterApps('shortlisted',this)">Shortlisted <span class="filter-count" id="cnt-shortlisted">0</span></button>
     <button class="filter-chip" onclick="filterApps('rejected',this)">Rejected <span class="filter-count" id="cnt-rejected">0</span></button>
@@ -145,7 +147,7 @@ function renderCard(a) {
   const score = a.match_score;
   const scoreColor = score>=80?"var(--green)":score>=60?"var(--gold)":"var(--pink)";
 
-  const timelineHtml = a.status !== "rejected"
+  const timelineHtml = a.status !== "rejected" && a.status !== "withdrawn"
     ? `<div class="timeline">
         <div class="timeline-steps">
           ${steps.map(s=>`
@@ -154,6 +156,10 @@ function renderCard(a) {
               <div class="tstep-label">${s.label}</div>
             </div>`).join('')}
         </div>
+      </div>`
+    : a.status === "withdrawn"
+    ? `<div style="margin-top:12px;padding:8px 12px;background:#f5f5f5;border-radius:8px;font-size:0.82rem;color:#999;font-weight:500">
+        ↩ You withdrew this application.
       </div>`
     : `<div style="margin-top:12px;padding:8px 12px;background:#fdecea;border-radius:8px;font-size:0.82rem;color:var(--red);font-weight:500">
         Not selected for this role. Keep applying — the right job is ahead.
@@ -186,10 +192,27 @@ function renderCard(a) {
       </div>
     </div>
     ${timelineHtml}
-    <div style="margin-top:14px;display:flex;gap:8px">
+    <div style="margin-top:14px;display:flex;gap:8px;align-items:center;justify-content:space-between">
       <a href="/jobs/${a.job_id}" style="font-size:0.8rem;color:var(--pink);font-weight:600;text-decoration:none">View Job →</a>
+      ${a.status === "applied" ? `<button onclick="withdrawApp(${a.application_id}, '${a.job_title}')" style="background:none;border:1.5px solid #ddd;border-radius:999px;padding:4px 14px;font-size:0.75rem;font-weight:600;color:#999;cursor:pointer;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='#ddd';this.style.color='#999'">Withdraw</button>` : ''}
     </div>
   </div>`;
+}
+
+async function withdrawApp(applicationId, jobTitle) {
+  if (!confirm(`Withdraw your application for "${jobTitle}"? You cannot reapply.`)) return;
+  try {
+    const res = await apiFetch(`/candidate/applications/${applicationId}`, { method: "DELETE" });
+    if (!res.success) throw new Error(res.error || "Failed");
+    // Update in-memory list
+    const app = allApps.find(a => a.application_id === applicationId);
+    if (app) app.status = "withdrawn";
+    renderApps(currentFilter === "all" ? allApps : allApps.filter(a => a.status === currentFilter));
+    updateStats(allApps);
+    showToast("Application withdrawn");
+  } catch(e) {
+    alert(e.message || "Failed to withdraw");
+  }
 }
 
 function filterApps(status, btn) {
@@ -228,6 +251,7 @@ function renderStats(apps) {
   document.getElementById("cnt-viewed").textContent     = apps.filter(a=>a.status==="viewed").length;
   document.getElementById("cnt-shortlisted").textContent= apps.filter(a=>a.status==="shortlisted").length;
   document.getElementById("cnt-rejected").textContent   = apps.filter(a=>a.status==="rejected").length;
+  document.getElementById("cnt-withdrawn").textContent  = apps.filter(a=>a.status==="withdrawn").length;
 }
 
 async function load() {
@@ -244,4 +268,3 @@ async function load() {
 load();
 </script>
 {% endblock %}
-

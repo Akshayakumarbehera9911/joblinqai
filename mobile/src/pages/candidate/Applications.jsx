@@ -3,17 +3,18 @@ import { useNavigate } from "react-router-dom";
 import TopBar     from "../../components/TopBar";
 import Spinner    from "../../components/Spinner";
 import EmptyState from "../../components/EmptyState";
-import { getApplications } from "../../api/candidate";
+import { getApplications, withdrawApplication } from "../../api/candidate";
 
-const FILTERS = ["all", "applied", "viewed", "shortlisted", "rejected"];
+const FILTERS = ["all", "applied", "viewed", "shortlisted", "rejected", "withdrawn"];
 
 const STATUS_STEPS = ["applied", "viewed", "shortlisted"];
 
 const STATUS_COLORS = {
-  applied:     { bg: "#f0f0f0", color: "#555" },
-  viewed:      { bg: "#fffbeb", color: "var(--gold)" },
-  shortlisted: { bg: "#e8f5e9", color: "var(--green)" },
-  rejected:    { bg: "#fdecea", color: "var(--red)" },
+  applied:     { bg: "#f0f0f0",  color: "#555" },
+  viewed:      { bg: "#fffbeb",  color: "var(--gold)" },
+  shortlisted: { bg: "#e8f5e9",  color: "var(--green)" },
+  rejected:    { bg: "#fdecea",  color: "var(--red)" },
+  withdrawn:   { bg: "#f5f5f5",  color: "#999" },
 };
 
 function formatSalary(min, max) {
@@ -44,6 +45,18 @@ export default function CandidateApplications() {
 
   const filtered = filter === "all" ? apps : apps.filter(a => a.status === filter);
 
+  async function handleWithdraw(app) {
+    if (!window.confirm(`Withdraw your application for "${app.job_title}"? You cannot reapply.`)) return;
+    try {
+      await withdrawApplication(app.application_id);
+      setApps(prev => prev.map(a =>
+        a.application_id === app.application_id ? { ...a, status: "withdrawn" } : a
+      ));
+    } catch (e) {
+      alert(e.message || "Failed to withdraw application");
+    }
+  }
+
   return (
     <>
       <TopBar title="My Applications" />
@@ -52,9 +65,7 @@ export default function CandidateApplications() {
         {/* Filter tabs */}
         <div style={{
           display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "6px",
-          marginBottom: "18px",
-          /* hide scrollbar across browsers */
-          scrollbarWidth: "none", msOverflowStyle: "none",
+          marginBottom: "18px", scrollbarWidth: "none", msOverflowStyle: "none",
         }}>
           {FILTERS.map(f => {
             const active = filter === f;
@@ -92,7 +103,7 @@ export default function CandidateApplications() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {filtered.map(app => (
-              <AppCard key={app.application_id} app={app} navigate={navigate} />
+              <AppCard key={app.application_id} app={app} navigate={navigate} onWithdraw={handleWithdraw} />
             ))}
           </div>
         )}
@@ -101,17 +112,18 @@ export default function CandidateApplications() {
   );
 }
 
-function AppCard({ app, navigate }) {
+function AppCard({ app, navigate, onWithdraw }) {
   const salary     = formatSalary(app.salary_min, app.salary_max);
   const date       = formatDate(app.applied_at);
-  const isRejected = app.status === "rejected";
+  const isRejected  = app.status === "rejected";
+  const isWithdrawn = app.status === "withdrawn";
   const sc         = STATUS_COLORS[app.status] || STATUS_COLORS.applied;
   const stepIndex  = STATUS_STEPS.indexOf(app.status);
 
   return (
     <div className="card" style={{ borderRadius: "14px", padding: "14px 14px 12px", overflow: "hidden" }}>
 
-      {/* Header — title + status badge */}
+      {/* Header – title + status badge */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "2px" }}>
         <div style={{
           fontFamily: "var(--font-serif)", fontSize: "0.97rem", fontWeight: 600,
@@ -141,16 +153,14 @@ function AppCard({ app, navigate }) {
           </span>
         )}
         {app.work_mode && (
-          <span style={{
-            padding: "2px 8px", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 600,
-            background: "var(--bg)", border: "1px solid var(--border)", color: "var(--muted)",
-          }}>{app.work_mode}</span>
+          <span style={{ padding: "2px 8px", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 600, background: "var(--bg)", border: "1px solid var(--border)", color: "var(--muted)" }}>
+            {app.work_mode}
+          </span>
         )}
         {app.job_type && (
-          <span style={{
-            padding: "2px 8px", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 600,
-            background: "var(--bg)", border: "1px solid var(--border)", color: "var(--muted)",
-          }}>{app.job_type}</span>
+          <span style={{ padding: "2px 8px", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 600, background: "var(--bg)", border: "1px solid var(--border)", color: "var(--muted)" }}>
+            {app.job_type}
+          </span>
         )}
         {salary && (
           <span style={{ fontSize: "0.73rem", fontWeight: 700, color: "var(--pink)" }}>{salary}</span>
@@ -164,15 +174,23 @@ function AppCard({ app, navigate }) {
         </div>
       )}
 
-      {/* Divider */}
       <div style={{ height: "1px", background: "var(--border)", marginBottom: "12px", opacity: 0.6 }} />
 
-      {/* Status — rejected banner OR step progress */}
-      {isRejected ? (
+      {/* Status section */}
+      {isWithdrawn ? (
         <div style={{
           display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px",
-          padding: "8px 10px", borderRadius: "8px",
-          background: sc.bg,
+          padding: "8px 10px", borderRadius: "8px", background: "#f5f5f5",
+        }}>
+          <span style={{ fontSize: "0.9rem" }}>↩</span>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#999" }}>
+            You withdrew this application
+          </span>
+        </div>
+      ) : isRejected ? (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px",
+          padding: "8px 10px", borderRadius: "8px", background: sc.bg,
         }}>
           <span style={{ fontSize: "0.9rem" }}>✕</span>
           <span style={{ fontSize: "0.78rem", fontWeight: 700, color: sc.color }}>
@@ -185,10 +203,7 @@ function AppCard({ app, navigate }) {
             const done    = i <= stepIndex;
             const current = i === stepIndex;
             return (
-              <div key={step} style={{
-                display: "flex", alignItems: "center",
-                flex: i < STATUS_STEPS.length - 1 ? 1 : 0,
-              }}>
+              <div key={step} style={{ display: "flex", alignItems: "center", flex: i < STATUS_STEPS.length - 1 ? 1 : 0 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
                   <div style={{
                     width: 22, height: 22, borderRadius: "50%",
@@ -213,8 +228,7 @@ function AppCard({ app, navigate }) {
                   <div style={{
                     flex: 1, height: 2, marginBottom: "14px",
                     background: i < stepIndex ? "var(--green)" : "var(--border)",
-                    borderRadius: "999px",
-                    transition: "background 0.2s",
+                    borderRadius: "999px", transition: "background 0.2s",
                   }} />
                 )}
               </div>
@@ -223,19 +237,31 @@ function AppCard({ app, navigate }) {
         </div>
       )}
 
-      {/* Footer — View Job */}
-      <div style={{ borderTop: "1px solid var(--border)", paddingTop: "10px" }}>
+      {/* Footer – View Job + Withdraw */}
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div
           onClick={() => navigate(`/jobs/${app.job_id}`)}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "4px",
-            fontSize: "0.8rem", fontWeight: 700, color: "var(--pink)", cursor: "pointer",
-          }}
+          style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 700, color: "var(--pink)", cursor: "pointer" }}
         >
           View Job <span style={{ fontSize: "0.85rem" }}>→</span>
         </div>
-      </div>
 
+        {/* Withdraw button — only for "applied" status */}
+        {app.status === "applied" && (
+          <button
+            onClick={() => onWithdraw(app)}
+            style={{
+              background: "none", border: "1.5px solid #ddd", borderRadius: "999px",
+              padding: "4px 12px", fontSize: "0.72rem", fontWeight: 600,
+              color: "#999", cursor: "pointer", transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.target.style.borderColor = "var(--red)"; e.target.style.color = "var(--red)"; }}
+            onMouseLeave={e => { e.target.style.borderColor = "#ddd"; e.target.style.color = "#999"; }}
+          >
+            Withdraw
+          </button>
+        )}
+      </div>
     </div>
   );
 }
