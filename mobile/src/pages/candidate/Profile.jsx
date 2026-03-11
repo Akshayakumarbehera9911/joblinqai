@@ -93,6 +93,12 @@ export default function CandidateProfile() {
   }
 
   async function saveProfile() {
+    if (!profile?.state) { setMsg("State is required"); return; }
+    if (!profile?.education_level) { setMsg("Education level is required"); return; }
+    if (!profile?.experience) { setMsg("Experience is required"); return; }
+    const min = parseInt(profile?.expected_salary_min || 0);
+    const max = parseInt(profile?.expected_salary_max || 0);
+    if (min && max && min >= max) { setMsg("Salary max must be greater than min"); return; }
     setSaving(true); setMsg("");
     try {
       const payload = {
@@ -320,29 +326,47 @@ export default function CandidateProfile() {
 
             {/* Personal */}
             {sectionLabel("Personal")}
-            {[
-              { label: "Gender",        key: "gender",        type: "text", placeholder: "Male / Female / Other" },
-              { label: "Date of Birth", key: "date_of_birth", type: "date" },
-            ].map(({ label, key, type, placeholder }) => (
-              <div key={key} style={{ marginBottom: "10px" }}>
-                <label className="label">{label}</label>
-                <input className="input" type={type} placeholder={placeholder || label}
-                  value={(profile?.[key]) ?? ""}
-                  onChange={e => setProfile(p => ({ ...(p || {}), [key]: e.target.value }))} />
-              </div>
-            ))}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Gender</label>
+              <select className="input" value={profile?.gender ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), gender: e.target.value }))}>
+                <option value="">Prefer not to say</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Date of Birth</label>
+              <input className="input" type="date"
+                value={profile?.date_of_birth ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), date_of_birth: e.target.value }))} />
+            </div>
 
             <Divider />
             {sectionLabel("Location")}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">State <span style={{ color: "var(--red)" }}>*</span></label>
+              <select className="input" value={profile?.state ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), state: e.target.value }))}>
+                <option value="">Select State</option>
+                {["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Chandigarh","Puducherry"].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
             {[
-              { label: "City",     key: "city",     type: "text" },
-              { label: "District", key: "district", type: "text" },
-              { label: "State",    key: "state",    type: "text" },
-              { label: "Pincode",  key: "pincode",  type: "text" },
-            ].map(({ label, key, type }) => (
+              { label: "City",     key: "city"     },
+              { label: "District", key: "district" },
+              { label: "Pincode",  key: "pincode"  },
+            ].map(({ label, key }) => (
               <div key={key} style={{ marginBottom: "10px" }}>
                 <label className="label">{label}</label>
-                <input className="input" type={type} placeholder={label}
+                <input className="input" type="text" placeholder={label}
                   value={(profile?.[key]) ?? ""}
                   onChange={e => setProfile(p => ({ ...(p || {}), [key]: e.target.value }))} />
               </div>
@@ -350,52 +374,145 @@ export default function CandidateProfile() {
 
             <Divider />
             {sectionLabel("Education")}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Education Level <span style={{ color: "var(--red)" }}>*</span></label>
+              <select className="input" value={profile?.education_level ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), education_level: e.target.value }))}>
+                <option value="">Select level</option>
+                <option value="class10">Class 10 (Matriculation)</option>
+                <option value="class12">Class 12 (Intermediate)</option>
+                <option value="iti">ITI / Vocational</option>
+                <option value="diploma">Polytechnic Diploma</option>
+                <option value="graduate">Bachelor's (B.Tech / B.Sc / BA / B.Com)</option>
+                <option value="postgraduate">Master's (M.Tech / MBA / M.Sc)</option>
+                <option value="phd">PhD / Doctorate</option>
+              </select>
+            </div>
+
             {[
-              { label: "Education Level", key: "education_level", type: "text", placeholder: "e.g. B.Tech, MBA" },
-              { label: "Education Field", key: "education_field", type: "text", placeholder: "e.g. Computer Science" },
-              { label: "Institution",     key: "institution",     type: "text" },
-              { label: "Passing Year",    key: "passing_year",    type: "number" },
-            ].map(({ label, key, type, placeholder }) => (
+              { label: "Field of Study", key: "education_field", placeholder: "e.g. Computer Science" },
+              { label: "Institution",    key: "institution",     placeholder: "e.g. IIT Bombay" },
+            ].map(({ label, key, placeholder }) => (
               <div key={key} style={{ marginBottom: "10px" }}>
                 <label className="label">{label}</label>
-                <input className="input" type={type} placeholder={placeholder || label}
+                <input className="input" type="text" placeholder={placeholder || label}
                   value={(profile?.[key]) ?? ""}
                   onChange={e => setProfile(p => ({ ...(p || {}), [key]: e.target.value }))} />
               </div>
             ))}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Passing Year</label>
+              <input className="input" type="number" placeholder="e.g. 2022" min="1990" max="2030"
+                value={profile?.passing_year ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), passing_year: e.target.value }))} />
+            </div>
 
             <Divider />
             {sectionLabel("Career")}
-            {[
-              { label: "Experience",    key: "experience",    type: "text", placeholder: "e.g. 2 years, Fresher" },
-              { label: "Current Title", key: "current_title", type: "text", placeholder: "e.g. Software Engineer" },
-              { label: "Industry",      key: "industry",      type: "text" },
-              { label: "Target Role",   key: "target_role",   type: "text", placeholder: "e.g. Frontend Developer" },
-            ].map(({ label, key, type, placeholder }) => (
-              <div key={key} style={{ marginBottom: "10px" }}>
-                <label className="label">{label}</label>
-                <input className="input" type={type} placeholder={placeholder || label}
-                  value={(profile?.[key]) ?? ""}
-                  onChange={e => setProfile(p => ({ ...(p || {}), [key]: e.target.value }))} />
-              </div>
-            ))}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Years of Experience <span style={{ color: "var(--red)" }}>*</span></label>
+              <select className="input" value={profile?.experience ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), experience: e.target.value }))}>
+                <option value="">Select experience</option>
+                <option value="0-1 years">Fresher / 0–1 year</option>
+                <option value="1-3 years">1–3 years</option>
+                <option value="3-5 years">3–5 years</option>
+                <option value="5-8 years">5–8 years</option>
+                <option value="8-20 years">8+ years</option>
+              </select>
+              <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 3 }}>This affects your job match score</div>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Current / Last Job Title</label>
+              <input className="input" type="text" placeholder="e.g. Software Engineer"
+                value={profile?.current_title ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), current_title: e.target.value }))} />
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Industry</label>
+              <select className="input" value={profile?.industry ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), industry: e.target.value }))}>
+                <option value="">Select industry</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Banking & Finance">Banking & Finance</option>
+                <option value="Healthcare">Healthcare & Pharma</option>
+                <option value="Education">Education & Training</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Retail & E-commerce">Retail & E-commerce</option>
+                <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
+                <option value="Construction & Real Estate">Construction & Real Estate</option>
+                <option value="Media & Entertainment">Media & Entertainment</option>
+                <option value="Hospitality & Tourism">Hospitality & Tourism</option>
+                <option value="Telecommunications">Telecommunications</option>
+                <option value="Government & Public Sector">Government & Public Sector</option>
+                <option value="Agriculture">Agriculture</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Target Role</label>
+              <input className="input" type="text" placeholder="e.g. Frontend Developer, Data Analyst"
+                value={profile?.target_role ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), target_role: e.target.value }))} />
+            </div>
 
             <Divider />
             {sectionLabel("Preferences")}
-            {[
-              { label: "Job Type",     key: "job_type",     type: "text", placeholder: "full-time / part-time" },
-              { label: "Work Mode",    key: "work_mode",    type: "text", placeholder: "remote / onsite / hybrid" },
-              { label: "Availability", key: "availability", type: "text", placeholder: "Immediate / 1 month" },
-              { label: "Expected Salary Min (₹)", key: "expected_salary_min", type: "number" },
-              { label: "Expected Salary Max (₹)", key: "expected_salary_max", type: "number" },
-            ].map(({ label, key, type, placeholder }) => (
-              <div key={key} style={{ marginBottom: "10px" }}>
-                <label className="label">{label}</label>
-                <input className="input" type={type} placeholder={placeholder || label}
-                  value={(profile?.[key]) ?? ""}
-                  onChange={e => setProfile(p => ({ ...(p || {}), [key]: e.target.value }))} />
-              </div>
-            ))}
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Preferred Job Type</label>
+              <select className="input" value={profile?.job_type ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), job_type: e.target.value }))}>
+                <option value="">Any</option>
+                <option value="full-time">Full Time</option>
+                <option value="part-time">Part Time</option>
+                <option value="contract">Contract</option>
+                <option value="internship">Internship</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Preferred Work Mode</label>
+              <select className="input" value={profile?.work_mode ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), work_mode: e.target.value }))}>
+                <option value="">Any</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="onsite">Onsite</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Availability</label>
+              <select className="input" value={profile?.availability ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), availability: e.target.value }))}>
+                <option value="immediate">Immediate</option>
+                <option value="15days">15 days notice</option>
+                <option value="30days">30 days notice</option>
+                <option value="60days">60 days notice</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Expected Salary Min</label>
+              <input className="input" type="number" placeholder="e.g. 25000" min="5000" step="1000"
+                value={profile?.expected_salary_min ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), expected_salary_min: e.target.value }))} />
+              <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 3 }}>Monthly in ₹ · Entry: 15k–30k · Mid: 30k–80k · Senior: 80k+</div>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+              <label className="label">Expected Salary Max</label>
+              <input className="input" type="number" placeholder="e.g. 50000" min="5000" step="1000"
+                value={profile?.expected_salary_max ?? ""}
+                onChange={e => setProfile(p => ({ ...(p || {}), expected_salary_max: e.target.value }))} />
+            </div>
 
             <Divider />
             {sectionLabel("Resume")}
