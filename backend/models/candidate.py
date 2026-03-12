@@ -44,6 +44,7 @@ class CandidateProfile(Base):
     expected_salary_max = Column(Integer)
 
     profile_complete = Column(Boolean, default=False)
+    fcm_token        = Column(String(500), nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     updated_at       = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
