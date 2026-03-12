@@ -47,6 +47,33 @@ app.include_router(scoring_router,   prefix="/api/scoring",   tags=["scoring"])
 def health():
     return {"success": True, "data": {"status": "running"}, "error": None}
 
+# ── Temporary Firebase debug endpoint — REMOVE AFTER TESTING ───────────────
+@app.get("/api/debug/push")
+def debug_push():
+    import os, json
+    creds = os.environ.get("FIREBASE_CREDENTIALS")
+    if not creds:
+        return {"error": "FIREBASE_CREDENTIALS not set"}
+    try:
+        parsed = json.loads(creds)
+    except Exception as e:
+        return {"error": f"JSON parse failed: {str(e)}", "first_100": creds[:100]}
+    try:
+        import firebase_admin
+        from firebase_admin import credentials, messaging
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(parsed)
+            firebase_admin.initialize_app(cred)
+        token = "cL0fSUOy1pgXrkB4VOT8BL:APA91bFH3zvj0chjoMJNXwPoxVJbi_nUTk1WQG-RNcRO-IMW679NTta4GCrkt6DpMaZ-XaVkIRvViMNHPErSzpX7ceDih565Sw5oELz-W9xK-yNbgSL6WFc"
+        message = messaging.Message(
+            notification=messaging.Notification(title="Test", body="Push test from Azure"),
+            token=token,
+        )
+        result = messaging.send(message)
+        return {"success": True, "message_id": result}
+    except Exception as e:
+        return {"error": str(e)}
+
 # ── Frontend pages ─────────────────────────────────────────────────────────
 @app.get("/register")
 def page_register(request: Request):
