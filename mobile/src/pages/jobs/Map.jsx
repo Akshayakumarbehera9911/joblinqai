@@ -37,8 +37,9 @@ export default function MapPage() {
   const mapObjRef  = useRef(null);
   const markersRef    = useRef([]);
   const userMarkerRef = useRef(null);
-  const jobMarkersRef = useRef([]);
-  const cityJobsCache = useRef({});
+  const jobMarkersRef  = useRef([]);
+  const cityJobsCache  = useRef({});
+  const locationRef    = useRef(null); // persists regardless of Near Me toggle
 
   const [drawerCity,    setDrawerCity]    = useState(null);
   const [drawerJobs,    setDrawerJobs]    = useState([]);
@@ -163,7 +164,9 @@ export default function MapPage() {
     // Silent location preload
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
-        setNearCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setNearCoords(coords);
+        locationRef.current = coords; // persist for directions
       }, () => {});
     }
 
@@ -262,7 +265,9 @@ export default function MapPage() {
     // Fallback request
     if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
     navigator.geolocation.getCurrentPosition(pos => {
-      setNearCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      setNearCoords(coords);
+      locationRef.current = coords;
       setNearMeActive(true);
     }, () => alert("Location access denied. Enable in browser settings."));
   }
@@ -621,9 +626,10 @@ export default function MapPage() {
                 const jobLng = job.longitude || drawerCity?.longitude;
                 const dist = (nearMeActive && nearCoords && jobLat && jobLng)
                   ? fmtDist(nearCoords.lat, nearCoords.lng, jobLat, jobLng) : null;
+                const loc = locationRef.current;
                 const dirUrl = (jobLat && jobLng)
-                  ? (nearCoords
-                      ? `https://www.google.com/maps/dir/?api=1&origin=${nearCoords.lat},${nearCoords.lng}&destination=${jobLat},${jobLng}`
+                  ? (loc
+                      ? `https://www.google.com/maps/dir/?api=1&origin=${loc.lat},${loc.lng}&destination=${jobLat},${jobLng}`
                       : `https://www.google.com/maps/search/?api=1&query=${jobLat},${jobLng}`)
                   : null;
                 return (
