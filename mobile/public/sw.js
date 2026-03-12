@@ -1,6 +1,36 @@
+importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDxWEPQc0Mw3dKvFFB3QCid1ETNqfFlZXM",
+  authDomain: "jobportal-555ca.firebaseapp.com",
+  projectId: "jobportal-555ca",
+  storageBucket: "jobportal-555ca.firebasestorage.app",
+  messagingSenderId: "347953420222",
+  appId: "1:347953420222:web:72cfbbad77497797700bef",
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const { title, body } = payload.notification || {};
+  self.registration.showNotification(title || "JobPortal", {
+    body: body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    data: { url: payload.fcmOptions?.link || "https://jobportal-mobile.onrender.com/applications" },
+  });
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "https://jobportal-mobile.onrender.com/applications";
+  event.waitUntil(clients.openWindow(url));
+});
+
+/* ── PWA Cache ── */
 const CACHE_NAME = "jobportal-cdn-v1";
 
-/* ── Install: cache icons immediately ── */
 self.addEventListener("install", event => {
   self.skipWaiting();
   event.waitUntil(
@@ -13,7 +43,6 @@ self.addEventListener("install", event => {
   );
 });
 
-/* ── Activate: wipe all old caches ── */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -23,11 +52,9 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
-/* ── Fetch ── */
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  /* Icons → serve from cache */
   if (url.pathname.startsWith("/icons/")) {
     event.respondWith(
       caches.match(event.request).then(cached => cached || fetch(event.request))
@@ -35,7 +62,6 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  /* CDN assets only → cache forever (unpkg, cdnjs, google fonts — never change) */
   if (
     url.hostname.includes("googleapis.com") ||
     url.hostname.includes("gstatic.com") ||
@@ -55,7 +81,4 @@ self.addEventListener("fetch", event => {
     );
     return;
   }
-
-  /* App shell + API → always network, never cache */
-  /* This means deployments are always instant with no stale UI */
 });

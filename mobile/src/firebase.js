@@ -15,18 +15,17 @@ const VAPID_KEY = "BBkqtZkQTBDepO5sspZsXKP5V0Gneq6TTu4-T3ZkosXoNx5ruuhE47aMMY0VI
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-/**
- * Request notification permission and return FCM token.
- * Returns null if permission denied or any error.
- */
 export async function requestFCMToken() {
   try {
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return null;
 
+    // Use the existing PWA service worker (sw.js) which now includes Firebase messaging
+    const swReg = await navigator.serviceWorker.ready;
+
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: await navigator.serviceWorker.register("/firebase-messaging-sw.js"),
+      serviceWorkerRegistration: swReg,
     });
 
     return token || null;
@@ -36,9 +35,6 @@ export async function requestFCMToken() {
   }
 }
 
-/**
- * Handle foreground messages (app is open).
- */
 export function onForegroundMessage(callback) {
   return onMessage(messaging, callback);
 }
