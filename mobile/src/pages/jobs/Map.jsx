@@ -4,6 +4,87 @@ import { useAuth } from "../../context/AuthContext";
 import { getMapData, getCityJobs, getRoleFamilies } from "../../api/jobs";
 
 const PINK = "#E8398A";
+
+// ── Location blocked modal ───────────────────────────────────────────────
+function LocationBlockedModal({ onClose }) {
+  return (
+    <div onClick={onClose} style={{
+      position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",
+      zIndex:9999,display:"flex",alignItems:"flex-end",
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:"var(--card)",borderRadius:"16px 16px 0 0",
+        padding:"24px 24px 40px",width:"100%",
+        fontFamily:"DM Sans,sans-serif",
+        boxShadow:"0 -4px 24px rgba(0,0,0,0.18)",
+      }}>
+        <div style={{width:36,height:4,background:"var(--border)",borderRadius:999,margin:"0 auto 20px"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+          <div style={{
+            width:42,height:42,borderRadius:12,background:"#FFF3DC",
+            display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{fontWeight:700,fontSize:"0.95rem"}}>Location Access Blocked</div>
+            <div style={{fontSize:"0.75rem",color:"var(--muted)",marginTop:2}}>Enable it to use Near Me &amp; Directions</div>
+          </div>
+        </div>
+        <div style={{fontSize:"0.8rem",color:"var(--muted)",marginBottom:18,lineHeight:1.6,padding:"10px 12px",background:"var(--bg)",borderRadius:10}}>
+          You previously blocked location access. Your browser will not ask again automatically.
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:22}}>
+          {[
+            ["1","Open browser Settings","Tap the menu or tap the lock icon in the address bar"],
+            ["2","Find Site Settings","Go to Privacy → Site Settings → Location"],
+            ["3","Allow this site","Find jobportal-mobile.onrender.com → set to Allow"],
+            ["4","Reload the page","Come back and try again"],
+          ].map(([num,title,desc])=>(
+            <div key={num} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+              <div style={{
+                width:26,height:26,borderRadius:"50%",background:PINK,
+                color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",
+                fontWeight:700,fontSize:"0.75rem",flexShrink:0,
+              }}>{num}</div>
+              <div>
+                <div style={{fontWeight:600,fontSize:"0.82rem"}}>{title}</div>
+                <div style={{fontSize:"0.72rem",color:"var(--muted)",marginTop:2,lineHeight:1.5}}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={onClose} style={{
+          width:"100%",padding:"11px",borderRadius:999,
+          background:PINK,color:"#fff",border:"none",
+          fontWeight:700,fontSize:"0.85rem",cursor:"pointer",fontFamily:"DM Sans,sans-serif",
+        }}>Got it</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Request location with permission check ───────────────────────────────
+// Returns coords or null. Calls onBlocked() if permission is denied.
+async function requestLocation(onBlocked) {
+  if (!navigator.geolocation) { onBlocked(); return null; }
+  try {
+    // Check permission state first — avoids silent failure on mobile
+    if (navigator.permissions) {
+      const status = await navigator.permissions.query({ name: "geolocation" });
+      if (status.state === "denied") { onBlocked(); return null; }
+    }
+  } catch(_) {}
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      ()  => { onBlocked(); resolve(null); },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+}
 const SAMPLE_CITIES = [
   { city: "Bangalore", state: "Karnataka",   latitude: 12.9716, longitude: 77.5946, job_count: 5 },
   { city: "Mumbai",    state: "Maharashtra", latitude: 19.0760, longitude: 72.8777, job_count: 8 },
@@ -50,6 +131,7 @@ export default function MapPage() {
 
   // Filter state
   const [filterOpen,    setFilterOpen]    = useState(false);
+  const [locationBlocked, setLocationBlocked] = useState(false);
   const [roleFamilies,  setRoleFamilies]  = useState([]);
   const [fRole,         setFRole]         = useState("");
   const [fExp,          setFExp]          = useState("");
@@ -162,13 +244,9 @@ export default function MapPage() {
     }
 
     // Silent location preload
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setNearCoords(coords);
-        locationRef.current = coords; // persist for directions
-      }, () => {});
-    }
+    requestLocation(() => {}).then(coords => {
+      if (coords) { setNearCoords(coords); locationRef.current = coords; }
+    });
 
     init();
     return () => {
@@ -255,23 +333,29 @@ export default function MapPage() {
     if (mapObjRef.current) mapObjRef.current.flyTo([20.5937, 78.9629], 5, { duration: 1 });
   }
 
-  function handleNearMe() {
-    if (nearMeActive) {
-      setNearMeActive(false);
-      return;
-    }
-    // If already preloaded — instant toggle
-    if (nearCoords) { setNearMeActive(true); return; }
-    // Fallback request
-    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
-    navigator.geolocation.getCurrentPosition(pos => {
-      const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  async function handleNearMe() {
+    if (nearMeActive) { setNearMeActive(false); return; }
+    if (nearCoords)   { setNearMeActive(true);  return; }
+    const coords = await requestLocation(() => setLocationBlocked(true));
+    if (coords) {
       setNearCoords(coords);
       locationRef.current = coords;
       setNearMeActive(true);
-    }, () => alert("Location access denied. Enable in browser settings."));
+    }
   }
 
+
+  async function handleDirections(jLat, jLng) {
+    let cur = locationRef.current;
+    if (!cur) {
+      const coords = await requestLocation(() => setLocationBlocked(true));
+      if (coords) { locationRef.current = coords; cur = coords; }
+    }
+    const url = cur
+      ? `https://www.google.com/maps/dir/?api=1&origin=${cur.lat},${cur.lng}&destination=${jLat},${jLng}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${jLat},${jLng}`;
+    window.open(url, "_blank");
+  }
 
   function fmtDist(lat1, lng1, lat2, lng2) {
     const R = 6371;
@@ -338,6 +422,7 @@ export default function MapPage() {
   }
 
   return (
+    <>
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", zIndex: 1 }}>
 
       {/* ── Filter pill ── */}
@@ -626,24 +711,7 @@ export default function MapPage() {
                 const jobLng = job.longitude || drawerCity?.longitude;
                 const dist = (nearMeActive && nearCoords && jobLat && jobLng)
                   ? fmtDist(nearCoords.lat, nearCoords.lng, jobLat, jobLng) : null;
-                const loc = locationRef.current;
-                const dirUrl = null; // handled by handleDirections
-                const handleDirections = (jLat, jLng) => {
-                  const cur = locationRef.current;
-                  if (cur) {
-                    window.open(`https://www.google.com/maps/dir/?api=1&origin=${cur.lat},${cur.lng}&destination=${jLat},${jLng}`, "_blank");
-                  } else if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                      locationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                      window.open(`https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${jLat},${jLng}`, "_blank");
-                    }, () => {
-                      // Location denied — open job location only
-                      window.open(`https://www.google.com/maps/search/?api=1&query=${jLat},${jLng}`, "_blank");
-                    });
-                  } else {
-                    window.open(`https://www.google.com/maps/search/?api=1&query=${jLat},${jLng}`, "_blank");
-                  }
-                };
+
                 return (
                   <div key={job.id} style={{
                     background: "var(--bg)", border: "1px solid var(--border)",
@@ -683,5 +751,7 @@ export default function MapPage() {
         @keyframes pulse { 0%{transform:scale(1);opacity:.4} 70%{transform:scale(2.5);opacity:0} 100%{transform:scale(1);opacity:0} }
       `}</style>
     </div>
+    {locationBlocked && <LocationBlockedModal onClose={() => setLocationBlocked(false)} />}
+    </>
   );
 }
