@@ -366,10 +366,11 @@ export default function MapPage() {
       <div style={{
         position: "absolute", bottom: "var(--nav-height)", left: 0, right: 0, zIndex: 1002,
         background: "var(--card)", borderRadius: "20px 20px 0 0",
-        transform: filterOpen ? "translateY(0)" : "translateY(100%)",
+        transform: filterOpen ? "translateY(0)" : "translateY(110%)",
         transition: "transform 0.3s cubic-bezier(0.32,0.72,0,1)",
         boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
         padding: "0 0 20px",
+        visibility: filterOpen ? "visible" : "hidden",
       }}>
         {/* Handle */}
         <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
@@ -577,16 +578,6 @@ export default function MapPage() {
                 <div style={{ display: "flex", justifyContent: "center", padding: "28px 0" }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2.5px solid var(--border)", borderTopColor: PINK, animation: "spin 0.8s linear infinite" }} />
                 </div>
-              ) : drawerJobs.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "28px 0" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--pink-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={PINK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                    </svg>
-                  </div>
-                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>No jobs listed yet</div>
-                  <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 3 }}>Try another city</div>
-                </div>
               ) : !isLoggedIn ? (
                 <div style={{ textAlign:"center", padding:"28px 16px" }}>
                   <div style={{
@@ -615,13 +606,26 @@ export default function MapPage() {
                     }}>Register</button>
                   </div>
                 </div>
+              ) : drawerJobs.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "28px 0" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--pink-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={PINK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>No jobs listed yet</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 3 }}>Try another city</div>
+                </div>
               ) : drawerJobs.map(job => {
                 const jobLat = job.latitude || drawerCity?.latitude;
                 const jobLng = job.longitude || drawerCity?.longitude;
                 const dist = (nearMeActive && nearCoords && jobLat && jobLng)
                   ? fmtDist(nearCoords.lat, nearCoords.lng, jobLat, jobLng) : null;
-                const dirUrl = (nearCoords && jobLat && jobLng)
-                  ? `https://www.google.com/maps/dir/?api=1&origin=${nearCoords.lat},${nearCoords.lng}&destination=${jobLat},${jobLng}` : null;
+                const dirUrl = (jobLat && jobLng)
+                  ? (nearCoords
+                      ? `https://www.google.com/maps/dir/?api=1&origin=${nearCoords.lat},${nearCoords.lng}&destination=${jobLat},${jobLng}`
+                      : `https://www.google.com/maps/search/?api=1&query=${jobLat},${jobLng}`)
+                  : null;
                 return (
                   <div key={job.id} style={{
                     background: "var(--bg)", border: "1px solid var(--border)",
