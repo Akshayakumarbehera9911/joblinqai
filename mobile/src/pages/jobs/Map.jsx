@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { getMapData, getCityJobs, getRoleFamilies } from "../../api/jobs";
 
 const PINK = "#E8398A";
@@ -31,6 +32,7 @@ const SAL_OPTIONS = [
 
 export default function MapPage() {
   const navigate   = useNavigate();
+  const { isLoggedIn } = useAuth();
   const mapRef     = useRef(null);
   const mapObjRef  = useRef(null);
   const markersRef    = useRef([]);
@@ -176,12 +178,18 @@ export default function MapPage() {
     setDrawerCity(cityData);
     setDrawerOpen(true);
     setDrawerJobs([]);
+
+    // Guest — just show login prompt, no jobs fetch
+    if (!isLoggedIn) {
+      setDrawerLoading(false);
+      return;
+    }
+
     setDrawerLoading(true);
     if (mapObjRef.current) {
       mapObjRef.current.flyTo([cityData.latitude, cityData.longitude], 12, { duration: 0.8 });
     }
     try {
-      // Use cache if available
       let jobs = cityJobsCache.current[cityData.city];
       if (!jobs) {
         const res = await getCityJobs(cityData.city);
@@ -578,6 +586,34 @@ export default function MapPage() {
                   </div>
                   <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>No jobs listed yet</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 3 }}>Try another city</div>
+                </div>
+              ) : !isLoggedIn ? (
+                <div style={{ textAlign:"center", padding:"28px 16px" }}>
+                  <div style={{
+                    width:48,height:48,borderRadius:12,background:"var(--pink-light)",
+                    display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={PINK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </div>
+                  <div style={{fontWeight:700,fontSize:"0.88rem",marginBottom:6}}>Login to view jobs</div>
+                  <div style={{fontSize:"0.75rem",color:"var(--muted)",marginBottom:16,lineHeight:1.6}}>
+                    Create a free account to explore jobs, get directions, and apply
+                  </div>
+                  <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+                    <button onClick={()=>navigate("/login")} style={{
+                      padding:"8px 20px",borderRadius:999,background:PINK,color:"#fff",
+                      border:"none",fontWeight:700,fontSize:"0.8rem",cursor:"pointer",
+                      fontFamily:"DM Sans,sans-serif",
+                    }}>Login</button>
+                    <button onClick={()=>navigate("/register")} style={{
+                      padding:"8px 20px",borderRadius:999,background:"none",color:PINK,
+                      border:`1.5px solid ${PINK}`,fontWeight:700,fontSize:"0.8rem",cursor:"pointer",
+                      fontFamily:"DM Sans,sans-serif",
+                    }}>Register</button>
+                  </div>
                 </div>
               ) : drawerJobs.map(job => {
                 const jobLat = job.latitude || drawerCity?.latitude;
