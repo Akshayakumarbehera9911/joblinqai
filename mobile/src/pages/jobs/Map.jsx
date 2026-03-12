@@ -627,11 +627,23 @@ export default function MapPage() {
                 const dist = (nearMeActive && nearCoords && jobLat && jobLng)
                   ? fmtDist(nearCoords.lat, nearCoords.lng, jobLat, jobLng) : null;
                 const loc = locationRef.current;
-                const dirUrl = (jobLat && jobLng)
-                  ? (loc
-                      ? `https://www.google.com/maps/dir/?api=1&origin=${loc.lat},${loc.lng}&destination=${jobLat},${jobLng}`
-                      : `https://www.google.com/maps/search/?api=1&query=${jobLat},${jobLng}`)
-                  : null;
+                const dirUrl = null; // handled by handleDirections
+                const handleDirections = (jLat, jLng) => {
+                  const cur = locationRef.current;
+                  if (cur) {
+                    window.open(`https://www.google.com/maps/dir/?api=1&origin=${cur.lat},${cur.lng}&destination=${jLat},${jLng}`, "_blank");
+                  } else if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(pos => {
+                      locationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                      window.open(`https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${jLat},${jLng}`, "_blank");
+                    }, () => {
+                      // Location denied — open job location only
+                      window.open(`https://www.google.com/maps/search/?api=1&query=${jLat},${jLng}`, "_blank");
+                    });
+                  } else {
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${jLat},${jLng}`, "_blank");
+                  }
+                };
                 return (
                   <div key={job.id} style={{
                     background: "var(--bg)", border: "1px solid var(--border)",
@@ -650,11 +662,12 @@ export default function MapPage() {
                         padding: "5px 12px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700,
                         background: PINK, color: "#fff", border: "none", cursor: "pointer",
                       }}>View Job</button>
-                      {dirUrl && (
-                        <a href={dirUrl} target="_blank" rel="noreferrer" style={{
+                      {jobLat && jobLng && (
+                        <button onClick={() => handleDirections(jobLat, jobLng)} style={{
                           padding: "5px 12px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700,
-                          background: "#3B5BDB", color: "#fff", textDecoration: "none", display: "inline-flex", alignItems: "center",
-                        }}>Directions</a>
+                          background: "#3B5BDB", color: "#fff", border: "none", cursor: "pointer",
+                          fontFamily: "DM Sans, sans-serif",
+                        }}>Directions</button>
                       )}
                     </div>
                   </div>
