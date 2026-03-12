@@ -35,12 +35,15 @@ export default function MapPage() {
   const mapObjRef  = useRef(null);
   const markersRef    = useRef([]);
   const userMarkerRef = useRef(null);
+  const jobMarkersRef = useRef([]);
+  const cityJobsCache = useRef({});
 
   const [drawerCity,    setDrawerCity]    = useState(null);
   const [drawerJobs,    setDrawerJobs]    = useState([]);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [drawerOpen,    setDrawerOpen]    = useState(false);
   const [mapReady,      setMapReady]      = useState(false);
+  const [zoomLevel,     setZoomLevel]     = useState(5);
 
   // Filter state
   const [filterOpen,    setFilterOpen]    = useState(false);
@@ -128,6 +131,31 @@ export default function MapPage() {
 
       await loadCities({});
       setMapReady(true);
+
+      // Zoom listener — switch between city clusters and job pins
+      map.on("zoomend", async () => {
+        const z = map.getZoom();
+        setZoomLevel(z);
+        if (z >= 10) {
+          // Hide city markers, show individual job pins
+          markersRef.current.forEach(m => map.removeLayer(m));
+          const bounds = map.getBounds();
+          // Find cities in current view
+          const visibleCities = markersDataRef.current.filter(c =>
+            bounds.contains([c.latitude, c.longitude])
+          );
+          for (const city of visibleCities) {
+            await loadJobPins(city.city, city.latitude, city.longitude);
+          }
+        } else {
+          // Remove job pins, show city markers
+          jobMarkersRef.current.forEach(m => map.removeLayer(m));
+          jobMarkersRef.current = [];
+          markersRef.current.forEach(m => map.addTo ? m.addTo(map) : null);
+          // Re-render city markers cleanly
+          markersRef.current.forEach(m => { try { m.addTo(map); } catch {} });
+        }
+      });
     }
 
     // Silent location preload
@@ -153,8 +181,13 @@ export default function MapPage() {
       mapObjRef.current.flyTo([cityData.latitude, cityData.longitude], 12, { duration: 0.8 });
     }
     try {
-      const res  = await getCityJobs(cityData.city);
-      const jobs = res.data?.data || res.data || [];
+      // Use cache if available
+      let jobs = cityJobsCache.current[cityData.city];
+      if (!jobs) {
+        const res = await getCityJobs(cityData.city);
+        jobs = res.data?.data || res.data || [];
+        cityJobsCache.current[cityData.city] = jobs;
+      }
       setDrawerJobs(jobs);
     } catch {
       setDrawerJobs([]);
@@ -233,6 +266,56 @@ export default function MapPage() {
     const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
     const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return km < 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+  }
+
+  async function loadJobPins(cityName, cityLat, cityLng) {
+    const L = (await import("leaflet")).default || await import("leaflet");
+    // Use cache to avoid refetching
+    let jobs = cityJobsCache.current[cityName];
+    if (!jobs) {
+      try {
+        const res = await getCityJobs(cityName);
+        jobs = res.data?.data || res.data || [];
+        cityJobsCache.current[cityName] = jobs;
+      } catch { return; }
+    }
+    if (!jobs.length) return;
+
+    // Group by rounded coords
+    const groups = {};
+    jobs.forEach(j => {
+      const lat = j.latitude  || cityLat;
+      const lng = j.longitude || cityLng;
+      const key = `${parseFloat(lat).toFixed(5)},${parseFloat(lng).toFixed(5)}`;
+      if (!groups[key]) groups[key] = { lat: parseFloat(lat), lng: parseFloat(lng), jobs: [] };
+      groups[key].jobs.push(j);
+    });
+
+    Object.values(groups).forEach(group => {
+      const { lat, lng, jobs: gjobs } = group;
+      const count = gjobs.length;
+      const size = 26;
+      const icon = L.divIcon({
+        className: "",
+        html: count > 1
+          ? `<div style="position:relative;">
+              <svg width="26" height="36" viewBox="0 0 26 36"><path d="M13 0C5.82 0 0 5.82 0 13c0 9.75 13 23 13 23S26 22.75 26 13C26 5.82 20.18 0 13 0z" fill="${PINK}" stroke="#fff" stroke-width="1.5"/><circle cx="13" cy="12" r="5" fill="#fff"/></svg>
+              <div style="position:absolute;top:-5px;right:-6px;min-width:16px;height:16px;border-radius:999px;background:#111;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;padding:0 3px;">${count}</div>
+            </div>`
+          : `<svg width="26" height="36" viewBox="0 0 26 36"><path d="M13 0C5.82 0 0 5.82 0 13c0 9.75 13 23 13 23S26 22.75 26 13C26 5.82 20.18 0 13 0z" fill="${PINK}" stroke="#fff" stroke-width="1.5"/><circle cx="13" cy="12" r="5" fill="#fff"/></svg>`,
+        iconSize: [26, 36], iconAnchor: [13, 36],
+      });
+      const m = L.marker([lat, lng], { icon })
+        .addTo(mapObjRef.current)
+        .on("click", () => {
+          // Open drawer with just these jobs
+          setDrawerCity({ city: cityName, state: "", job_count: gjobs.length, latitude: lat, longitude: lng });
+          setDrawerJobs(gjobs);
+          setDrawerLoading(false);
+          setDrawerOpen(true);
+        });
+      jobMarkersRef.current.push(m);
+    });
   }
 
   function fmtSalary(min, max) {
