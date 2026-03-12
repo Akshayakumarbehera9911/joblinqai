@@ -396,27 +396,24 @@ def update_application_status(
 
     # Send push notification to candidate
     try:
-        profile = db.query(CandidateProfile).filter(CandidateProfile.id == app.candidate_id).first()
-        if profile and getattr(profile, "fcm_token", None):
-            from backend.utils.firebase import send_push
-            if body.status == "shortlisted":
-                send_push(
-                    profile.fcm_token,
-                    title="🎉 You've been shortlisted!",
-                    body=f"Congratulations! Your application for {job.title} has been shortlisted."
-                )
-            elif body.status == "rejected":
-                send_push(
-                    profile.fcm_token,
-                    title="Application Update",
-                    body=f"Your application for {job.title} has been reviewed. Keep applying!"
-                )
+        from backend.utils.firebase import send_push_to_candidate
+        if body.status == "shortlisted":
+            send_push_to_candidate(
+                app.candidate_id,
+                title="🎉 You've been shortlisted!",
+                body=f"Congratulations! Your application for {job.title} has been shortlisted.",
+                db=db
+            )
+        elif body.status == "rejected":
+            send_push_to_candidate(
+                app.candidate_id,
+                title="Application Update",
+                body=f"Your application for {job.title} has been reviewed. Keep applying!",
+                db=db
+            )
     except Exception as e:
         import logging
         logging.getLogger(__name__).error("Push failed: %s", str(e), exc_info=True)
-
-    return {"success": True, "data": {"message": f"Application {body.status}"}, "error": None}
-
 
 # ── GET /api/hr/dashboard ─────────────────────────────────────────────────
 @router.get("/dashboard")

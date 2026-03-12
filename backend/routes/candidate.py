@@ -427,12 +427,16 @@ class FCMTokenBody(BaseModel):
 
 @router.post("/fcm-token")
 def save_fcm_token(body: FCMTokenBody, current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
-    """Save FCM push token for this candidate."""
+    """Save FCM push token for this device. Supports multiple devices per candidate."""
+    from backend.models.candidate import CandidateFCMToken
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
-    profile.fcm_token = body.token
-    db.commit()
+    # Upsert — if token already exists don't duplicate
+    existing = db.query(CandidateFCMToken).filter(CandidateFCMToken.token == body.token).first()
+    if not existing:
+        db.add(CandidateFCMToken(candidate_id=profile.id, token=body.token))
+        db.commit()
     return {"success": True, "data": {"message": "Token saved"}, "error": None}
 
 
