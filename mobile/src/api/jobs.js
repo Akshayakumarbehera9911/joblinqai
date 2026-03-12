@@ -14,12 +14,16 @@ export function applyJob(id) {
   return apiFetch(`/jobs/${id}/apply`, { method: "POST" });
 }
 
-export function getMapData() {
-  return apiFetch("/jobs/map/data");
+export function getMapData(params = "") {
+  return apiFetch(`/jobs/map/data${params ? "?" + params : ""}`);
 }
 
 export function getCityJobs(city) {
   return apiFetch(`/jobs/map/city/${encodeURIComponent(city)}`);
+}
+
+export function getRoleFamilies() {
+  return apiFetch("/jobs/map/role-families");
 }
 
 export function suggestCities(q) {
