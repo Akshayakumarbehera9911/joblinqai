@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,11 @@ def send_push(token: str, title: str, body: str) -> bool:
 
         # Initialize only once
         if not firebase_admin._apps:
-            cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
-            cred = credentials.Certificate(os.path.abspath(cred_path))
+            creds_json = os.environ.get("FIREBASE_CREDENTIALS")
+            if not creds_json:
+                logger.error("FIREBASE_CREDENTIALS env var not set")
+                return False
+            cred = credentials.Certificate(json.loads(creds_json))
             firebase_admin.initialize_app(cred)
 
         message = messaging.Message(
