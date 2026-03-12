@@ -241,7 +241,35 @@ export default function HRDashboard() {
   if (loading) return (
     <>
       <TopBar title="Dashboard" />
-      <div className="page"><Spinner /></div>
+      <div className="page" style={{ padding: "calc(var(--topbar-height) + 12px) 14px calc(var(--nav-height) + 14px)" }}>
+        {/* Company strip skeleton */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--border)", flexShrink: 0, animation: "pulse 1.4s ease-in-out infinite" }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ height: 12, borderRadius: 6, background: "var(--border)", marginBottom: 6, width: "55%", animation: "pulse 1.4s ease-in-out infinite" }} />
+            <div style={{ height: 10, borderRadius: 6, background: "var(--border)", width: "35%", animation: "pulse 1.4s ease-in-out infinite" }} />
+          </div>
+        </div>
+        {/* Stats skeleton */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+          {[0,1,2,3].map(i => (
+            <div key={i} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", height: 52, animation: "pulse 1.4s ease-in-out infinite" }} />
+          ))}
+        </div>
+        {/* Job cards skeleton */}
+        {[0,1,2].map(i => (
+          <div key={i} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", marginBottom: 8 }}>
+            <div style={{ height: 13, borderRadius: 6, background: "var(--border)", width: "60%", marginBottom: 8, animation: "pulse 1.4s ease-in-out infinite" }} />
+            <div style={{ height: 10, borderRadius: 6, background: "var(--border)", width: "40%", marginBottom: 12, animation: "pulse 1.4s ease-in-out infinite" }} />
+            <div style={{ display: "flex", gap: 6 }}>
+              {[0,1,2].map(j => (
+                <div key={j} style={{ height: 26, borderRadius: 6, background: "var(--border)", flex: 1, animation: "pulse 1.4s ease-in-out infinite" }} />
+              ))}
+            </div>
+          </div>
+        ))}
+        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
+      </div>
     </>
   );
 

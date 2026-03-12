@@ -8,6 +8,17 @@ const JOB_TYPES    = ["full-time", "part-time", "contract", "internship"];
 const WORK_MODES   = ["onsite", "remote", "hybrid"];
 const ROLE_TYPES   = ["technical", "non-technical", "blue-collar"];
 const SALARY_TYPES = ["per month", "per year", "per hour", "per day", "fixed"];
+const CATEGORIES   = [
+  "Technology", "Finance", "Marketing", "Sales", "Operations",
+  "Human Resources", "Design", "Customer Support", "Healthcare",
+  "Education", "Logistics", "Manufacturing", "Legal", "Other",
+];
+const EXPERIENCE_OPTS = ["0-1 years", "1-3 years", "3-5 years", "5-8 years", "8-20 years"];
+const EDUCATION_OPTS  = [
+  "Class 10", "Class 12", "ITI", "Diploma", "Any Graduate",
+  "B.Tech / B.E.", "BCA", "BBA", "B.Com", "B.Sc",
+  "MBA", "MCA", "M.Tech", "Any Post Graduate", "PhD",
+];
 
 /* ── Chip selector ── */
 function ChipGroup({ options, value, onChange }) {
@@ -275,16 +286,22 @@ export default function HRPostJob() {
                 onChange={e => setJob(j => ({ ...j, title: e.target.value }))} />
             </InlineField>
             <InlineField label="Category">
-              <InlineInput value={job.category} placeholder="e.g. Technology, Finance"
-                onChange={e => setJob(j => ({ ...j, category: e.target.value }))} />
+              <select value={job.category} onChange={e => setJob(j => ({ ...j, category: e.target.value }))}
+                style={{ width: "100%", border: "none", outline: "none", padding: "10px 0 10px 8px", fontSize: "0.82rem", fontWeight: 500, background: "transparent", color: job.category ? "var(--black)" : "var(--muted)", fontFamily: "var(--font-sans)", cursor: "pointer" }}>
+                <option value="">Select category</option>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </InlineField>
             <InlineField label="Openings">
               <InlineInput type="number" value={job.openings} placeholder="1"
                 onChange={e => setJob(j => ({ ...j, openings: e.target.value }))} />
             </InlineField>
             <InlineField label="Education" last>
-              <InlineInput value={job.education_required} placeholder="e.g. B.Tech, Any Graduate"
-                onChange={e => setJob(j => ({ ...j, education_required: e.target.value }))} />
+              <select value={job.education_required} onChange={e => setJob(j => ({ ...j, education_required: e.target.value }))}
+                style={{ width: "100%", border: "none", outline: "none", padding: "10px 0 10px 8px", fontSize: "0.82rem", fontWeight: 500, background: "transparent", color: job.education_required ? "var(--black)" : "var(--muted)", fontFamily: "var(--font-sans)", cursor: "pointer" }}>
+                <option value="">Select education</option>
+                {EDUCATION_OPTS.map(e => <option key={e} value={e}>{e}</option>)}
+              </select>
             </InlineField>
           </Section>
 
@@ -354,10 +371,10 @@ export default function HRPostJob() {
 
           {/* ── Experience ── */}
           <Section title="Experience">
-            <InlineField label="Min Experience" last>
-              <InlineInput value={job.min_experience} placeholder="e.g. 2 years"
-                onChange={e => setJob(j => ({ ...j, min_experience: e.target.value }))} />
-            </InlineField>
+            <div style={{ padding: "10px 12px" }}>
+              <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 7 }}>Min Experience Required</div>
+              <ChipGroup options={EXPERIENCE_OPTS} value={job.min_experience} onChange={v => setJob(j => ({ ...j, min_experience: v }))} />
+            </div>
           </Section>
 
           {/* ── Salary ── */}
