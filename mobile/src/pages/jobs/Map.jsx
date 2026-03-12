@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMapData, getCityJobs } from "../../api/jobs";
+import { getMapData, getCityJobs, getRoleFamilies } from "../../api/jobs";
 
 const PINK = "#E8398A";
 const SAMPLE_CITIES = [
@@ -13,17 +13,90 @@ const SAMPLE_CITIES = [
   { city: "Kolkata",   state: "West Bengal", latitude: 22.5726, longitude: 88.3639, job_count: 3 },
 ];
 
+const EXP_OPTIONS = [
+  { value: "",           label: "Any Experience" },
+  { value: "0-1 years",  label: "Fresher / 0–1 yr" },
+  { value: "1-3 years",  label: "1–3 years" },
+  { value: "3-5 years",  label: "3–5 years" },
+  { value: "5-8 years",  label: "5–8 years" },
+  { value: "8-20 years", label: "8+ years" },
+];
+const SAL_OPTIONS = [
+  { value: "",      label: "Any Salary" },
+  { value: "15000", label: "₹15k+/mo" },
+  { value: "30000", label: "₹30k+/mo" },
+  { value: "50000", label: "₹50k+/mo" },
+  { value: "80000", label: "₹80k+/mo" },
+];
+
 export default function MapPage() {
   const navigate   = useNavigate();
   const mapRef     = useRef(null);
   const mapObjRef  = useRef(null);
-  const markersRef = useRef([]);
+  const markersRef    = useRef([]);
+  const userMarkerRef = useRef(null);
 
   const [drawerCity,    setDrawerCity]    = useState(null);
   const [drawerJobs,    setDrawerJobs]    = useState([]);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [drawerOpen,    setDrawerOpen]    = useState(false);
   const [mapReady,      setMapReady]      = useState(false);
+
+  // Filter state
+  const [filterOpen,    setFilterOpen]    = useState(false);
+  const [roleFamilies,  setRoleFamilies]  = useState([]);
+  const [fRole,         setFRole]         = useState("");
+  const [fExp,          setFExp]          = useState("");
+  const [fSalary,       setFSalary]       = useState("");
+  const [nearMeActive,  setNearMeActive]  = useState(false);
+  const [nearCoords,    setNearCoords]    = useState(null);
+  const activeFilterCount = [fRole, fExp, fSalary, nearMeActive].filter(Boolean).length;
+  const markersDataRef = useRef([]);
+
+  useEffect(() => { loadRoleFamiliesData(); }, []);
+
+  async function loadRoleFamiliesData() {
+    try {
+      const res = await getRoleFamilies();
+      setRoleFamilies(res.data || []);
+    } catch {}
+  }
+
+  const loadCities = useCallback(async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.role)       params.set("role_family", filters.role);
+    if (filters.experience) params.set("experience",  filters.experience);
+    if (filters.salary)     params.set("salary_min",  filters.salary);
+    if (filters.nearMe && filters.lat && filters.lng) {
+      params.set("near_lat", filters.lat);
+      params.set("near_lng", filters.lng);
+      params.set("near_km",  "50");
+    }
+    try {
+      const res   = await getMapData(params.toString());
+      const data  = res.data?.data || res.data || [];
+      const cities = data.length ? data : SAMPLE_CITIES;
+      markersDataRef.current = cities;
+      // Rebuild markers on map
+      if (mapObjRef.current) {
+        markersRef.current.forEach(m => mapObjRef.current.removeLayer(m));
+        markersRef.current = [];
+        const L = (await import("leaflet")).default || await import("leaflet");
+        cities.forEach(city => {
+          const size = Math.min(10 + Math.log(city.job_count + 1) * 5, 28);
+          const icon = L.divIcon({
+            className: "",
+            html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${PINK};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;font-size:${Math.max(8,size*0.38)}px;font-weight:700;color:#fff;font-family:DM Sans,sans-serif;">${city.job_count}</div>`,
+            iconSize: [size, size], iconAnchor: [size/2, size/2],
+          });
+          const m = L.marker([city.latitude, city.longitude], { icon })
+            .addTo(mapObjRef.current)
+            .on("click", () => openDrawer(city));
+          markersRef.current.push(m);
+        });
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,34 +126,15 @@ export default function MapPage() {
         .addAttribution('© <a href="https://openstreetmap.org">OSM</a>')
         .addTo(map);
 
-      let cities = SAMPLE_CITIES;
-      try {
-        const res  = await getMapData();
-        const data = res.data?.data || res.data || [];
-        if (data.length) cities = data;
-      } catch {}
-
-      cities.forEach(city => {
-        const size = Math.min(10 + Math.log(city.job_count + 1) * 5, 28);
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="
-            width:${size}px;height:${size}px;border-radius:50%;
-            background:${PINK};border:2.5px solid #fff;
-            box-shadow:0 2px 6px rgba(0,0,0,0.25);
-            display:flex;align-items:center;justify-content:center;
-            font-size:${Math.max(8,size*0.38)}px;font-weight:700;color:#fff;
-            font-family:DM Sans,sans-serif;
-          ">${city.job_count}</div>`,
-          iconSize:   [size, size],
-          iconAnchor: [size / 2, size / 2],
-        });
-        L.marker([city.latitude, city.longitude], { icon })
-          .addTo(map)
-          .on("click", () => openDrawer(city));
-      });
-
+      await loadCities({});
       setMapReady(true);
+    }
+
+    // Silent location preload
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        setNearCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      }, () => {});
     }
 
     init();
@@ -109,6 +163,78 @@ export default function MapPage() {
     }
   }
 
+  function applyFilters() {
+    const filters = { role: fRole, experience: fExp, salary: fSalary, nearMe: nearMeActive };
+    if (nearMeActive && nearCoords) { filters.lat = nearCoords.lat; filters.lng = nearCoords.lng; }
+    loadCities(filters);
+    setFilterOpen(false);
+    setDrawerOpen(false);
+    // Fly to user if Near Me, else reset to India
+    if (nearMeActive && nearCoords && mapObjRef.current) {
+      mapObjRef.current.flyTo([nearCoords.lat, nearCoords.lng], 9, { duration: 1.2 });
+      showUserMarker(nearCoords.lat, nearCoords.lng);
+    } else {
+      removeUserMarker();
+      if (mapObjRef.current) mapObjRef.current.flyTo([20.5937, 78.9629], 5, { duration: 1 });
+    }
+  }
+
+  async function showUserMarker(lat, lng) {
+    const L = (await import("leaflet")).default || await import("leaflet");
+    if (userMarkerRef.current && mapObjRef.current) mapObjRef.current.removeLayer(userMarkerRef.current);
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:16px;height:16px;position:relative;">
+        <div style="position:absolute;inset:0;border-radius:50%;background:#3B5BDB;opacity:0.3;animation:pulse 2s ease-out infinite;"></div>
+        <div style="position:absolute;top:3px;left:3px;width:10px;height:10px;border-radius:50%;background:#3B5BDB;border:2px solid #fff;box-shadow:0 1px 4px rgba(59,91,219,.5);"></div>
+      </div>`,
+      iconSize: [16, 16], iconAnchor: [8, 8],
+    });
+    userMarkerRef.current = L.marker([lat, lng], { icon, zIndexOffset: 1000 })
+      .addTo(mapObjRef.current)
+      .bindPopup('<div style="padding:6px 10px;font-size:12px;font-weight:700;">📍 You are here</div>', { closeButton: false });
+  }
+
+  function removeUserMarker() {
+    if (userMarkerRef.current && mapObjRef.current) {
+      mapObjRef.current.removeLayer(userMarkerRef.current);
+      userMarkerRef.current = null;
+    }
+  }
+
+  function clearFilters() {
+    setFRole(""); setFExp(""); setFSalary("");
+    setNearMeActive(false); setNearCoords(null);
+    loadCities({});
+    setFilterOpen(false);
+    setDrawerOpen(false);
+    if (mapObjRef.current) mapObjRef.current.flyTo([20.5937, 78.9629], 5, { duration: 1 });
+  }
+
+  function handleNearMe() {
+    if (nearMeActive) {
+      setNearMeActive(false);
+      return;
+    }
+    // If already preloaded — instant toggle
+    if (nearCoords) { setNearMeActive(true); return; }
+    // Fallback request
+    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      setNearCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      setNearMeActive(true);
+    }, () => alert("Location access denied. Enable in browser settings."));
+  }
+
+
+  function fmtDist(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return km < 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+  }
+
   function fmtSalary(min, max) {
     if (!min) return null;
     const toK = n => n >= 100000 ? (n/100000).toFixed(1)+"L" : (n/1000).toFixed(0)+"k";
@@ -117,6 +243,132 @@ export default function MapPage() {
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", zIndex: 1 }}>
+
+      {/* ── Filter pill ── */}
+      {mapReady && (
+        <button onClick={() => setFilterOpen(true)} style={{
+          position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)",
+          zIndex: 1000, background: activeFilterCount > 0 ? PINK : "var(--card)",
+          color: activeFilterCount > 0 ? "#fff" : "var(--muted)",
+          border: `1.5px solid ${activeFilterCount > 0 ? PINK : "var(--border)"}`,
+          borderRadius: 999, padding: "7px 16px",
+          fontSize: "0.78rem", fontWeight: 700,
+          cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
+          transition: "all 0.15s",
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+          </svg>
+          Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
+        </button>
+      )}
+
+      {/* ── Filter overlay ── */}
+      {filterOpen && (
+        <div onClick={() => setFilterOpen(false)} style={{
+          position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 1001,
+        }} />
+      )}
+
+      {/* ── Filter bottom sheet ── */}
+      <div style={{
+        position: "absolute", bottom: "var(--nav-height)", left: 0, right: 0, zIndex: 1002,
+        background: "var(--card)", borderRadius: "20px 20px 0 0",
+        transform: filterOpen ? "translateY(0)" : "translateY(100%)",
+        transition: "transform 0.3s cubic-bezier(0.32,0.72,0,1)",
+        boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
+        padding: "0 0 20px",
+      }}>
+        {/* Handle */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
+          <div style={{ width: 36, height: 4, background: "var(--border)", borderRadius: 999 }} />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 16px 14px" }}>
+          <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>Filter Jobs on Map</div>
+          {activeFilterCount > 0 && (
+            <button onClick={clearFilters} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer" }}>
+              Clear all
+            </button>
+          )}
+        </div>
+
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Role */}
+          <div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Role Family</div>
+            <select className="input" value={fRole} onChange={e => setFRole(e.target.value)}>
+              <option value="">All Roles</option>
+              {roleFamilies.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+
+          {/* Experience */}
+          <div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Experience</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {EXP_OPTIONS.map(o => (
+                <button key={o.value} onClick={() => setFExp(o.value)} style={{
+                  padding: "6px 12px", borderRadius: 999, fontSize: "0.77rem", fontWeight: 600,
+                  border: `1.5px solid ${fExp === o.value ? PINK : "var(--border)"}`,
+                  background: fExp === o.value ? "var(--pink-light)" : "var(--card)",
+                  color: fExp === o.value ? PINK : "var(--muted)",
+                  cursor: "pointer",
+                }}>{o.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Salary */}
+          <div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Min Salary</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {SAL_OPTIONS.map(o => (
+                <button key={o.value} onClick={() => setFSalary(o.value)} style={{
+                  padding: "6px 12px", borderRadius: 999, fontSize: "0.77rem", fontWeight: 600,
+                  border: `1.5px solid ${fSalary === o.value ? PINK : "var(--border)"}`,
+                  background: fSalary === o.value ? "var(--pink-light)" : "var(--card)",
+                  color: fSalary === o.value ? PINK : "var(--muted)",
+                  cursor: "pointer",
+                }}>{o.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Near Me toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0" }}>
+            <div>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Near Me</div>
+              <div style={{ fontSize: "0.78rem", color: nearMeActive ? PINK : "var(--muted)", fontWeight: 600 }}>
+                {nearMeActive ? "📍 50km radius active" : "Show jobs within 50km"}
+              </div>
+            </div>
+            <div onClick={handleNearMe} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+              <div style={{
+                width: 40, height: 22, borderRadius: 999,
+                background: nearMeActive ? PINK : "var(--border)",
+                position: "relative", transition: "background 0.2s",
+              }}>
+                <div style={{
+                  position: "absolute", top: 3, left: nearMeActive ? 21 : 3,
+                  width: 16, height: 16, borderRadius: "50%",
+                  background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  transition: "left 0.2s",
+                }} />
+              </div>
+            </div>
+          </div>
+
+          <button onClick={applyFilters} style={{
+            padding: "12px", borderRadius: 999, background: PINK, color: "#fff",
+            border: "none", fontWeight: 700, fontSize: "0.88rem", cursor: "pointer",
+          }}>
+            Apply Filters
+          </button>
+        </div>
+      </div>
 
       {/* ── Back ── */}
       <button onClick={() => navigate(-1)} style={{
@@ -244,34 +496,50 @@ export default function MapPage() {
                   <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>No jobs listed yet</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 3 }}>Try another city</div>
                 </div>
-              ) : drawerJobs.map(job => (
-                <div key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} style={{
-                  background: "var(--bg)", border: "1px solid var(--border)",
-                  borderRadius: 8, padding: "10px 12px", marginBottom: 7,
-                  cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: "0.84rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{job.title}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 2 }}>
+              ) : drawerJobs.map(job => {
+                const jobLat = job.latitude || drawerCity?.latitude;
+                const jobLng = job.longitude || drawerCity?.longitude;
+                const dist = (nearMeActive && nearCoords && jobLat && jobLng)
+                  ? fmtDist(nearCoords.lat, nearCoords.lng, jobLat, jobLng) : null;
+                const dirUrl = (nearCoords && jobLat && jobLng)
+                  ? `https://www.google.com/maps/dir/?api=1&origin=${nearCoords.lat},${nearCoords.lng}&destination=${jobLat},${jobLng}` : null;
+                return (
+                  <div key={job.id} style={{
+                    background: "var(--bg)", border: "1px solid var(--border)",
+                    borderRadius: 8, padding: "10px 12px", marginBottom: 7,
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.84rem", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{job.title}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: dist ? 3 : 8 }}>
                       {job.company_name}
                       {fmtSalary(job.salary_min, job.salary_max) && (
-                        <span style={{ color: PINK, fontWeight: 600, marginLeft: 6 }}>
-                          {fmtSalary(job.salary_min, job.salary_max)}
-                        </span>
+                        <span style={{ color: PINK, fontWeight: 600, marginLeft: 6 }}>{fmtSalary(job.salary_min, job.salary_max)}</span>
+                      )}
+                    </div>
+                    {dist && <div style={{ fontSize: "0.7rem", color: "#3B5BDB", fontWeight: 600, marginBottom: 8 }}>📍 {dist} away</div>}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => navigate(`/jobs/${job.id}`)} style={{
+                        padding: "5px 12px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700,
+                        background: PINK, color: "#fff", border: "none", cursor: "pointer",
+                      }}>View Job</button>
+                      {dirUrl && (
+                        <a href={dirUrl} target="_blank" rel="noreferrer" style={{
+                          padding: "5px 12px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700,
+                          background: "#3B5BDB", color: "#fff", textDecoration: "none", display: "inline-flex", alignItems: "center",
+                        }}>Directions</a>
                       )}
                     </div>
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%{transform:scale(1);opacity:.4} 70%{transform:scale(2.5);opacity:0} 100%{transform:scale(1);opacity:0} }
+      `}</style>
     </div>
   );
 }

@@ -90,7 +90,13 @@ def search_jobs(
 def map_page_redirect():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/jobs/map")
-
+@router.get("/map/role-families")
+def map_role_families(db: Session = Depends(get_db)):
+    from backend.models.score import RoleSynonymCache
+    from sqlalchemy import distinct
+    rows = db.query(distinct(RoleSynonymCache.target_role)).all()
+    families = sorted(list(set(r[0] for r in rows if r[0] and r[0].strip())))
+    return {"success": True, "data": families, "error": None}
 # Static fallback coordinates for Indian cities (used when job has no lat/long)
 CITY_COORDS = {
     "bangalore": (12.9716, 77.5946), "bengaluru": (12.9716, 77.5946),
@@ -109,66 +115,73 @@ CITY_COORDS = {
 
 # ── GET /api/jobs/map/data ────────────────────────────────────────────────
 @router.get("/map/data")
-def map_data(db: Session = Depends(get_db)):
-    """Returns job cluster data for globe — all active job cities with coordinates."""
-    from sqlalchemy import func
+def map_data(
+    role_family: Optional[str] = Query(None),
+    experience:  Optional[str] = Query(None),
+    salary_min:  Optional[int] = Query(None),
+    near_lat:    Optional[float] = Query(None),
+    near_lng:    Optional[float] = Query(None),
+    near_km:     Optional[float] = Query(50),
+    db: Session = Depends(get_db)
+):
+    from backend.models.score import RoleSynonymCache
+    import math
 
-    # Group by city only — then pick first non-null lat/lng per city
-    # Grouping by (city, lat, lng) would split same city into multiple rows
-    # when some jobs have coords and others don't, losing the count.
-    all_jobs = db.query(
-        Job.city, Job.state, Job.latitude, Job.longitude
-    ).filter(
+    query = db.query(Job.city, Job.state, Job.latitude, Job.longitude).filter(
         Job.status == "active",
         Job.city.isnot(None)
-    ).all()
+    )
 
-    # Build per-city aggregates manually
+    # Role family filter — fetch matched_titles from cache, filter by job title
+    if role_family:
+        cache = db.query(RoleSynonymCache).filter(
+            RoleSynonymCache.target_role == role_family
+        ).first()
+        if cache and cache.matched_titles:
+            from sqlalchemy import or_
+            title_filters = [Job.title.ilike(f"%{t}%") for t in cache.matched_titles]
+            query = query.filter(or_(*title_filters))
+
+    # Experience filter
+    if experience:
+        query = query.filter(Job.min_experience == experience)
+
+    # Salary filter
+    if salary_min:
+        query = query.filter(Job.salary_min >= salary_min, Job.show_salary == True)
+
+    # Near me — bounding box (1 deg lat ≈ 111km)
+    if near_lat is not None and near_lng is not None:
+        delta_lat = near_km / 111.0
+        delta_lng = near_km / (111.0 * math.cos(math.radians(near_lat)))
+        query = query.filter(
+            Job.latitude.between(near_lat - delta_lat, near_lat + delta_lat),
+            Job.longitude.between(near_lng - delta_lng, near_lng + delta_lng)
+        )
+
+    all_jobs = query.all()
+
     city_data = {}
     for j in all_jobs:
         key = (j.city or "").lower().strip()
         if key not in city_data:
-            city_data[key] = {
-                "city": j.city,
-                "state": j.state,
-                "latitude": None,
-                "longitude": None,
-                "job_count": 0,
-            }
+            city_data[key] = {"city": j.city, "state": j.state, "latitude": None, "longitude": None, "job_count": 0}
         city_data[key]["job_count"] += 1
-        # Take first non-null coords we find for this city
         if city_data[key]["latitude"] is None and j.latitude is not None:
             city_data[key]["latitude"]  = float(j.latitude)
             city_data[key]["longitude"] = float(j.longitude)
 
     out = []
     for key, r in city_data.items():
-        lat = r["latitude"]
-        lng = r["longitude"]
-
-        # Fallback to static coords if no job in this city had coordinates yet
+        lat, lng = r["latitude"], r["longitude"]
         if lat is None or lng is None:
             coords = CITY_COORDS.get(key)
-            if coords:
-                lat, lng = coords
-
+            if coords: lat, lng = coords
         if lat is None or lng is None:
-            continue  # city truly unknown — skip
+            continue
+        out.append({"city": r["city"], "state": r["state"], "latitude": lat, "longitude": lng, "job_count": r["job_count"]})
 
-        out.append({
-            "city":      r["city"],
-            "state":     r["state"],
-            "latitude":  lat,
-            "longitude": lng,
-            "job_count": r["job_count"],
-        })
-
-    return {
-        "success": True,
-        "data": out,
-        "error": None
-    }
-
+    return {"success": True, "data": out, "error": None}
 
 # ── GET /api/jobs/map/city/{city} ─────────────────────────────────────────
 @router.get("/map/city/{city}")

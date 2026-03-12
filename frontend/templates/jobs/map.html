@@ -6,105 +6,133 @@
 <title>Job Map — JobPortal</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
-  * { margin:0; padding:0; box-sizing:border-box; }
-  :root {
-    --bg:#F2EDE8; --pink:#E8398A; --pink-hover:#d42f7c;
-    --pink-light:#fdf0f7; --black:#111111; --muted:#888880;
-    --card:#ffffff; --border:#e0dbd4; --green:#2d9e6b; --red:#e03c3c;
-  }
-  body { background:var(--bg); color:var(--black); font-family:'DM Sans',sans-serif; height:100vh; width:100vw; overflow:hidden; display:flex; flex-direction:column; }
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#F2EDE8; --pink:#E8398A; --pink-hover:#d42f7c;
+  --pink-light:#fdf0f7; --black:#111111; --muted:#888880;
+  --card:#ffffff; --border:#e0dbd4; --green:#2d9e6b; --red:#e03c3c;
+  --blue:#3B5BDB;
+}
+body { background:var(--bg); color:var(--black); font-family:'DM Sans',sans-serif; height:100vh; width:100vw; overflow:hidden; display:flex; flex-direction:column; }
 
-  /* Navbar */
-  .navbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; justify-content:space-between; flex-shrink:0; position:relative; z-index:200; }
-  .navbar::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--pink); }
-  .brand { font-family:'Instrument Serif',serif; font-size:1.3rem; color:var(--black); text-decoration:none; }
-  .brand span { color:var(--pink); }
-  .nav-right { display:flex; align-items:center; gap:16px; font-size:0.88rem; }
-  .nav-right a { color:var(--muted); text-decoration:none; font-weight:500; }
-  .nav-right a:hover { color:var(--pink); }
-  .back-link { display:flex; align-items:center; gap:6px; color:var(--muted) !important; }
+/* Navbar */
+.navbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; justify-content:space-between; flex-shrink:0; position:relative; z-index:1000; }
+.navbar::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--pink); }
+.brand { font-family:'Instrument Serif',serif; font-size:1.3rem; color:var(--black); text-decoration:none; }
+.brand span { color:var(--pink); }
+.nav-right { display:flex; align-items:center; gap:16px; font-size:0.88rem; }
+.nav-right a { color:var(--muted); text-decoration:none; font-weight:500; }
+.nav-right a:hover { color:var(--pink); }
 
-  /* Main layout */
-  .map-layout { display:flex; flex:1; overflow:hidden; }
+/* Layout */
+.map-layout { display:flex; flex:1; overflow:hidden; }
 
-  /* Sidebar */
-  .sidebar { width:300px; flex-shrink:0; height:100%; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; box-shadow:2px 0 12px rgba(0,0,0,0.06); }
-  .top-bar { height:4px; background:var(--pink); flex-shrink:0; }
-  .sidebar-inner { padding:20px; display:flex; flex-direction:column; gap:16px; flex:1; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+/* Sidebar */
+.sidebar { width:300px; flex-shrink:0; height:100%; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; box-shadow:2px 0 12px rgba(0,0,0,0.06); }
+.top-bar { height:4px; background:var(--pink); flex-shrink:0; }
+.sidebar-inner { padding:16px; display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.sidebar-title { font-family:'Instrument Serif',serif; font-size:1.3rem; color:var(--black); }
+.sidebar-title span { color:var(--pink); }
+.sidebar-sub { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+.section-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:1.8px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.count-badge { background:var(--pink); color:#fff; border-radius:20px; padding:1px 8px; font-size:10px; font-weight:700; }
+.city-search { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--black); background:var(--bg); outline:none; transition:border-color 0.2s; }
+.city-search:focus { border-color:var(--pink); background:#fff; }
+.city-search::placeholder { color:#c0bab4; }
+.cities-scroll { display:flex; flex-direction:column; gap:5px; overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.city-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.15s; }
+.city-card:hover, .city-card.active { border-color:var(--pink); background:var(--pink-light); }
+.city-dot { width:9px; height:9px; background:var(--pink); border-radius:50%; flex-shrink:0; }
+.city-dot.big { width:13px; height:13px; }
+.city-info { flex:1; }
+.city-name { font-size:13px; font-weight:600; }
+.city-count { font-size:11px; color:var(--muted); margin-top:1px; }
+.city-arrow { color:var(--muted); font-size:16px; }
+.divider { height:1px; background:var(--border); flex-shrink:0; }
+.job-mini { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 12px; cursor:pointer; transition:all 0.15s; margin-bottom:5px; }
+.job-mini:hover { border-color:var(--pink); background:var(--pink-light); }
+.job-mini-title { font-size:13px; font-weight:600; margin-bottom:2px; }
+.job-mini-co { font-size:11px; color:var(--muted); }
+.job-mini-sal { font-size:11px; color:var(--pink); font-weight:600; margin-top:2px; }
+.job-mini-dist { font-size:10px; color:var(--blue); font-weight:600; margin-top:2px; }
+.empty-state { text-align:center; padding:24px 10px; color:var(--muted); font-size:13px; line-height:1.7; }
 
-  .sidebar-title { font-family:'Instrument Serif',serif; font-size:1.4rem; color:var(--black); }
-  .sidebar-title span { color:var(--pink); }
-  .sidebar-sub { font-size:0.82rem; color:var(--muted); margin-top:2px; }
+/* Map area */
+#map-area { flex:1; position:relative; }
+#leaflet-map { width:100%; height:100%; }
 
-  .section-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:1.8px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-  .count-badge { background:var(--pink); color:#fff; border-radius:20px; padding:1px 8px; font-size:10px; font-weight:700; }
+/* Filter bar */
+.filter-bar { display:flex; align-items:flex-end; gap:10px; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; z-index:150; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.filter-group { display:flex; flex-direction:column; gap:3px; }
+.filter-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
+.filter-select { padding:7px 10px; border:1.5px solid var(--border); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:0.82rem; color:var(--black); background:var(--bg); outline:none; cursor:pointer; transition:border-color 0.15s; min-width:130px; }
+.filter-select:focus, .filter-select.active { border-color:var(--pink); background:#fff; }
+.filter-sep { width:1px; height:32px; background:var(--border); margin:0 2px; align-self:flex-end; }
 
-  /* Search */
-  .city-search { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--black); background:var(--bg); outline:none; transition:border-color 0.2s; }
-  .city-search:focus { border-color:var(--pink); background:#fff; }
-  .city-search::placeholder { color:#c0bab4; }
+/* Near Me toggle switch */
+.near-me-group { display:flex; flex-direction:column; gap:3px; }
+.near-me-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.btn-near-me { display:flex; align-items:center; gap:8px; cursor:pointer; background:none; border:none; padding:0; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:600; color:var(--muted); white-space:nowrap; transition:color .15s; height:34px; }
+.btn-near-me.active { color:var(--pink); }
+.toggle-track { width:34px; height:18px; border-radius:999px; background:var(--border); position:relative; transition:background .2s; flex-shrink:0; }
+.btn-near-me.active .toggle-track { background:var(--pink); }
+.toggle-thumb { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:transform .2s; }
+.btn-near-me.active .toggle-thumb { transform:translateX(16px); }
 
-  /* City list */
-  .cities-scroll { display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  .city-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.15s; }
-  .city-card:hover, .city-card.active { border-color:var(--pink); background:var(--pink-light); }
-  .city-dot { width:10px; height:10px; background:var(--pink); border-radius:50%; flex-shrink:0; }
-  .city-dot.big { width:14px; height:14px; }
-  .city-info { flex:1; }
-  .city-name { font-size:13px; font-weight:600; }
-  .city-count { font-size:11px; color:var(--muted); margin-top:1px; }
-  .city-arrow { color:var(--muted); font-size:16px; }
+.btn-apply-filter { padding:7px 18px; background:var(--pink); color:#fff; border:none; border-radius:7px; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:700; cursor:pointer; transition:background 0.15s; white-space:nowrap; align-self:flex-end; height:34px; }
+.btn-apply-filter:hover { background:var(--pink-hover); }
+.btn-clear-filter { padding:7px 12px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.15s; white-space:nowrap; align-self:flex-end; height:34px; display:none; }
+.btn-clear-filter:hover { border-color:var(--red); color:var(--red); }
+.ml-auto { margin-left:auto; display:flex; gap:8px; align-items:flex-end; }
 
-  .divider { height:1px; background:var(--border); flex-shrink:0; }
+/* Leaflet tweaks */
+.leaflet-tile-pane { filter:sepia(10%) saturate(0.85) brightness(1.02); }
+.leaflet-popup-content-wrapper { border-radius:10px!important; border:1px solid var(--border)!important; font-family:'DM Sans',sans-serif!important; box-shadow:0 4px 20px rgba(0,0,0,0.12)!important; padding:0!important; overflow:hidden; }
+.leaflet-popup-content { margin:0!important; font-size:13px!important; min-width:200px; }
+.leaflet-popup-tip-container { display:none; }
+.leaflet-container { font-family:'DM Sans',sans-serif!important; }
 
-  /* Job list in sidebar (when city selected) */
-  .job-mini { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; transition:all 0.15s; margin-bottom:6px; }
-  .job-mini:hover { border-color:var(--pink); background:var(--pink-light); }
-  .job-mini-title { font-size:13px; font-weight:600; margin-bottom:3px; }
-  .job-mini-co { font-size:11px; color:var(--muted); }
-  .job-mini-sal { font-size:11px; color:var(--pink); font-weight:600; margin-top:3px; }
+/* Job popup */
+.job-popup { padding:14px 16px; }
+.job-popup-title { font-weight:700; font-size:14px; margin-bottom:3px; color:var(--black); }
+.job-popup-co { font-size:12px; color:var(--muted); margin-bottom:6px; }
+.job-popup-sal { font-size:12px; color:var(--pink); font-weight:600; margin-bottom:4px; }
+.job-popup-dist { font-size:11px; color:var(--blue); font-weight:600; margin-bottom:10px; }
+.job-popup-actions { display:flex; gap:6px; }
+.popup-btn { padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; text-decoration:none; display:inline-flex; align-items:center; transition:opacity .15s; }
+.popup-btn:hover { opacity:.85; text-decoration:none; }
+.popup-btn-primary { background:var(--pink); color:#fff; }
+.popup-btn-dir { background:var(--blue); color:#fff; }
 
-  /* Map area */
-  #map-area { flex:1; position:relative; }
-  #globe-view { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); }
-  #globe-view svg { cursor:grab; }
-  #globe-view svg:active { cursor:grabbing; }
-  .drag-hint { position:absolute; bottom:16px; right:16px; font-size:11px; color:var(--muted); font-weight:500; background:var(--card); padding:6px 12px; border-radius:999px; border:1px solid var(--border); }
+/* City cluster popup */
+.cluster-popup { padding:12px 14px; }
+.cluster-popup-city { font-weight:700; font-size:14px; color:var(--black); margin-bottom:2px; }
+.cluster-popup-count { font-size:12px; color:var(--muted); }
 
-  #street-view { position:absolute; inset:0; display:none; flex-direction:column; }
-  #leaflet-map { flex:1; }
+/* User location pulse */
+.user-location-dot { width:16px; height:16px; position:relative; }
+.user-location-dot::before { content:''; position:absolute; inset:0; border-radius:50%; background:var(--blue); opacity:.3; animation:pulse 2s ease-out infinite; }
+.user-location-dot::after { content:''; position:absolute; top:3px; left:3px; width:10px; height:10px; border-radius:50%; background:var(--blue); border:2px solid #fff; box-shadow:0 1px 4px rgba(59,91,219,.5); }
+@keyframes pulse { 0%{transform:scale(1);opacity:.4} 70%{transform:scale(2.5);opacity:0} 100%{transform:scale(1);opacity:0} }
 
-  .back-btn { position:absolute; top:14px; left:50px; z-index:1000; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; color:var(--black); cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 10px rgba(0,0,0,0.1); transition:all 0.15s; }
-  .back-btn:hover { border-color:var(--pink); color:var(--pink); }
-  .view-badge { position:absolute; top:14px; right:14px; z-index:1000; background:var(--pink); color:#fff; border-radius:20px; padding:5px 14px; font-size:11px; font-weight:700; letter-spacing:0.5px; pointer-events:none; }
-
-  /* Tooltip */
-  .globe-tooltip { position:absolute; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:12px; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.1); display:none; z-index:100; }
-  .globe-tooltip strong { display:block; margin-bottom:2px; }
-  .globe-tooltip span { color:var(--pink); font-weight:600; }
-  .globe-tooltip em { display:block; font-size:10px; color:var(--muted); margin-top:3px; font-style:normal; }
-
-  .empty-state { text-align:center; padding:24px 10px; color:var(--muted); font-size:13px; line-height:1.7; }
-
-  /* Leaflet tweaks */
-  .leaflet-tile-pane { filter:sepia(15%) saturate(0.75) brightness(1.03); }
-  .leaflet-popup-content-wrapper { border-radius:8px!important; border:1px solid var(--border)!important; font-family:'DM Sans',sans-serif!important; box-shadow:0 4px 20px rgba(0,0,0,0.1)!important; }
-  .leaflet-popup-content { margin:12px 16px!important; font-size:13px!important; }
+/* Loading overlay */
+.map-loading { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:8px 18px; font-size:12px; font-weight:600; color:var(--muted); box-shadow:0 2px 12px rgba(0,0,0,0.1); z-index:500; display:none; gap:8px; align-items:center; }
+.map-loading.show { display:flex; }
+.spinner-sm { width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--pink); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar">
   <a class="brand" href="/">Job<span>Portal</span></a>
   <div class="nav-right">
-    <a href="/jobs" class="back-link">← Back to Jobs</a>
+    <a href="/jobs">← Back to Jobs</a>
     <a href="/dashboard">Dashboard</a>
   </div>
 </nav>
 
-<!-- Layout -->
 <div class="map-layout">
 
   <!-- Sidebar -->
@@ -113,21 +141,16 @@
     <div class="sidebar-inner">
       <div>
         <div class="sidebar-title">Job<span>Map</span></div>
-        <div class="sidebar-sub">Jobs across India — click a city to explore</div>
+        <div class="sidebar-sub">Click a city pin to explore jobs</div>
       </div>
-
       <input class="city-search" id="city-search" placeholder="Search city…" oninput="filterCities(this.value)" />
-
       <div class="divider"></div>
-
       <div>
         <div class="section-label">Cities with Jobs <span class="count-badge" id="city-count">0</span></div>
         <div class="cities-scroll" id="cities-list">
-          <div class="empty-state">Loading job locations…</div>
+          <div class="empty-state">Loading…</div>
         </div>
       </div>
-
-      <!-- Job list appears here when city clicked -->
       <div id="jobs-panel" style="display:none">
         <div class="divider"></div>
         <div class="section-label" id="jobs-panel-label">Jobs in City</div>
@@ -136,76 +159,163 @@
     </div>
   </div>
 
-  <!-- Map area -->
-  <div id="map-area">
+  <!-- Map column -->
+  <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
 
-    <!-- Globe -->
-    <div id="globe-view">
-      <svg id="globeSvg"></svg>
-      <div class="drag-hint">Drag to rotate · Scroll to zoom · Click city for street view</div>
-      <div class="globe-tooltip" id="globe-tooltip">
-        <strong id="tt-city"></strong>
-        <span id="tt-count"></span>
-        <em>Click to see street map →</em>
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Role</span>
+        <select class="filter-select" id="f-role"><option value="">All Roles</option></select>
+      </div>
+      <div class="filter-sep"></div>
+      <div class="filter-group">
+        <span class="filter-label">Experience</span>
+        <select class="filter-select" id="f-exp">
+          <option value="">Any Experience</option>
+          <option value="0-1 years">Fresher / 0–1 yr</option>
+          <option value="1-3 years">1–3 years</option>
+          <option value="3-5 years">3–5 years</option>
+          <option value="5-8 years">5–8 years</option>
+          <option value="8-20 years">8+ years</option>
+        </select>
+      </div>
+      <div class="filter-sep"></div>
+      <div class="filter-group">
+        <span class="filter-label">Min Salary</span>
+        <select class="filter-select" id="f-salary">
+          <option value="">Any Salary</option>
+          <option value="15000">₹15k+/mo</option>
+          <option value="30000">₹30k+/mo</option>
+          <option value="50000">₹50k+/mo</option>
+          <option value="80000">₹80k+/mo</option>
+        </select>
+      </div>
+      <div class="filter-sep"></div>
+      <div class="near-me-group">
+        <span class="near-me-label">Near Me</span>
+        <button class="btn-near-me" id="btn-near-me" onclick="useNearMe()">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          50 km radius
+        </button>
+      </div>
+      <div class="ml-auto">
+        <button class="btn-clear-filter" id="btn-clear" onclick="clearFilters()">Clear</button>
+        <button class="btn-apply-filter" onclick="applyFilters()">Apply Filters</button>
       </div>
     </div>
 
-    <!-- Street view -->
-    <div id="street-view">
+    <!-- Map -->
+    <div id="map-area">
       <div id="leaflet-map"></div>
-      <button class="back-btn" onclick="showGlobe()">← Globe View</button>
-      <div class="view-badge" id="street-badge">Street View</div>
+      <div class="map-loading" id="map-loading">
+        <div class="spinner-sm"></div> Loading jobs…
+      </div>
     </div>
 
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API = "https://jobportal-q9ii.onrender.com/api";
-let mapData = [];      // city clusters from API
-let allCities = [];    // for filtering
-let leafletMap = null;
-let leafletMarkers = [];
-let rotation = [-78, -20]; // centered on India (D3 uses negative of target lng)
-let scale = 1;
-let isDragging = false, autoRotating = true, lastPos;
-let svg, projection, path, width, height;
+const API = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
+let mapData = [];
+let allCities = [];
+let activeFilters = { role:"", experience:"", salary:"", nearMe:false, lat:null, lng:null };
+let _userLat = null, _userLng = null;
+let userMarker = null;
+let cityMarkers = [];
+let map = null;
 
-// ── Load map data ───────────────────────────────────────────────────────
-async function loadMapData() {
-  try {
-    const res  = await fetch(`${API}/jobs/map/data`);
-    const json = await res.json();
-    mapData  = json.data || [];
-    allCities = [...mapData];
+// ── Init Leaflet map ────────────────────────────────────────────────────
+function initMap() {
+  map = L.map("leaflet-map", {
+    center: [20.5937, 78.9629], // India center
+    zoom: 5,
+    zoomControl: true,
+    attributionControl: true,
+  });
 
-    // If no jobs have lat/long yet, show sample Indian cities
-    if (!mapData.length) {
-      mapData = [
-        {city:"Bangalore", state:"Karnataka", latitude:12.9716, longitude:77.5946, job_count:1},
-      ];
-      allCities = [...mapData];
-    }
-
-    renderCityList(allCities);
-  } catch(e) {
-    console.error("Map data error:", e);
-  }
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: "© CartoDB © OpenStreetMap",
+    subdomains: "abcd",
+    maxZoom: 19,
+  }).addTo(map);
 }
 
-// ── City list ────────────────────────────────────────────────────────────
+// ── City cluster icon ────────────────────────────────────────────────────
+function cityIcon(count) {
+  const size = count > 10 ? 30 : count > 5 ? 26 : 22;
+  const fs   = count > 9 ? '9' : '11';
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#E8398A;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(232,57,138,.35);display:flex;align-items:center;justify-content:center;font-family:sans-serif;font-weight:700;font-size:${fs}px;color:#fff;cursor:pointer;">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -(size/2 + 4)],
+  });
+}
+
+// ── Job pin icon ─────────────────────────────────────────────────────────
+function jobIcon() {
+  return L.divIcon({
+    className: "",
+    html: `<svg width="26" height="36" viewBox="0 0 26 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 0C5.82 0 0 5.82 0 13c0 9.75 13 23 13 23S26 22.75 26 13C26 5.82 20.18 0 13 0z" fill="#E8398A" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="13" cy="12" r="5" fill="#fff"/>
+    </svg>`,
+    iconSize: [26, 36],
+    iconAnchor: [13, 36],
+    popupAnchor: [0, -38],
+  });
+}
+
+// ── User location icon ───────────────────────────────────────────────────
+function userIcon() {
+  return L.divIcon({
+    className: "",
+    html: `<div class="user-location-dot"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+}
+
+// ── Haversine distance ───────────────────────────────────────────────────
+function distKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function fmtDist(km) {
+  return km < 1 ? `${Math.round(km*1000)}m away` : `${km.toFixed(1)} km away`;
+}
+
+// ── Render city pins ─────────────────────────────────────────────────────
+function renderCityPins(cities) {
+  cityMarkers.forEach(m => map.removeLayer(m));
+  cityMarkers = [];
+
+  cities.forEach(c => {
+    const m = L.marker([c.latitude, c.longitude], { icon: cityIcon(c.job_count) })
+      .addTo(map)
+      .on("click", () => selectCity(c.latitude, c.longitude, c.city, c.job_count));
+    cityMarkers.push(m);
+  });
+}
+
+// ── City list in sidebar ─────────────────────────────────────────────────
 function renderCityList(cities) {
   document.getElementById("city-count").textContent = cities.length;
   const el = document.getElementById("cities-list");
   if (!cities.length) {
-    el.innerHTML = `<div class="empty-state">No cities found</div>`;
+    el.innerHTML = `<div class="empty-state">No jobs found<br>with current filters</div>`;
     return;
   }
   el.innerHTML = cities.map(c => `
-    <div class="city-card" onclick="selectCity(${c.latitude}, ${c.longitude}, '${c.city}', ${c.job_count})">
+    <div class="city-card" onclick="selectCity(${c.latitude}, ${c.longitude}, '${c.city.replace(/'/g,"\\'")}', ${c.job_count})">
       <div class="city-dot ${c.job_count > 5 ? 'big' : ''}"></div>
       <div class="city-info">
         <div class="city-name">${c.city}</div>
@@ -220,22 +330,41 @@ function filterCities(q) {
   renderCityList(allCities.filter(c => c.city.toLowerCase().includes(q.toLowerCase())));
 }
 
-// ── Select city → fly globe + show street map ─────────────────────────
+// ── Load map data ────────────────────────────────────────────────────────
+async function loadMapData(filters = {}) {
+  setLoading(true);
+  try {
+    const params = new URLSearchParams();
+    if (filters.role)       params.set("role_family", filters.role);
+    if (filters.experience) params.set("experience",  filters.experience);
+    if (filters.salary)     params.set("salary_min",  filters.salary);
+    if (filters.nearMe && filters.lat && filters.lng) {
+      params.set("near_lat", filters.lat);
+      params.set("near_lng", filters.lng);
+      params.set("near_km",  "50");
+    }
+    const url = `${API}/jobs/map/data${params.toString() ? "?" + params : ""}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    mapData   = json.data || [];
+    allCities = [...mapData];
+    renderCityList(allCities);
+    renderCityPins(allCities);
+  } catch(e) { console.error("Map data error:", e); }
+  finally { setLoading(false); }
+}
+
+// ── Select city ──────────────────────────────────────────────────────────
 async function selectCity(lat, lng, cityName, count) {
-  // Highlight matching city card in sidebar (works from both sidebar clicks and globe pin clicks)
+  // Highlight sidebar card
   document.querySelectorAll(".city-card").forEach(c => {
-    const name = c.querySelector(".city-name")?.textContent?.trim().toLowerCase();
-    if(name === cityName.toLowerCase()) c.classList.add("active");
-    else c.classList.remove("active");
+    c.classList.toggle("active", c.querySelector(".city-name")?.textContent?.trim().toLowerCase() === cityName.toLowerCase());
   });
 
-  // Fly globe to city
-  flyTo(lat, lng);
+  // Fly to city and zoom in
+  map.flyTo([lat, lng], 12, { duration: 1 });
 
-  // Load street map
-  showStreetView(lat, lng, cityName);
-
-  // Load jobs for this city in sidebar
+  // Show jobs panel
   document.getElementById("jobs-panel").style.display = "block";
   document.getElementById("jobs-panel-label").textContent = `Jobs in ${cityName}`;
   document.getElementById("jobs-mini-list").innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px">Loading…</div>`;
@@ -244,229 +373,195 @@ async function selectCity(lat, lng, cityName, count) {
     const res  = await fetch(`${API}/jobs/map/city/${encodeURIComponent(cityName)}`);
     const json = await res.json();
     const jobs = json.data || [];
+
     if (!jobs.length) {
-      document.getElementById("jobs-mini-list").innerHTML = `<div style="text-align:center;padding:32px 12px"><img src="/static/icons/empty-map.png" width="120" height="120" style="display:block;margin:0 auto;object-fit:contain;margin-bottom:10px;opacity:.9"><div style="font-size:.85rem;font-weight:700;color:#111;margin-bottom:4px">No jobs here yet</div><div style="font-size:.78rem;color:#888">Check other cities or come back later.</div></div>`;
-    } else {
-      document.getElementById("jobs-mini-list").innerHTML = jobs.map(j => `
-        <div class="job-mini" onclick="window.location.href='/jobs/${j.id}'">
-          <div class="job-mini-title">${j.title}</div>
-          <div class="job-mini-co">${j.company_name}</div>
-          ${j.salary_min ? `<div class="job-mini-sal">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k</div>` : ''}
-        </div>`).join('');
-      // Add markers to leaflet
-      addJobMarkers(jobs, lat, lng);
+      document.getElementById("jobs-mini-list").innerHTML = `<div class="empty-state">No jobs in ${cityName}</div>`;
+      return;
     }
+
+    // Render sidebar job list
+    document.getElementById("jobs-mini-list").innerHTML = jobs.map(j => {
+      const dist = (_userLat && _userLng && j.latitude && j.longitude)
+        ? `<div class="job-mini-dist">📍 ${fmtDist(distKm(_userLat, _userLng, j.latitude, j.longitude))}</div>` : '';
+      return `<div class="job-mini" onclick="window.location.href='/jobs/${j.id}'">
+        <div class="job-mini-title">${j.title}</div>
+        <div class="job-mini-co">${j.company_name}</div>
+        ${j.salary_min ? `<div class="job-mini-sal">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k/mo</div>` : ''}
+        ${dist}
+      </div>`;
+    }).join('');
+
+    // Add individual job markers on map
+    addJobMarkers(jobs, lat, lng);
+
   } catch(e) {}
 }
 
-// ── Globe (D3) ────────────────────────────────────────────────────────
-function initGlobe(world) {
-  const el = document.getElementById("globeSvg");
-  width  = el.parentElement.clientWidth;
-  height = el.parentElement.clientHeight;
-
-  el.setAttribute("width",  width);
-  el.setAttribute("height", height);
-
-  projection = d3.geoOrthographic()
-    .scale(Math.min(width, height) * 0.44)
-    .translate([width/2, height/2])
-    .rotate(rotation)
-    .clipAngle(90);
-
-  path = d3.geoPath().projection(projection);
-  svg  = d3.select("#globeSvg");
-
-  const countries = topojson.feature(world, world.objects.countries);
-  const graticule = d3.geoGraticule();
-
-  svg.append("circle")
-    .attr("cx", width/2).attr("cy", height/2)
-    .attr("r", projection.scale())
-    .attr("fill", "#E8E3DC")
-    .attr("stroke", var_pink()).attr("stroke-width", 0.5);
-
-  svg.append("g").attr("class","grat")
-    .append("path").datum(graticule()).attr("fill","none")
-    .attr("stroke","#D5CFCA").attr("stroke-width",0.4);
-
-  svg.append("g").attr("class","countries")
-    .selectAll("path").data(countries.features).enter()
-    .append("path").attr("fill","#E0DAD3").attr("stroke","#C8C2BB").attr("stroke-width",0.5);
-
-  svg.append("g").attr("class","pins");
-
-  renderGlobe();
-  setupDrag();
-  setupZoom();
-
-  // Auto-rotate
-  const timer = d3.interval(() => {
-    if (autoRotating) {
-      rotation[0] += 0.15;
-      projection.rotate(rotation);
-      renderGlobe();
-    }
-  }, 30);
-}
-
-function var_pink() { return "#E8398A"; }
-
-function renderGlobe() {
-  projection.rotate(rotation);
-  const r = projection.scale();
-
-  svg.select("circle").attr("r", r);
-  svg.select(".grat path").attr("d", path(d3.geoGraticule()()));
-  svg.selectAll(".countries path").attr("d", path);
-
-  // Draw city dots with count label above
-  const DOT_R = 5;
-  const tooltip = document.getElementById("globe-tooltip");
-
-  function isVisible(d) {
-    const r = projection.rotate();
-    const dist = d3.geoDistance([d.longitude, d.latitude], [-r[0], -r[1]]);
-    return dist < Math.PI / 2;
-  }
-
-  // Dots
-  svg.select(".pins").selectAll("circle.city-dot").remove();
-  svg.select(".pins").selectAll("circle.city-dot")
-    .data(mapData)
-    .enter().append("circle")
-    .attr("class", "city-dot")
-    .attr("cx", d => { const p = projection([d.longitude, d.latitude]); return p ? p[0] : -9999; })
-    .attr("cy", d => { const p = projection([d.longitude, d.latitude]); return p ? p[1] : -9999; })
-    .attr("r", DOT_R)
-    .attr("fill", var_pink())
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1.5)
-    .attr("visibility", d => isVisible(d) ? "visible" : "hidden")
-    .style("cursor", "pointer")
-    .on("mouseover", (event, d) => {
-      autoRotating = false;
-      tooltip.style.display = "block";
-      document.getElementById("tt-city").textContent = d.city;
-      document.getElementById("tt-count").textContent = `${d.job_count} job${d.job_count !== 1 ? "s" : ""}`;
-      tooltip.style.left = (event.offsetX + 14) + "px";
-      tooltip.style.top  = (event.offsetY - 10) + "px";
-    })
-    .on("mouseout", () => { tooltip.style.display = "none"; })
-    .on("click", (event, d) => { autoRotating = false; selectCity(d.latitude, d.longitude, d.city, d.job_count); });
-
-  // Count labels floating above each dot
-  svg.select(".pins").selectAll("text.pin-label").remove();
-  svg.select(".pins").selectAll("text.pin-label")
-    .data(mapData)
-    .enter().append("text")
-    .attr("class", "pin-label")
-    .attr("x", d => { const p = projection([d.longitude, d.latitude]); return p ? p[0] : -9999; })
-    .attr("y", d => { const p = projection([d.longitude, d.latitude]); return p ? p[1] - DOT_R - 3 : -9999; })
-    .attr("text-anchor", "middle")
-    .attr("visibility", d => isVisible(d) ? "visible" : "hidden")
-    .text(d => d.job_count)
-    .attr("fill", "#E8398A")
-    .attr("font-size", "8px")
-    .attr("font-weight", "700")
-    .attr("font-family", "sans-serif")
-    .style("pointer-events", "none");
-}
-
-function setupDrag() {
-  svg.on("mousedown", e => { isDragging=true; autoRotating=false; lastPos=[e.clientX,e.clientY]; });
-  window.addEventListener("mousemove", e => {
-    if (!isDragging) return;
-    const dx=e.clientX-lastPos[0], dy=e.clientY-lastPos[1];
-    rotation[0] += dx*0.4;
-    rotation[1] = Math.max(-90, Math.min(90, rotation[1]-dy*0.4));
-    lastPos=[e.clientX,e.clientY];
-    renderGlobe();
-  });
-  window.addEventListener("mouseup", ()=>isDragging=false);
-}
-
-function setupZoom() {
-  svg.on("wheel", e => {
-    e.preventDefault();
-    scale *= e.deltaY>0 ? 0.92 : 1.08;
-    scale = Math.max(0.4, Math.min(4, scale));
-    projection.scale(Math.min(width,height)*0.44*scale);
-    renderGlobe();
-  });
-}
-
-function flyTo(lat, lng) {
-  autoRotating = false;
-  const target = [-lng, -lat];
-  const start  = [...rotation];
-  let step = 0;
-  const iv = setInterval(()=>{
-    step++;
-    const t = step/40;
-    const ease = t<0.5 ? 2*t*t : -1+(4-2*t)*t;
-    rotation[0] = start[0]+(target[0]-start[0])*ease;
-    rotation[1] = start[1]+(target[1]-start[1])*ease;
-    projection.rotate(rotation); renderGlobe();
-    if (step>=40) clearInterval(iv);
-  }, 16);
-}
-
-// ── Street view (Leaflet) ─────────────────────────────────────────────
-function showStreetView(lat, lng, cityName) {
-  document.getElementById("globe-view").style.display = "none";
-  const sv = document.getElementById("street-view");
-  sv.style.display = "flex";
-  document.getElementById("street-badge").textContent = cityName;
-
-  if (!leafletMap) {
-    leafletMap = L.map("leaflet-map").setView([lat, lng], 12);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution:"© CartoDB © OpenStreetMap", subdomains:"abcd", maxZoom:19
-    }).addTo(leafletMap);
-    // City center marker
-    L.circleMarker([lat, lng], {radius:8, color:var_pink(), fillColor:var_pink(), fillOpacity:0.5}).addTo(leafletMap);
-  } else {
-    leafletMap.flyTo([lat, lng], 12, {duration:1});
-  }
-  setTimeout(()=>leafletMap.invalidateSize(), 100);
-}
-
+// ── Job markers on map ───────────────────────────────────────────────────
+let jobMarkers = [];
 function addJobMarkers(jobs, cityLat, cityLng) {
-  leafletMarkers.forEach(m=>leafletMap.removeLayer(m));
-  leafletMarkers=[];
-  const icon = L.divIcon({
-    className:'',
-    html:`<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26S28 24.5 28 14C28 6.27 21.73 0 14 0z" fill="#E8398A" stroke="#fff" stroke-width="1.5"/>
-      <circle cx="14" cy="13" r="5" fill="#fff"/>
-    </svg>`,
-    iconSize:[28,40], iconAnchor:[14,40], popupAnchor:[0,-42]
-  });
-  jobs.forEach((j, idx)=>{
-    // Use job's own coordinates if available, else use city center + tiny offset
-    // Offset: spiral pattern so multiple jobs don't overlap exactly
-    const angle = idx * 2.4; // golden angle spread
-    const dist  = idx === 0 ? 0 : 0.008 + (idx * 0.003); // ~800m+ apart
+  // Remove old job markers
+  jobMarkers.forEach(m => map.removeLayer(m));
+  jobMarkers = [];
+
+  jobs.forEach((j, idx) => {
+    const angle = idx * 2.4;
+    const dist  = idx === 0 ? 0 : 0.008 + (idx * 0.003);
     const lat = j.latitude  || (cityLat + dist * Math.sin(angle));
     const lng = j.longitude || (cityLng + dist * Math.cos(angle));
-    const m = L.marker([lat, lng],{icon})
-      .addTo(leafletMap)
-      .bindPopup(`<strong>${j.title}</strong><br><span style="color:#888;font-size:11px">${j.company_name}</span>${j.salary_min?`<br><span style="color:#E8398A;font-weight:600">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k</span>`:''}<br><a href="/jobs/${j.id}" style="color:#E8398A;font-size:11px;font-weight:600">View Job →</a>`);
-    leafletMarkers.push(m);
+
+    const distText = (_userLat && _userLng)
+      ? `<div style="font-size:11px;color:#3B5BDB;font-weight:600;margin-bottom:3px">📍 ${fmtDist(distKm(_userLat, _userLng, lat, lng))}</div>` : '';
+
+    const dirBtn = (_userLat && _userLng)
+      ? `<a href="https://www.google.com/maps/dir/?api=1&origin=${_userLat},${_userLng}&destination=${lat},${lng}" target="_blank" style="padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;background:#3B5BDB;color:#fff;text-decoration:none;display:inline-flex;align-items:center;">Directions</a>` : '';
+
+    const popup = L.popup({ closeButton: false, maxWidth: 220 }).setContent(`
+      <div style="padding:12px 14px;font-family:'DM Sans',sans-serif;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px;color:#111">${j.title}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:5px">${j.company_name}</div>
+        ${j.salary_min ? `<div style="font-size:11px;color:#E8398A;font-weight:600;margin-bottom:3px">₹${(j.salary_min/1000).toFixed(0)}k–₹${(j.salary_max/1000).toFixed(0)}k/mo</div>` : ''}
+        ${distText}
+        <div style="display:flex;gap:5px;margin-top:8px">
+          <a href="/jobs/${j.id}" style="padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;background:#E8398A;color:#fff;text-decoration:none;display:inline-flex;align-items:center;">View Job</a>
+          ${dirBtn}
+        </div>
+      </div>`);
+
+    const m = L.marker([lat, lng], { icon: jobIcon() })
+      .addTo(map)
+      .bindPopup(popup);
+    jobMarkers.push(m);
   });
 }
 
-function showGlobe() {
-  document.getElementById("street-view").style.display="none";
-  document.getElementById("globe-view").style.display="flex";
+// ── User location ────────────────────────────────────────────────────────
+function showUserMarker(lat, lng) {
+  if (userMarker) map.removeLayer(userMarker);
+  userMarker = L.marker([lat, lng], { icon: userIcon(), zIndexOffset: 1000 })
+    .addTo(map)
+    .bindPopup(`<div style="padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#111">📍 You are here</div>`, { closeButton: false });
 }
 
-// ── Init ──────────────────────────────────────────────────────────────
-loadMapData();
-fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
-  .then(r=>r.json())
-  .then(w=>initGlobe(w));
+function removeUserMarker() {
+  if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+}
+
+// ── Near Me toggle ───────────────────────────────────────────────────────
+function useNearMe() {
+  const btn = document.getElementById("btn-near-me");
+  const isOn = !btn.classList.contains("active");
+
+  if (!isOn) {
+    btn.classList.remove("active");
+    activeFilters.nearMe = false;
+    activeFilters.lat    = null;
+    activeFilters.lng    = null;
+    removeUserMarker();
+    return;
+  }
+
+  // Already have coords from preload — instant
+  if (_userLat && _userLng) {
+    activeFilters.nearMe = true;
+    activeFilters.lat    = _userLat;
+    activeFilters.lng    = _userLng;
+    btn.classList.add("active");
+    showUserMarker(_userLat, _userLng);
+    return;
+  }
+
+  // Fallback — request now
+  if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    _userLat = pos.coords.latitude;
+    _userLng = pos.coords.longitude;
+    activeFilters.nearMe = true;
+    activeFilters.lat    = _userLat;
+    activeFilters.lng    = _userLng;
+    btn.classList.add("active");
+    showUserMarker(_userLat, _userLng);
+  }, () => {
+    alert("Location access denied. Enable location in browser settings.");
+  });
+}
+
+// ── Filters ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  activeFilters.role       = document.getElementById("f-role").value;
+  activeFilters.experience = document.getElementById("f-exp").value;
+  activeFilters.salary     = document.getElementById("f-salary").value;
+
+  ["f-role","f-exp","f-salary"].forEach(id => {
+    document.getElementById(id).classList.toggle("active", !!document.getElementById(id).value);
+  });
+
+  const hasFilters = activeFilters.role || activeFilters.experience || activeFilters.salary || activeFilters.nearMe;
+  document.getElementById("btn-clear").style.display = hasFilters ? "inline-block" : "none";
+
+  // Clear job-level markers and panel — new filter = fresh state
+  jobMarkers.forEach(m => map.removeLayer(m));
+  jobMarkers = [];
+  document.getElementById("jobs-panel").style.display = "none";
+  document.querySelectorAll(".city-card").forEach(c => c.classList.remove("active"));
+
+  // Fly to user if Near Me, else reset to India view
+  if (activeFilters.nearMe && activeFilters.lat && activeFilters.lng) {
+    showUserMarker(activeFilters.lat, activeFilters.lng);
+    map.flyTo([activeFilters.lat, activeFilters.lng], 9, { duration: 1.2 });
+  } else {
+    map.flyTo([20.5937, 78.9629], 5, { duration: 1 });
+  }
+
+  loadMapData(activeFilters);
+}
+
+function clearFilters() {
+  document.getElementById("f-role").value   = "";
+  document.getElementById("f-exp").value    = "";
+  document.getElementById("f-salary").value = "";
+  document.getElementById("btn-near-me").classList.remove("active");
+  document.getElementById("btn-clear").style.display = "none";
+  ["f-role","f-exp","f-salary"].forEach(id => document.getElementById(id).classList.remove("active"));
+  activeFilters = { role:"", experience:"", salary:"", nearMe:false, lat:null, lng:null };
+  removeUserMarker();
+  jobMarkers.forEach(m => map.removeLayer(m));
+  jobMarkers = [];
+  document.getElementById("jobs-panel").style.display = "none";
+  map.flyTo([20.5937, 78.9629], 5, { duration: 1 });
+  loadMapData({});
+}
+
+// ── Load role families ───────────────────────────────────────────────────
+async function loadRoleFamilies() {
+  try {
+    const res  = await fetch(`${API}/jobs/map/role-families`);
+    const json = await res.json();
+    const sel  = document.getElementById("f-role");
+    (json.data || []).forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f; opt.textContent = f;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+function setLoading(on) {
+  document.getElementById("map-loading").classList.toggle("show", on);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+initMap();
+loadMapData({});
+loadRoleFamilies();
+
+// Silently preload user location
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    _userLat = pos.coords.latitude;
+    _userLng = pos.coords.longitude;
+  }, () => {});
+}
 </script>
 </body>
 </html>
