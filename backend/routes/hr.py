@@ -221,25 +221,6 @@ def create_job(body: JobCreate, current_user: User = Depends(require_hr), db: Se
 
     db.commit()
     db.refresh(job)
-
-    # Auto-geocode if no coordinates provided but city exists
-    if job.city and not job.latitude:
-        try:
-            import requests as _req
-            q = f"{job.city}, {job.state or ''}, India"
-            r = _req.get(
-                "https://nominatim.openstreetmap.org/search",
-                params={"q": q, "format": "json", "limit": 1},
-                headers={"User-Agent": "JobPortal/1.0"}, timeout=5
-            )
-            data = r.json()
-            if data:
-                job.latitude  = float(data[0]["lat"])
-                job.longitude = float(data[0]["lon"])
-                db.commit()
-        except Exception:
-            pass  # geocoding is non-critical, never block job creation
-
     return {"success": True, "data": {"job_id": job.id}, "error": None}
 
 
@@ -300,25 +281,6 @@ def update_job(job_id: int, body: JobCreate, current_user: User = Depends(requir
         db.add(skill)
 
     db.commit()
-
-    # Re-geocode if city was updated and no coordinates provided
-    if job.city and not job.latitude:
-        try:
-            import requests as _req
-            q = f"{job.city}, {job.state or ''}, India"
-            r = _req.get(
-                "https://nominatim.openstreetmap.org/search",
-                params={"q": q, "format": "json", "limit": 1},
-                headers={"User-Agent": "JobPortal/1.0"}, timeout=5
-            )
-            data = r.json()
-            if data:
-                job.latitude  = float(data[0]["lat"])
-                job.longitude = float(data[0]["lon"])
-                db.commit()
-        except Exception:
-            pass
-
     return {"success": True, "data": {"message": "Job updated"}, "error": None}
 
 
@@ -431,6 +393,27 @@ def update_application_status(
 
     app.status = body.status
     db.commit()
+
+    # Send push notification to candidate
+    try:
+        profile = db.query(CandidateProfile).filter(CandidateProfile.id == app.candidate_id).first()
+        if profile and getattr(profile, "fcm_token", None):
+            from backend.utils.firebase import send_push
+            if body.status == "shortlisted":
+                send_push(
+                    profile.fcm_token,
+                    title="🎉 You've been shortlisted!",
+                    body=f"Congratulations! Your application for {job.title} has been shortlisted."
+                )
+            elif body.status == "rejected":
+                send_push(
+                    profile.fcm_token,
+                    title="Application Update",
+                    body=f"Your application for {job.title} has been reviewed. Keep applying!"
+                )
+    except Exception:
+        pass  # never block the status update
+
     return {"success": True, "data": {"message": f"Application {body.status}"}, "error": None}
 
 

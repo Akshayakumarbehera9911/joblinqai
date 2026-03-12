@@ -272,6 +272,24 @@ function GlobalMenu() {
 
 // ── App ──────────────────────────────────────────────────────────────────
 export default function App() {
+  const { isLoggedIn, role } = useAuth();
+
+  // Register FCM token when candidate logs in
+  useEffect(() => {
+    if (!isLoggedIn || role !== "candidate") return;
+    async function registerPush() {
+      try {
+        const { requestFCMToken } = await import("./firebase");
+        const token = await requestFCMToken();
+        if (!token) return;
+        const { saveFCMToken } = await import("./api/candidate");
+        await saveFCMToken(token);
+      } catch (e) {
+        console.warn("Push registration failed:", e);
+      }
+    }
+    registerPush();
+  }, [isLoggedIn, role]);
   return (
     <>
       <Routes>

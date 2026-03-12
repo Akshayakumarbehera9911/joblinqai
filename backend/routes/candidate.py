@@ -421,6 +421,21 @@ def remove_photo(current_user: User = Depends(require_candidate), db: Session = 
     return {"success": True, "data": {"message": "Photo deleted"}, "error": None}
 
 
+# ── POST /api/candidate/fcm-token ─────────────────────────────────────────────
+class FCMTokenBody(BaseModel):
+    token: str
+
+@router.post("/fcm-token")
+def save_fcm_token(body: FCMTokenBody, current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
+    """Save FCM push token for this candidate."""
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    profile.fcm_token = body.token
+    db.commit()
+    return {"success": True, "data": {"message": "Token saved"}, "error": None}
+
+
 # ── DELETE /api/candidate/photo ───────────────────────────────────────────────
 @router.delete("/photo")
 def delete_photo(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):

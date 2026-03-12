@@ -23,4 +23,4 @@ export const uploadResume      = (formData) => apiUpload("/candidate/resume", fo
 export const uploadPhoto       = (formData) => apiUpload("/candidate/photo", formData);
 // Correct pipeline route (not /candidate/run-pipeline)
 export const runPipeline       = () => apiFetch("/scoring/calculate", { method: "POST" });
-export const deletePhoto = () => apiFetch("/candidate/photo", { method: "DELETE" });
+export const deletePhoto = () => apiFetch("/candidate/photo", { method: "DELETE" });export const saveFCMToken = (token) => apiFetch("/candidate/fcm-token", { method: "POST", body: JSON.stringify({ token }) });
