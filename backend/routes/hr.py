@@ -411,8 +411,9 @@ def update_application_status(
                     title="Application Update",
                     body=f"Your application for {job.title} has been reviewed. Keep applying!"
                 )
-    except Exception:
-        pass  # never block the status update
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error("Push failed: %s", str(e), exc_info=True)
 
     return {"success": True, "data": {"message": f"Application {body.status}"}, "error": None}
 
