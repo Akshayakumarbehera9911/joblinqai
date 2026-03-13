@@ -77,6 +77,71 @@ def get_stats(admin: User = Depends(require_admin), db: Session = Depends(get_db
                   .limit(5).all()
     candidate_states = [{"state": r.state, "count": r.count} for r in state_raw]
 
+    # ── People analytics ──────────────────────────────────────────────────
+    edu_raw = db.query(CandidateProfile.education_level, func.count(CandidateProfile.id).label("count"))\
+                .filter(CandidateProfile.education_level != None)\
+                .group_by(CandidateProfile.education_level)\
+                .order_by(func.count(CandidateProfile.id).desc()).all()
+    education_breakdown = [{"level": r.education_level, "count": r.count} for r in edu_raw]
+
+    exp_raw = db.query(CandidateProfile.experience, func.count(CandidateProfile.id).label("count"))\
+                .filter(CandidateProfile.experience != None)\
+                .group_by(CandidateProfile.experience)\
+                .order_by(func.count(CandidateProfile.id).desc()).all()
+    experience_breakdown = [{"range": r.experience, "count": r.count} for r in exp_raw]
+
+    industry_raw = db.query(CandidateProfile.industry, func.count(CandidateProfile.id).label("count"))\
+                     .filter(CandidateProfile.industry != None)\
+                     .group_by(CandidateProfile.industry)\
+                     .order_by(func.count(CandidateProfile.id).desc())\
+                     .limit(6).all()
+    industry_breakdown = [{"industry": r.industry, "count": r.count} for r in industry_raw]
+
+    wmode_raw = db.query(CandidateProfile.work_mode, func.count(CandidateProfile.id).label("count"))\
+                  .filter(CandidateProfile.work_mode != None)\
+                  .group_by(CandidateProfile.work_mode).all()
+    candidate_work_modes = [{"mode": r.work_mode, "count": r.count} for r in wmode_raw]
+
+    role_raw = db.query(CandidateProfile.target_role, func.count(CandidateProfile.id).label("count"))\
+                 .filter(CandidateProfile.target_role != None)\
+                 .group_by(CandidateProfile.target_role)\
+                 .order_by(func.count(CandidateProfile.id).desc())\
+                 .limit(6).all()
+    top_target_roles = [{"role": r.target_role, "count": r.count} for r in role_raw]
+
+    # ── Jobs analytics ────────────────────────────────────────────────────
+    weekly_jobs_raw = db.query(
+        func.date_trunc('week', Job.created_at).label("week"),
+        func.count(Job.id).label("count")
+    ).filter(Job.created_at >= six_weeks_ago)\
+     .group_by(func.date_trunc('week', Job.created_at))\
+     .order_by(func.date_trunc('week', Job.created_at)).all()
+    weekly_jobs = [{"week": str(r.week)[:10], "count": r.count} for r in weekly_jobs_raw]
+
+    role_type_raw = db.query(Job.role_type, func.count(Job.id).label("count"))\
+                     .filter(Job.role_type != None)\
+                     .group_by(Job.role_type).all()
+    jobs_by_role_type = [{"type": r.role_type, "count": r.count} for r in role_type_raw]
+
+    job_wmode_raw = db.query(Job.work_mode, func.count(Job.id).label("count"))\
+                     .filter(Job.work_mode != None)\
+                     .group_by(Job.work_mode).all()
+    jobs_by_work_mode = [{"mode": r.work_mode, "count": r.count} for r in job_wmode_raw]
+
+    # ── Pipeline analytics ────────────────────────────────────────────────
+    score_dist_raw = db.query(
+        func.count(ReadinessScore.id).filter(ReadinessScore.overall_score < 25).label("poor"),
+        func.count(ReadinessScore.id).filter(ReadinessScore.overall_score.between(25, 49)).label("fair"),
+        func.count(ReadinessScore.id).filter(ReadinessScore.overall_score.between(50, 74)).label("good"),
+        func.count(ReadinessScore.id).filter(ReadinessScore.overall_score >= 75).label("excellent"),
+    ).first()
+    score_distribution = [
+        {"band": "0–24",  "count": score_dist_raw.poor     or 0},
+        {"band": "25–49", "count": score_dist_raw.fair     or 0},
+        {"band": "50–74", "count": score_dist_raw.good     or 0},
+        {"band": "75–100","count": score_dist_raw.excellent or 0},
+    ]
+
     return {"success": True, "data": {
         "total_users": total_users,
         "total_candidates": total_candidates,
@@ -97,6 +162,18 @@ def get_stats(admin: User = Depends(require_admin), db: Session = Depends(get_db
         "weekly_apps": weekly_apps,
         "top_categories": top_categories,
         "candidate_states": candidate_states,
+        # People
+        "education_breakdown":    education_breakdown,
+        "experience_breakdown":   experience_breakdown,
+        "industry_breakdown":     industry_breakdown,
+        "candidate_work_modes":   candidate_work_modes,
+        "top_target_roles":       top_target_roles,
+        # Jobs
+        "weekly_jobs":            weekly_jobs,
+        "jobs_by_role_type":      jobs_by_role_type,
+        "jobs_by_work_mode":      jobs_by_work_mode,
+        # Pipeline
+        "score_distribution":     score_distribution,
     }, "error": None}
 
 
