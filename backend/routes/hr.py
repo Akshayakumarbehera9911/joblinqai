@@ -394,9 +394,12 @@ def update_application_status(
     app.status = body.status
     db.commit()
 
-    # Send push notification to candidate
+    # Send push + email notifications to candidate
     try:
+        profile = db.query(CandidateProfile).filter(CandidateProfile.id == app.candidate_id).first()
+        candidate_user = db.query(User).filter(User.id == profile.user_id).first() if profile else None
         from backend.utils.firebase import send_push_to_candidate
+        from backend.utils.email import send_shortlist_email, send_reject_email
         if body.status == "shortlisted":
             send_push_to_candidate(
                 app.candidate_id,
@@ -404,6 +407,13 @@ def update_application_status(
                 body=f"Congratulations! Your application for {job.title} has been shortlisted.",
                 db=db
             )
+            if candidate_user:
+                send_shortlist_email(
+                    candidate_user.email,
+                    candidate_user.full_name,
+                    job.title,
+                    company.company_name
+                )
         elif body.status == "rejected":
             send_push_to_candidate(
                 app.candidate_id,
@@ -411,9 +421,16 @@ def update_application_status(
                 body=f"Your application for {job.title} has been reviewed. Keep applying!",
                 db=db
             )
+            if candidate_user:
+                send_reject_email(
+                    candidate_user.email,
+                    candidate_user.full_name,
+                    job.title,
+                    company.company_name
+                )
     except Exception as e:
         import logging
-        logging.getLogger(__name__).error("Push failed: %s", str(e), exc_info=True)
+        logging.getLogger(__name__).error("Notification failed: %s", str(e), exc_info=True)
 
 # ── GET /api/hr/dashboard ─────────────────────────────────────────────────
 @router.get("/dashboard")

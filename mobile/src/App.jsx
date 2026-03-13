@@ -270,20 +270,52 @@ function GlobalMenu() {
   );
 }
 
+// ── In-app notification toast ─────────────────────────────────────────────
+function NotifToast({ notif, onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+  return (
+    <div onClick={onClose} style={{
+      position:"fixed", top:16, left:"50%", transform:"translateX(-50%)",
+      zIndex:9999, background:"var(--card)", borderRadius:14,
+      boxShadow:"0 4px 24px rgba(0,0,0,0.18)", padding:"12px 16px",
+      minWidth:260, maxWidth:340, cursor:"pointer",
+      border:"1.5px solid var(--border)", fontFamily:"DM Sans,sans-serif",
+      animation:"toastIn 0.2s ease",
+    }}>
+      <div style={{fontWeight:700, fontSize:"0.85rem", marginBottom:2}}>{notif.title}</div>
+      <div style={{fontSize:"0.78rem", color:"var(--muted)"}}>{notif.body}</div>
+      <style>{`@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+    </div>
+  );
+}
+
 // ── App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const { isLoggedIn, role } = useAuth();
+  const [notif, setNotif] = useState(null);
 
   // Register FCM token when candidate logs in
   useEffect(() => {
     if (!isLoggedIn || role !== "candidate") return;
     async function registerPush() {
       try {
-        const { requestFCMToken } = await import("./firebase");
+        const { requestFCMToken, onForegroundMessage } = await import("./firebase");
         const token = await requestFCMToken();
-        if (!token) return;
-        const { saveFCMToken } = await import("./api/candidate");
-        await saveFCMToken(token);
+        if (token) {
+          const { saveFCMToken } = await import("./api/candidate");
+          await saveFCMToken(token);
+        }
+        // Listen for foreground messages
+        onForegroundMessage((payload) => {
+          const title = payload.notification?.title || "JobPortal";
+          const body  = payload.notification?.body  || "";
+          setNotif({ title, body });
+          // Tell Applications page to refresh
+          window.dispatchEvent(new CustomEvent("jobportal:notification"));
+        });
       } catch (e) {
         console.warn("Push registration failed:", e);
       }
@@ -292,6 +324,7 @@ export default function App() {
   }, [isLoggedIn, role]);
   return (
     <>
+      {notif && <NotifToast notif={notif} onClose={() => setNotif(null)} />}
       <Routes>
         <Route path="/"         element={<Navigate to="/jobs" replace />} />
         <Route path="/login"    element={<GuestOnly><Login /></GuestOnly>} />

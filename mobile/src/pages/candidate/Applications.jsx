@@ -43,6 +43,17 @@ export default function CandidateApplications() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Auto-refresh when a push notification arrives (foreground)
+  useEffect(() => {
+    function refresh() {
+      getApplications()
+        .then(res => setApps(res.data || []))
+        .catch(() => {});
+    }
+    window.addEventListener("jobportal:notification", refresh);
+    return () => window.removeEventListener("jobportal:notification", refresh);
+  }, []);
+
   const filtered = filter === "all" ? apps : apps.filter(a => a.status === filter);
 
   async function handleWithdraw(app) {
