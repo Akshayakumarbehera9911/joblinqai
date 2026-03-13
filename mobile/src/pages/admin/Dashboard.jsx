@@ -439,33 +439,51 @@ function PeopleCharts({ stats }) {
 }
 
 function JobsCharts({ stats }) {
-  const cats   = stats.top_categories || [];
-  const weekly = stats.weekly_apps    || [];
+  const cats      = stats.top_categories    || [];
+  const weeklyJ   = stats.weekly_jobs       || [];
+  const roleTypes = stats.jobs_by_role_type || [];
+  const workModes = stats.jobs_by_work_mode || [];
   const tooltipStyle = { fontSize: "0.75rem", borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD };
 
-  const jobStatusData = [
-    { name: "Active", value: stats.active_jobs || 0 },
-    { name: "Closed", value: stats.closed_jobs || 0 },
-    { name: "Draft",  value: stats.draft_jobs  || 0 },
+  const statusData = [
+    { name: "Active", value: stats.active_jobs || 0, fill: GREEN },
+    { name: "Closed", value: stats.closed_jobs || 0, fill: MUTED },
+    { name: "Draft",  value: stats.draft_jobs  || 0, fill: BLUE  },
   ].filter(d => d.value > 0);
+
+  const COLORS = [PINK, BLUE, "#8b5cf6", "#f59e0b", "#10b981"];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-      {/* Jobs by status bar */}
-      {jobStatusData.length > 0 && (
+      {/* Jobs posted over time */}
+      {weeklyJ.length > 1 && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
+          <SH>Jobs Posted — Last 6 Weeks</SH>
+          <ResponsiveContainer width="100%" height={110}>
+            <AreaChart data={weeklyJ} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+              <defs>
+                <linearGradient id="jobsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor={BLUE} stopOpacity={0.18} />
+                  <stop offset="95%" stopColor={BLUE} stopOpacity={0}    />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="week" tick={{ fontSize: 9, fill: MUTED }} tickLine={false} axisLine={false} tickFormatter={v => v.slice(5)} />
+              <YAxis tick={{ fontSize: 9, fill: MUTED }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={tooltipStyle} labelFormatter={v => `Week of ${v}`} />
+              <Area type="monotone" dataKey="count" stroke={BLUE} strokeWidth={2} fill="url(#jobsGrad)" dot={{ fill: BLUE, r: 2.5 }} name="Jobs Posted" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Jobs by status */}
+      {statusData.length > 0 && (
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
           <SH>Jobs by Status</SH>
-          <ResponsiveContainer width="100%" height={100}>
-            <BarChart data={jobStatusData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 9, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: "var(--muted)" }} tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="value" name="Jobs" radius={[4,4,0,0]}>
-                {jobStatusData.map((e, i) => <Cell key={i} fill={i === 0 ? "var(--green)" : i === 1 ? "var(--muted)" : "var(--gold)"} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {statusData.map((s, i) => (
+            <HRow key={s.name} label={s.name} value={s.value} max={stats.total_jobs || 1} color={s.fill} />
+          ))}
         </div>
       )}
 
@@ -474,109 +492,159 @@ function JobsCharts({ stats }) {
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
           <SH>Top Categories</SH>
           {cats.map((c, i) => (
-            <HRow key={c.category} label={c.category} value={c.count} max={cats[0]?.count || 1} color="var(--pink)" />
+            <HRow key={c.category} label={c.category} value={c.count} max={cats[0]?.count || 1} color={COLORS[i % COLORS.length]} />
           ))}
         </div>
       )}
 
-      {/* Total jobs summary */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
-        <SH>Job Summary</SH>
-        {[
-          { label: "Total Jobs",    value: stats.total_jobs    || 0 },
-          { label: "Active",        value: stats.active_jobs   || 0 },
-          { label: "Total Companies", value: stats.total_companies || 0 },
-          { label: "Verified Cos",  value: stats.verified_companies || 0 },
-        ].map((r, i) => (
-          <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 3 ? `1px solid ${BORDER}` : "none" }}>
-            <span style={{ fontSize: "0.78rem", color: MUTED }}>{r.label}</span>
-            <span style={{ fontFamily: "var(--font-serif)", fontSize: "0.95rem", color: BLACK }}>{r.value}</span>
-          </div>
-        ))}
-      </div>
+      {/* Jobs by role type donut */}
+      {roleTypes.length > 0 && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
+          <SH>Jobs by Role Type</SH>
+          <ResponsiveContainer width="100%" height={160}>
+            <PieChart>
+              <Pie data={roleTypes} dataKey="count" nameKey="type" cx="50%" cy="45%"
+                innerRadius={44} outerRadius={62} paddingAngle={3}>
+                {roleTypes.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend iconType="circle" iconSize={7}
+                formatter={(v) => <span style={{ fontSize: "0.7rem", color: MUTED, textTransform: "capitalize" }}>{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Jobs by work mode */}
+      {workModes.length > 0 && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
+          <SH>Jobs by Work Mode</SH>
+          {workModes.map((w, i) => (
+            <HRow key={w.mode} label={w.mode} value={w.count} max={workModes[0]?.count || 1} color={COLORS[i % COLORS.length]} />
+          ))}
+        </div>
+      )}
+
+      {/* No data fallback */}
+      {cats.length === 0 && roleTypes.length === 0 && workModes.length === 0 && (
+        <div style={{ textAlign: "center", padding: "32px 0", color: MUTED, fontSize: "0.82rem" }}>
+          No jobs data yet
+        </div>
+      )}
 
     </div>
   );
 }
 
 function PipelineCharts({ stats }) {
-  const total  = stats.total_applications || 0;
-  const viewed = stats.viewed_apps        || 0;
-  const short  = stats.shortlisted_apps   || 0;
-  const rej    = stats.rejected_apps      || 0;
-  const avg    = stats.avg_readiness_score;
+  const total      = stats.total_applications || 0;
+  const viewed     = stats.viewed_apps        || 0;
+  const short      = stats.shortlisted_apps   || 0;
+  const rej        = stats.rejected_apps      || 0;
+  const avg        = stats.avg_readiness_score;
+  const targetRoles = stats.top_target_roles  || [];
+  const scoreDist  = stats.score_distribution || [];
   const tooltipStyle = { fontSize: "0.75rem", borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD };
 
-  const funnelBar = [
-    { name: "Applied",     value: total  },
-    { name: "Viewed",      value: viewed },
-    { name: "Shortlisted", value: short  },
-    { name: "Rejected",    value: rej    },
-  ];
-
-  const shortlistRate = total > 0 ? Math.round((short / total) * 100) : 0;
+  const shortlistRate = total > 0 ? Math.round((short  / total) * 100) : 0;
   const viewRate      = total > 0 ? Math.round((viewed / total) * 100) : 0;
   const rejectRate    = total > 0 ? Math.round((rej    / total) * 100) : 0;
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+  const funnelData = [
+    { label: "Applied",     value: total,  pct: 100,          color: BLUE  },
+    { label: "Viewed",      value: viewed, pct: viewRate,      color: "#8b5cf6" },
+    { label: "Shortlisted", value: short,  pct: shortlistRate, color: GREEN },
+    { label: "Rejected",    value: rej,    pct: rejectRate,    color: RED   },
+  ];
 
-      {/* Funnel bar chart */}
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 8 }}>
+
+      {/* Application funnel with % */}
       {total > 0 && (
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
-          <SH>Funnel Overview</SH>
-          <ResponsiveContainer width="100%" height={110}>
-            <BarChart data={funnelBar} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 8, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: "var(--muted)" }} tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="value" name="Count" radius={[4,4,0,0]}>
-                {funnelBar.map((e, i) => <Cell key={i} fill={["var(--pink)","var(--muted)","var(--green)","var(--red)"][i]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <SH>Application Funnel</SH>
+          {funnelData.map(f => (
+            <div key={f.label} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: "0.78rem", color: BLACK, fontWeight: 500 }}>{f.label}</span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: "0.68rem", color: MUTED }}>{f.pct}%</span>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 700, color: f.color, minWidth: 18, textAlign: "right" }}>{f.value}</span>
+                </div>
+              </div>
+              <div style={{ background: BG, borderRadius: 999, height: 6, overflow: "hidden" }}>
+                <div style={{ width: `${f.pct}%`, height: "100%", background: f.color, borderRadius: 999, transition: "width 0.7s ease" }} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Conversion rates */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
-        <SH>Conversion Rates</SH>
-        {[
-          { label: "View Rate",       value: viewRate,      color: "var(--muted)" },
-          { label: "Shortlist Rate",  value: shortlistRate, color: "var(--green)" },
-          { label: "Rejection Rate",  value: rejectRate,    color: "var(--red)"   },
-        ].map(r => (
-          <div key={r.label} style={{ marginBottom: 10 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: "0.75rem", color: BLACK, fontWeight: 500 }}>{r.label}</span>
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: "0.9rem", color: r.color }}>{r.value}%</span>
+      {/* 3 conversion rate metric cards */}
+      {total > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {[
+            { label: "View Rate",      value: `${viewRate}%`,      color: BLUE  },
+            { label: "Shortlist Rate", value: `${shortlistRate}%`, color: GREEN },
+            { label: "Reject Rate",    value: `${rejectRate}%`,    color: RED   },
+          ].map(m => (
+            <div key={m.label} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 8px", textAlign: "center" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</div>
+              <div style={{ fontSize: "0.58rem", color: MUTED, marginTop: 4, lineHeight: 1.3 }}>{m.label}</div>
             </div>
-            <div style={{ background: BG, borderRadius: 999, height: 5 }}>
-              <div style={{ width: `${r.value}%`, height: "100%", background: r.color, borderRadius: 999 }} />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Avg score card */}
+      {/* Avg readiness score */}
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
-        <SH>Readiness Score</SH>
-        <div style={{ textAlign: "center", padding: "10px 0" }}>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "3rem", color: avg ? "var(--gold)" : MUTED, lineHeight: 1 }}>
+        <SH>Avg Readiness Score</SH>
+        <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
+          <div style={{ fontSize: "3.2rem", fontWeight: 800, color: avg ? GOLD : MUTED, lineHeight: 1 }}>
             {avg ? `${avg}%` : "—"}
           </div>
-          <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: 6 }}>
-            {avg ? "average candidate readiness" : "no scores calculated yet"}
+          <div style={{ fontSize: "0.7rem", color: MUTED, marginTop: 6 }}>
+            {avg ? "average across all candidates" : "no scores calculated yet"}
           </div>
         </div>
         {avg && (
-          <div style={{ marginTop: 10 }}>
-            <div style={{ background: BG, borderRadius: 999, height: 8, overflow: "hidden" }}>
-              <div style={{ width: `${avg}%`, height: "100%", background: "var(--gold)", borderRadius: 999, transition: "width 0.8s ease" }} />
-            </div>
+          <div style={{ background: BG, borderRadius: 999, height: 8, overflow: "hidden" }}>
+            <div style={{ width: `${avg}%`, height: "100%", background: GOLD, borderRadius: 999, transition: "width 0.8s ease" }} />
           </div>
         )}
       </div>
+
+      {/* Score distribution */}
+      {scoreDist.some(s => s.count > 0) && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
+          <SH>Score Distribution</SH>
+          {scoreDist.map((s, i) => {
+            const maxCount = Math.max(...scoreDist.map(d => d.count)) || 1;
+            const COLORS = [RED, AMBER, BLUE, GREEN];
+            return (
+              <HRow key={s.band} label={s.band} value={s.count} max={maxCount} color={COLORS[i]} />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Top target roles */}
+      {targetRoles.length > 0 && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px" }}>
+          <SH>Top Target Roles</SH>
+          {targetRoles.map((r, i) => (
+            <HRow key={r.role} label={r.role} value={r.count} max={targetRoles[0]?.count || 1} color={PINK} />
+          ))}
+        </div>
+      )}
+
+      {/* No data fallback */}
+      {total === 0 && (
+        <div style={{ textAlign: "center", padding: "32px 0", color: MUTED, fontSize: "0.82rem" }}>
+          No application data yet
+        </div>
+      )}
 
     </div>
   );
