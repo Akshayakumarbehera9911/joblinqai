@@ -131,6 +131,12 @@ function AppCard({ app, navigate, onWithdraw }) {
   const sc         = STATUS_COLORS[app.status] || STATUS_COLORS.applied;
   const stepIndex  = STATUS_STEPS.indexOf(app.status);
 
+  // Days since applied — for shortlist nudge
+  const daysSince = app.applied_at
+    ? Math.floor((Date.now() - new Date(app.applied_at).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  const showNudge = app.status === "shortlisted" && daysSince >= 3;
+
   return (
     <div className="card" style={{ borderRadius: "14px", padding: "14px 14px 12px", overflow: "hidden" }}>
 
@@ -245,6 +251,20 @@ function AppCard({ app, navigate, onWithdraw }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Shortlist nudge — shown after 3+ days with no follow-up */}
+      {showNudge && (
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: "8px",
+          padding: "8px 10px", borderRadius: "8px", marginBottom: "10px",
+          background: "#fffbeb", border: "1px solid #ffe082",
+        }}>
+          <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>⏳</span>
+          <span style={{ fontSize: "0.75rem", color: "#7c6200", lineHeight: 1.5 }}>
+            <strong>Shortlisted {daysSince} days ago.</strong> The hiring team will contact you if they'd like to move forward. Keep applying to other roles in the meantime.
+          </span>
         </div>
       )}
 
