@@ -8,6 +8,10 @@ import {
   getAdminJobs, setJobStatus,
   getReports, updateReport,
 } from "../../api/admin";
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 const PINK  = "var(--pink)";
 const GREEN = "var(--green)";
@@ -186,14 +190,15 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-function TabIcon({ id }) {
-  const s = { width: 15, height: 15, display: "inline-block", verticalAlign: "middle", marginRight: 4 };
+function TabIcon({ id, active }) {
+  const color = active ? "#E8398A" : "#aaa";
   const p = { fill: "none", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
-  if (id === "overview")  return <svg viewBox="0 0 24 24" style={s} stroke="currentColor" {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-  if (id === "users")     return <svg viewBox="0 0 24 24" style={s} stroke="currentColor" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-  if (id === "companies") return <svg viewBox="0 0 24 24" style={s} stroke="currentColor" {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-  if (id === "jobs")      return <svg viewBox="0 0 24 24" style={s} stroke="currentColor" {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>;
-  if (id === "reports")   return <svg viewBox="0 0 24 24" style={s} stroke="currentColor" {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+  const s = { width: 20, height: 20 };
+  if (id === "overview")  return <svg viewBox="0 0 24 24" style={s} stroke={color} {...p}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
+  if (id === "users")     return <svg viewBox="0 0 24 24" style={s} stroke={color} {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+  if (id === "companies") return <svg viewBox="0 0 24 24" style={s} stroke={color} {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+  if (id === "jobs")      return <svg viewBox="0 0 24 24" style={s} stroke={color} {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>;
+  if (id === "reports")   return <svg viewBox="0 0 24 24" style={s} stroke={color} {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
   return null;
 }
 
@@ -214,37 +219,254 @@ function OverviewTab() {
   }, []);
   if (loading) return <Spinner />;
   if (!stats)  return <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Failed to load stats.</div>;
-  const statCards = [
-    { label: "Total Users",    value: stats.total_users,        accent: BLUE  },
-    { label: "Candidates",     value: stats.total_candidates,   accent: BLUE  },
-    { label: "HR Accounts",    value: stats.total_hr,           accent: PINK  },
-    { label: "Companies",      value: stats.total_companies,    accent: AMBER },
-    { label: "Verified Cos",   value: stats.verified_companies, accent: GREEN },
-    { label: "Total Jobs",     value: stats.total_jobs,         accent: AMBER },
-    { label: "Active Jobs",    value: stats.active_jobs,        accent: GREEN },
-    { label: "Applications",   value: stats.total_applications, accent: BLUE  },
-    { label: "Open Reports",   value: stats.open_reports,       accent: RED   },
-    { label: "Inactive Users", value: stats.inactive_users,     accent: RED   },
-  ];
+
+  const PINK2  = "#E8398A";
+  const BLUE2  = "#3b82f6";
+  const PURP   = "#8b5cf6";
+  const SLATE  = "#64748b";
+
+  const totalApps   = stats.total_applications || 0;
+  const shortlisted = stats.shortlisted_apps   || 0;
+  const rejected    = stats.rejected_apps      || 0;
+  const viewed      = stats.viewed_apps        || 0;
+  const applied     = totalApps;
+
+  const funnelMax = applied || 1;
+
+  const jobsDonut = [
+    { name: "Active", value: stats.active_jobs  || 0, fill: PINK2 },
+    { name: "Closed", value: stats.closed_jobs  || 0, fill: "#e2e8f0" },
+    { name: "Draft",  value: stats.draft_jobs   || 0, fill: BLUE2  },
+  ].filter(d => d.value > 0);
+
+  const weeklyData  = stats.weekly_apps       || [];
+  const topCats     = stats.top_categories    || [];
+  const candStates  = stats.candidate_states  || [];
+  const avgScore    = stats.avg_readiness_score || null;
+
+  /* ── tiny stat card ── */
+  function KCard({ value, label, sub, color }) {
+    return (
+      <div style={{
+        background: "var(--card)", borderRadius: 14, padding: "16px 14px",
+        border: "1px solid var(--border)", position: "relative", overflow: "hidden",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: color }} />
+        <div style={{ fontSize: "1.9rem", fontWeight: 800, color, lineHeight: 1.05 }}>{value ?? "—"}</div>
+        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--black)", marginTop: 3 }}>{label}</div>
+        {sub && <div style={{ fontSize: "0.65rem", color: "var(--muted)", marginTop: 1 }}>{sub}</div>}
+      </div>
+    );
+  }
+
+  /* ── section header ── */
+  function SH({ children }) {
+    return <div style={{ fontSize: "0.78rem", fontWeight: 700, color: SLATE, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.6px" }}>{children}</div>;
+  }
+
+  /* ── funnel row ── */
+  function FRow({ label, value, color }) {
+    const pct = Math.round((value / funnelMax) * 100);
+    return (
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+          <span style={{ fontSize: "0.78rem", color: "var(--black)", fontWeight: 500 }}>{label}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{pct}%</span>
+            <span style={{ fontSize: "0.82rem", fontWeight: 700, color, minWidth: 20, textAlign: "right" }}>{value}</span>
+          </div>
+        </div>
+        <div style={{ background: "var(--bg)", borderRadius: 999, height: 6, overflow: "hidden" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <SectionTitle>Platform Overview</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
-        {statCards.map(sc => (
-          <div key={sc.label} style={{
-            background: "var(--card)", border: "1px solid var(--border)",
-            borderRadius: 12, padding: "14px 16px", position: "relative", overflow: "hidden",
-          }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: sc.accent }} />
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.7rem", lineHeight: 1 }}>{sc.value ?? "—"}</div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{sc.label}</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 8 }}>
+
+      {/* Open reports alert */}
+      {(stats.open_reports || 0) > 0 && (
+        <div style={{
+          background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: 12,
+          padding: "10px 14px", display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <span style={{ fontSize: "1rem" }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#e11d48" }}>
+              {stats.open_reports} open report{stats.open_reports > 1 ? "s" : ""} need attention
+            </div>
+            <div style={{ fontSize: "0.7rem", color: "#9f1239" }}>Switch to Reports tab</div>
+          </div>
+        </div>
+      )}
+
+      {/* KPI 2x2 grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <KCard value={stats.total_users}        label="Total Users"   sub={`${stats.total_candidates || 0} candidates`} color={BLUE2} />
+        <KCard value={stats.active_jobs}         label="Active Jobs"   sub={`of ${stats.total_jobs || 0} total`}        color={PINK2} />
+        <KCard value={totalApps}                 label="Applications"  sub={`${shortlisted} shortlisted`}                color={PURP}  />
+        <KCard value={avgScore ? `${avgScore}%` : "—"} label="Avg Score" sub="readiness"                               color="#f59e0b" />
+      </div>
+
+      {/* Platform health strip */}
+      <div style={{
+        background: "var(--card)", borderRadius: 14, padding: "14px 16px",
+        border: "1px solid var(--border)", display: "flex", justifyContent: "space-around",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}>
+        {[
+          { label: "HR Accounts",  value: stats.total_hr || 0 },
+          { label: "Companies",    value: `${stats.verified_companies || 0}/${stats.total_companies || 0}`, sub: "verified" },
+          { label: "Inactive",     value: stats.inactive_users || 0, warn: (stats.inactive_users || 0) > 0 },
+          { label: "Reports",      value: stats.open_reports || 0, warn: (stats.open_reports || 0) > 0 },
+        ].map(item => (
+          <div key={item.label} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: item.warn ? "#e11d48" : PINK2 }}>{item.value}</div>
+            {item.sub && <div style={{ fontSize: "0.58rem", color: "var(--muted)" }}>{item.sub}</div>}
+            <div style={{ fontSize: "0.62rem", color: "var(--muted)", marginTop: 1 }}>{item.label}</div>
           </div>
         ))}
       </div>
+
+      {/* Application funnel */}
+      <div style={{ background: "var(--card)", borderRadius: 14, padding: "16px", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <SH>Application Funnel</SH>
+        <FRow label="Applied"     value={applied}     color={BLUE2} />
+        <FRow label="Viewed"      value={viewed}      color={PURP}  />
+        <FRow label="Shortlisted" value={shortlisted} color={PINK2} />
+        <FRow label="Rejected"    value={rejected}    color="#f43f5e" />
+      </div>
+
+      {/* Jobs by status donut */}
+      {jobsDonut.length > 0 && (
+        <div style={{ background: "var(--card)", borderRadius: 14, padding: "16px", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <SH>Jobs by Status</SH>
+          <ResponsiveContainer width="100%" height={170}>
+            <PieChart>
+              <Pie data={jobsDonut} cx="50%" cy="45%" innerRadius={48} outerRadius={68} paddingAngle={3} dataKey="value">
+                {jobsDonut.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+              </Pie>
+              <Tooltip contentStyle={{ fontSize: "0.75rem", borderRadius: 8, border: "1px solid var(--border)" }} />
+              <Legend iconType="circle" iconSize={7}
+                formatter={(v, e) => <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{v} ({e.payload.value})</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Weekly applications */}
+      {weeklyData.length > 1 && (
+        <div style={{ background: "var(--card)", borderRadius: 14, padding: "16px", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <SH>Applications — Last 6 Weeks</SH>
+          <ResponsiveContainer width="100%" height={110}>
+            <AreaChart data={weeklyData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+              <defs>
+                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor={PINK2} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={PINK2} stopOpacity={0}   />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="week" tick={{ fontSize: 9, fill: "#aaa" }} tickLine={false} axisLine={false} tickFormatter={v => v.slice(5)} />
+              <YAxis tick={{ fontSize: 9, fill: "#aaa" }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={{ fontSize: "0.75rem", borderRadius: 8, border: "1px solid var(--border)" }} labelFormatter={v => `Week of ${v}`} />
+              <Area type="monotone" dataKey="count" stroke={PINK2} strokeWidth={2} fill="url(#areaGrad)" dot={{ fill: PINK2, r: 3 }} name="Applications" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Top job categories */}
+      {topCats.length > 0 && (
+        <div style={{ background: "var(--card)", borderRadius: 14, padding: "16px", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <SH>Top Job Categories</SH>
+          {topCats.map((c, i) => (
+            <div key={c.category} style={{ marginBottom: i < topCats.length - 1 ? 10 : 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: "0.78rem", color: "var(--black)", fontWeight: 500 }}>{c.category}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: PINK2 }}>{c.count}</span>
+              </div>
+              <div style={{ background: "var(--bg)", borderRadius: 999, height: 5 }}>
+                <div style={{
+                  width: `${Math.round((c.count / (topCats[0]?.count || 1)) * 100)}%`,
+                  height: "100%", borderRadius: 999,
+                  background: `linear-gradient(90deg, ${PINK2}, ${BLUE2})`,
+                  opacity: 1 - i * 0.15,
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Candidates by state */}
+      {candStates.length > 0 && (
+        <div style={{ background: "var(--card)", borderRadius: 14, padding: "16px", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <SH>Candidates by State</SH>
+          {candStates.map((s, i) => (
+            <div key={s.state} style={{ marginBottom: i < candStates.length - 1 ? 10 : 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: "0.78rem", color: "var(--black)", fontWeight: 500 }}>{s.state}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: BLUE2 }}>{s.count}</span>
+              </div>
+              <div style={{ background: "var(--bg)", borderRadius: 999, height: 5 }}>
+                <div style={{
+                  width: `${Math.round((s.count / (candStates[0]?.count || 1)) * 100)}%`,
+                  height: "100%", background: BLUE2, borderRadius: 999, opacity: 1 - i * 0.15,
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
 
+/* ── Main ── */
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("overview");
+
+  return (
+    <>
+      <TopBar title="Admin Panel" />
+      <div className="page" style={{ padding: "calc(var(--topbar-height) + 0px) 0 calc(var(--nav-height) + 16px)" }}>
+        {/* Icon-only tab bar — no scroll */}
+        <div style={{
+          display: "flex", borderBottom: "1px solid var(--border)",
+          background: "var(--card)", position: "sticky", top: 0, zIndex: 10,
+        }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+              flex: 1, padding: "11px 0", border: "none",
+              borderBottom: activeTab === t.id ? "2.5px solid #E8398A" : "2.5px solid transparent",
+              background: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+            }}>
+              <TabIcon id={t.id} active={activeTab === t.id} />
+              <span style={{
+                fontSize: "0.58rem", fontWeight: activeTab === t.id ? 700 : 500,
+                color: activeTab === t.id ? "#E8398A" : "#aaa", letterSpacing: "0.3px",
+              }}>
+                {t.id === "companies" ? "Cos" : t.label}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: "16px 16px 0" }}>
+          {activeTab === "overview"  && <OverviewTab />}
+          {activeTab === "users"     && <UsersTab />}
+          {activeTab === "companies" && <CompaniesTab />}
+          {activeTab === "jobs"      && <JobsTab />}
+          {activeTab === "reports"   && <ReportsTab />}
+        </div>
+      </div>
+    </>
+  );
+}
 /* ── Users ── */
 function UsersTab() {
   const [users,   setUsers]   = useState([]);
@@ -667,56 +889,5 @@ function Toast({ msg, type }) {
       border: `1px solid ${type === "error" ? RED : GREEN}`,
       boxShadow: "0 4px 20px rgba(0,0,0,.2)", whiteSpace: "nowrap",
     }}>{msg}</div>
-  );
-}
-
-/* ── Main ── */
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const { logout } = useAuth();
-
-  return (
-    <>
-      <TopBar title="Admin Panel" />
-      <div className="page" style={{ padding: "calc(var(--topbar-height) + 0px) 0 calc(var(--nav-height) + 16px)" }}>
-        <div style={{
-          display: "flex", overflowX: "auto", borderBottom: "1px solid var(--border)",
-          background: "var(--card)", scrollbarWidth: "none",
-          position: "sticky", top: 0, zIndex: 10, alignItems: "center",
-        }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-              flexShrink: 0, padding: "10px 14px", border: "none",
-              borderBottom: activeTab === t.id ? `2.5px solid ${PINK}` : "2.5px solid transparent",
-              background: "none", cursor: "pointer", fontSize: "0.78rem",
-              fontWeight: activeTab === t.id ? 700 : 500,
-              color: activeTab === t.id ? PINK : "var(--muted)",
-              display: "flex", alignItems: "center", gap: 4,
-            }}>
-              <TabIcon id={t.id} />{t.label}
-            </button>
-          ))}
-          <button onClick={logout} style={{
-            flexShrink: 0, marginLeft: "auto", padding: "10px 14px",
-            border: "none", borderBottom: "2.5px solid transparent",
-            background: "none", cursor: "pointer",
-            fontSize: "0.78rem", fontWeight: 500, color: RED,
-            display: "flex", alignItems: "center", gap: 4,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            Logout
-          </button>
-        </div>
-        <div style={{ padding: "16px 16px 0" }}>
-          {activeTab === "overview"  && <OverviewTab />}
-          {activeTab === "users"     && <UsersTab />}
-          {activeTab === "companies" && <CompaniesTab />}
-          {activeTab === "jobs"      && <JobsTab />}
-          {activeTab === "reports"   && <ReportsTab />}
-        </div>
-      </div>
-    </>
   );
 }
