@@ -5,8 +5,11 @@ from backend.config import DATABASE_URL
 
 # MySQL needs connect_args for charset; PostgreSQL ignores them
 _is_mysql = DATABASE_URL.startswith("mysql")
-_kwargs = {"connect_args": {"charset": "utf8mb4"}} if _is_mysql else {"pool_size": 5, "max_overflow": 10}
-
+_kwargs = {"connect_args": {"charset": "utf8mb4"}} if _is_mysql else {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "connect_args": {"sslmode": "require"}  # ← only addition
+}
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
