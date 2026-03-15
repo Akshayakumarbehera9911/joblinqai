@@ -2,12 +2,12 @@ importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "AIzaSyDxWEPQc0Mw3dKvFFB3QCid1ETNqfFlZXM",
-  authDomain: "jobportal-555ca.firebaseapp.com",
-  projectId: "jobportal-555ca",
-  storageBucket: "jobportal-555ca.firebasestorage.app",
-  messagingSenderId: "347953420222",
-  appId: "1:347953420222:web:72cfbbad77497797700bef",
+  apiKey: "AIzaSyCsAWFIruPsMQ1-WONbn938YHSMpCUCdBc",
+  authDomain: "joblinqai-6906c.firebaseapp.com",
+  projectId: "joblinqai-6906c",
+  storageBucket: "joblinqai-6906c.firebasestorage.app",
+  messagingSenderId: "678654942688",
+  appId: "1:678654942688:web:1f4c11210db9f5f2451f85",
 });
 
 const messaging = firebase.messaging();
@@ -18,18 +18,18 @@ messaging.onBackgroundMessage((payload) => {
     body: body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    data: { url: payload.fcmOptions?.link || "https://jobportal-mobile.onrender.com/applications" },
+    data: { url: payload.fcmOptions?.link || "https://joblinqai.pages.dev/applications" },
   });
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "https://jobportal-mobile.onrender.com/applications";
+  const url = event.notification.data?.url || "https://joblinqai.pages.dev/applications";
   event.waitUntil(clients.openWindow(url));
 });
 
 /* ── PWA Cache ── */
-const CACHE_NAME = "jobportal-cdn-v1";
+const CACHE_NAME = "joblinqai-v1";
 
 self.addEventListener("install", event => {
   self.skipWaiting();
@@ -55,6 +55,7 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
+  // Cache icons only
   if (url.pathname.startsWith("/icons/")) {
     event.respondWith(
       caches.match(event.request).then(cached => cached || fetch(event.request))
@@ -62,6 +63,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // Cache CDN resources — fix: clone before caching, return original
   if (
     url.hostname.includes("googleapis.com") ||
     url.hostname.includes("gstatic.com") ||
@@ -73,9 +75,10 @@ self.addEventListener("fetch", event => {
         if (cached) return cached;
         return fetch(event.request).then(response => {
           if (response.ok) {
-            caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+            const toCache = response.clone(); // clone for cache, return original
+            caches.open(CACHE_NAME).then(c => c.put(event.request, toCache));
           }
-          return response;
+          return response; // return original — not consumed
         });
       })
     );
