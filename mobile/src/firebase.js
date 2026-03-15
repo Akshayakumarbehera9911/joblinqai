@@ -2,15 +2,15 @@ import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDxWEPQc0Mw3dKvFFB3QCid1ETNqfFlZXM",
-  authDomain: "jobportal-555ca.firebaseapp.com",
-  projectId: "jobportal-555ca",
-  storageBucket: "jobportal-555ca.firebasestorage.app",
-  messagingSenderId: "347953420222",
-  appId: "1:347953420222:web:72cfbbad77497797700bef",
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const VAPID_KEY = "BBkqtZkQTBDepO5sspZsXKP5V0Gneq6TTu4-T3ZkosXoNx5ruuhE47aMMY0VIz9ce-zM8YLjE4az2CASNPOeWzg";
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
@@ -20,7 +20,6 @@ export async function requestFCMToken() {
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return null;
 
-    // Use the existing PWA service worker (sw.js) which now includes Firebase messaging
     const swReg = await navigator.serviceWorker.ready;
 
     const token = await getToken(messaging, {
