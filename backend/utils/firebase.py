@@ -31,7 +31,7 @@ def send_push(token: str, title: str, body: str) -> bool:
                     title=title, body=body, icon="/icons/icon-192.png",
                 ),
                 fcm_options=messaging.WebpushFCMOptions(
-                    link="https://jobportal-mobile.onrender.com/applications"
+                    link="https://joblinqai-production.up.railway.app/applications"
                 ),
             ),
             token=token,
@@ -73,7 +73,7 @@ def send_push_to_candidate(candidate_id: int, title: str, body: str, db) -> int:
                         title=title, body=body, icon="/icons/icon-192.png",
                     ),
                     fcm_options=messaging.WebpushFCMOptions(
-                        link="https://jobportal-mobile.onrender.com/applications"
+                        link="https://joblinqai-production.up.railway.app/applications"
                     ),
                 ),
                 token=t.token,

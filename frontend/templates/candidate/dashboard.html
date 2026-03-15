@@ -188,7 +188,7 @@ document.querySelector('.page-content').style.padding='0';
 document.querySelector('.page-content > .container').style.maxWidth='none';
 document.querySelector('.page-content > .container').style.padding='0';
 
-const API=`https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api`, token=Auth.getToken();
+const API=`https://joblinqai-production.up.railway.app/api`, token=Auth.getToken();
 if(!token) window.location.href='/login';
 
 const IC = path => `/static/icons/${path}`;

@@ -198,7 +198,7 @@ function GlobalMenu() {
 
   function handleShare() {
     setOpen(false);
-    const url = "https://jobportal-mobile.onrender.com";
+    const url = "https://joblinqai-production.up.railway.app";
     if (navigator.share) {
       navigator.share({ title:"JobPortal", text:"Find jobs across India", url }).catch(()=>{});
     } else {

@@ -1,5 +1,5 @@
 // ── Base URL ───────────────────────────────────────────────────────────────
-const API_BASE = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
+const API_BASE = "https://joblinqai-production.up.railway.app/api";
 
 // ── Token helpers ──────────────────────────────────────────────────────────
 const Auth = {

@@ -1,4 +1,4 @@
-const BASE = "https://jobportal-api-a2dcfwh8dfcaesf4.southindia-01.azurewebsites.net/api";
+const BASE = "https://joblinqai-production.up.railway.app/api";
 
 function getToken() {
   return localStorage.getItem("token");
