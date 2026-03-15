@@ -14,5 +14,5 @@ groq
 email-validator
 bcrypt==4.0.1
 jinja2
-scikit-learn
+scikit-learn==1.6.1
 firebase-admin
