@@ -5,7 +5,7 @@ import SkillTag  from "../../components/SkillTag";
 import { useAuth } from "../../context/AuthContext";
 import { setSkillSuggestionsCount } from "../../components/BottomNav";
 import {
-  getProfile, updateProfile,
+  getProfile, updateProfile, createProfile,
   getSkills, addSkill, deleteSkill,
   getSkillSuggestions,
   getProjects, addProject, deleteProject,
@@ -122,7 +122,13 @@ export default function CandidateProfile() {
         expected_salary_min: profile.expected_salary_min ? parseInt(profile.expected_salary_min) : null,
         expected_salary_max: profile.expected_salary_max ? parseInt(profile.expected_salary_max) : null,
       };
-      await updateProfile(payload);
+      if (profile?.id) {
+        await updateProfile(payload);
+      } else {
+        await createProfile(payload);
+        const p = await getProfile();
+        setProfile(p.data?.profile || null);
+      }
       setMsg("Profile saved!");
     } catch (e) { setMsg(e.message); }
     finally { setSaving(false); }

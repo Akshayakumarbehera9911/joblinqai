@@ -3,6 +3,7 @@ import { apiFetch, apiUpload } from "./client";
 export const getDashboard      = (mode = "all") => apiFetch(`/candidate/dashboard?mode=${mode}`);
 export const getProfile        = () => apiFetch("/candidate/profile");
 export const updateProfile     = (data) => apiFetch("/candidate/profile", { method: "PUT", body: JSON.stringify(data) });
+export const createProfile     = (data) => apiFetch("/candidate/profile", { method: "POST", body: JSON.stringify(data) });
 export const getApplications   = () => apiFetch("/candidate/applications");
 export const withdrawApplication = (id) => apiFetch(`/candidate/applications/${id}`, { method: "DELETE" });
 
