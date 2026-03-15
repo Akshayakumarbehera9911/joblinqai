@@ -30,7 +30,6 @@ redirect/
 
 # Misc
 *.sql
-*.txt
 render.yaml
 .DS_Store
 Thumbs.db
