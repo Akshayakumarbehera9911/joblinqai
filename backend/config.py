@@ -22,7 +22,7 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
 # ── Groq ───────────────────────────────────────────────────────────────────
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+
 # ── Validation — crash early if critical vars missing ──────────────────────
 def validate():
     missing = []
