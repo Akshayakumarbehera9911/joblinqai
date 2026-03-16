@@ -215,8 +215,9 @@ def create_job(body: JobCreate, current_user: User = Depends(require_hr), db: Se
     db.add(job)
     db.flush()  # get job.id before committing
 
+    from backend.pipeline.skill_normalizer import normalize_skill
     for s in skills_data:
-        skill = JobSkill(job_id=job.id, skill_name=s.skill_name, is_mandatory=s.is_mandatory)
+        skill = JobSkill(job_id=job.id, skill_name=normalize_skill(s.skill_name, db), is_mandatory=s.is_mandatory)
         db.add(skill)
 
     db.commit()
@@ -276,8 +277,9 @@ def update_job(job_id: int, body: JobCreate, current_user: User = Depends(requir
 
     # Replace skills
     db.query(JobSkill).filter(JobSkill.job_id == job.id).delete()
+    from backend.pipeline.skill_normalizer import normalize_skill
     for s in skills_data:
-        skill = JobSkill(job_id=job.id, skill_name=s.skill_name, is_mandatory=s.is_mandatory)
+        skill = JobSkill(job_id=job.id, skill_name=normalize_skill(s.skill_name, db), is_mandatory=s.is_mandatory)
         db.add(skill)
 
     db.commit()

@@ -19,14 +19,14 @@ def make_udemy_link(skill: str) -> str:
     return f"https://www.udemy.com/courses/search/?q={quote(skill)}"
 
 
-# ── Skill alias map: if candidate has KEY, treat VALUE as also present ────
-# This handles legitimate implied knowledge (e.g. PostgreSQL implies SQL)
-SKILL_ALIASES = {
+# ── Skill implication map: if candidate has KEY, they also have VALUE ─────
+# Only for genuinely implied knowledge — e.g. knowing PostgreSQL implies SQL
+SKILL_IMPLICATIONS = {
     "postgresql": ["sql"],
     "mysql":      ["sql"],
     "sqlite":     ["sql"],
     "mssql":      ["sql"],
-    "oracle db":  ["sql"],
+    "oracle":     ["sql"],
     "mariadb":    ["sql"],
     "pandas":     ["python"],
     "numpy":      ["python"],
@@ -41,32 +41,45 @@ SKILL_ALIASES = {
 
 
 def _expand_candidate_skills(candidate_skills: list) -> set:
-    """Return a set of candidate skill names + all implied skills."""
+    """Return canonical skill set + all implied skills."""
     expanded = set(s.lower() for s in candidate_skills)
     for skill in list(expanded):
-        for alias in SKILL_ALIASES.get(skill, []):
-            expanded.add(alias.lower())
+        for implied in SKILL_IMPLICATIONS.get(skill, []):
+            expanded.add(implied.lower())
     return expanded
 
 
-def identify_gaps(candidate_skills: list, market_demand: list, target_role: str) -> list:
+def identify_gaps(candidate_skills: list, market_demand: list, target_role: str, db=None) -> list:
     """
-    Identify skill gaps using a hybrid approach:
-    1. Exact/alias match first — if candidate clearly has the skill (directly or implied), skip it
-    2. AI classifies severity for remaining gaps
+    Identify skill gaps.
+    If db is provided, normalizes both skill lists before comparing.
+    Falls back gracefully if normalizer unavailable.
     Returns list of {skill_name, gap_level, udemy_link}
     """
     if not market_demand:
         return []
 
-    # Step 1: Filter out skills candidate already has (exact + alias)
-    expanded = _expand_candidate_skills(candidate_skills)
-    missing = [s for s in market_demand if s.lower() not in expanded]
+    # Normalize both lists if DB session available
+    if db is not None:
+        try:
+            from backend.pipeline.skill_normalizer import normalize_skill
+            norm_candidate = [normalize_skill(s, db) for s in candidate_skills]
+            norm_market    = [normalize_skill(s, db) for s in market_demand]
+        except Exception:
+            norm_candidate = candidate_skills
+            norm_market    = market_demand
+    else:
+        norm_candidate = candidate_skills
+        norm_market    = market_demand
+
+    # Filter out skills candidate already has (exact + implication)
+    expanded = _expand_candidate_skills(norm_candidate)
+    missing  = [s for s in norm_market if s.lower() not in expanded]
 
     if not missing:
         return []
 
-    # Step 2: Ask AI to classify severity of genuinely missing skills only
+    # Ask Groq to classify severity of genuinely missing skills
     prompt = f"""You are analyzing skill gaps for a {target_role} job candidate.
 
 The candidate is CONFIRMED to be missing these skills (do not question this):
@@ -91,7 +104,7 @@ Format: [{{"skill_name": "Statistics", "gap_level": "critical"}}, ...]"""
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=800,
-            temperature=0.0   # deterministic — no random drops between calls
+            temperature=0.0
         )
         raw = _strip_think_tags(response.choices[0].message.content)
         raw = raw.replace("```json", "").replace("```", "").strip()
@@ -100,17 +113,14 @@ Format: [{{"skill_name": "Statistics", "gap_level": "critical"}}, ...]"""
             raise ValueError("Not a list")
 
         # Safety net: ensure all missing skills appear in output
-        # (AI sometimes drops skills even when told not to)
         returned_names = {g["skill_name"].lower() for g in gaps if isinstance(g, dict)}
         for skill in missing:
             if skill.lower() not in returned_names:
                 gaps.append({"skill_name": skill, "gap_level": "moderate"})
 
     except Exception:
-        # Fallback: all missing skills as moderate
         gaps = [{"skill_name": s, "gap_level": "moderate"} for s in missing]
 
-    # Add Udemy links
     result = []
     for gap in gaps:
         if isinstance(gap, dict) and "skill_name" in gap:

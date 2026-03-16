@@ -42,3 +42,12 @@ class RoleSynonymCache(Base):
     matched_titles     = Column(JSON, nullable=False)
     job_count_snapshot = Column(Integer, default=0)
     created_at         = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class SkillNormCache(Base):
+    __tablename__ = "skill_norm_cache"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    raw_name   = Column(String(150), unique=True, nullable=False, index=True)  # lowercase
+    canonical  = Column(String(150), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

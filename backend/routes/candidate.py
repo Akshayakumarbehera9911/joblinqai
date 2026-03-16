@@ -182,9 +182,11 @@ def get_skills(current_user: User = Depends(require_candidate), db: Session = De
 def add_skills(skills: List[SkillCreate], current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
     profile = get_profile_or_404(current_user.id, db)
     added = []
+    from backend.pipeline.skill_normalizer import normalize_skill
     for s in skills:
-        skill = CandidateSkill(candidate_id=profile.id, **s.model_dump())
-        db.add(skill); added.append(s.skill_name)
+        canonical_name = normalize_skill(s.skill_name, db)
+        skill = CandidateSkill(candidate_id=profile.id, skill_name=canonical_name, category=s.category, level=s.level)
+        db.add(skill); added.append(canonical_name)
     db.commit()
     return {"success": True, "data": {"added": added}, "error": None}
 

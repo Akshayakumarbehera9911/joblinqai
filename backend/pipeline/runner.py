@@ -46,7 +46,7 @@ def run_pipeline(candidate_id: int, db: Session) -> dict:
         enriched_skills = existing_skill_names
 
     # Step 4 — Identify gaps (using ONLY DB skills — resume skills are suggestions, not confirmed)
-    gaps = identify_gaps(existing_skill_names, market_demand, profile.target_role)
+    gaps = identify_gaps(existing_skill_names, market_demand, profile.target_role, db)
 
     # Step 5 — Calculate score
     score_result = calculate_score(structured, market_demand, weights)
