@@ -70,21 +70,13 @@ export default function HRApplicants() {
     setUpdating(true);
     try {
       await updateAppStatus(appId, status);
-      // Update local state immediately — no extra API call needed for reject
+      // Always update local state immediately — no extra API call ever
       const updated = applicants.map(a =>
         String(a.application_id) === String(appId) ? { ...a, status } : a
       );
       setApplicants(updated);
       const localFresh = updated.find(a => String(a.application_id) === String(appId));
       if (localFresh) setSelected(localFresh);
-      // Only re-fetch when shortlisting — to get contact details from server
-      if (status === 'shortlisted') {
-        try {
-          const res = await getApplicants(id);
-          const serverFresh = (res.data || []).find(a => String(a.application_id) === String(appId));
-          if (serverFresh) { setApplicants(res.data || []); setSelected(serverFresh); }
-        } catch {} // silently ignore — local state already updated
-      }
     } catch (e) { alert(e.message); }
     finally { setUpdating(false); }
   }

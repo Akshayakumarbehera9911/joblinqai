@@ -23,7 +23,7 @@
   --r: 10px;
 }
 
-body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:var(--black); }
+body { font-family:'DM Sans',sans-serif; background:var(--white); color:var(--black); }
 
 /* LAYOUT */
 .wrap { max-width:1200px; margin:0 auto; padding:28px 20px 60px; }
@@ -37,9 +37,9 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .hero-name { font-family:'Libre Baskerville',serif; font-size:1.6rem; font-weight:700; line-height:1.1; margin-bottom:4px; }
 .hero-sub  { color:rgba(255,255,255,0.75); font-size:0.85rem; }
 .hero-badge { background:var(--good); color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.5px; margin-left:8px; vertical-align:middle; }
-.btn-primary { background:#fff; color:#0A66C2; border:none; padding:9px 20px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-primary { background:#fff; color:#0A66C2; border:none; padding:9px 20px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; font-family:'DM Sans',sans-serif; transition:all .15s; }
 .btn-primary:hover { background:#004fa3; color:#fff; text-decoration:none; }
-.btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.5); padding:9px 20px; border-radius:6px; font-weight:600; font-size:0.85rem; cursor:pointer; text-decoration:none; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.5); padding:9px 20px; border-radius:6px; font-weight:600; font-size:0.85rem; cursor:pointer; text-decoration:none; font-family:'DM Sans',sans-serif; transition:all .15s; }
 .btn-ghost:hover { border-color:#aaa; color:#fff; text-decoration:none; }
 
 /* STAT GRID */
@@ -66,13 +66,13 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .pill-active { background:var(--good-lt); color:var(--good); }
 .pill-closed { background:var(--bad-lt);  color:var(--bad); }
 .pill-draft  { background:var(--off2);    color:var(--gray); }
-.btn-sm { padding:5px 12px; border-radius:5px; font-size:.75rem; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:'Source Sans 3',sans-serif; }
+.btn-sm { padding:5px 12px; border-radius:5px; font-size:.75rem; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:'DM Sans',sans-serif; }
 .btn-view-apps { background:var(--pink); color:#fff; border-color:var(--pink); }
 .btn-view-apps:hover { opacity:.85; }
-.btn-edit { background:transparent; color:var(--black); border-color:var(--border); }
+.btn-edit { background:#f0f0f0; color:var(--black); border-color:var(--border); }
 .btn-edit:hover { border-color:var(--black); }
-.btn-del { background:transparent; color:var(--bad); border-color:var(--bad-lt); }
-.btn-del:hover { background:var(--bad-lt); }
+.btn-del { background:#E02020; color:#fff; border-color:#E02020; }
+.btn-del:hover { opacity:.85; }
 
 /* APPLICANTS PANEL */
 .drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:150; }
@@ -112,9 +112,9 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .sb-shortlisted { background:#E6F5EE;        color:#0D7A4E; }
 .sb-rejected    { background:var(--pink-lt); color:var(--pink); }
 .sb-withdrawn   { background:#F5F5F0;        color:#aaa; }
-.btn-shortlist { background:var(--good-lt); color:var(--good); border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:opacity .15s; }
-.btn-reject    { background:var(--pink-lt);  color:var(--pink);  border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:opacity .15s; }
-.btn-view-cand { background:var(--off2); color:var(--black); border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-shortlist { background:#00A651; color:#fff; border:none; padding:4px 10px; border-radius:999px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity .15s; }
+.btn-reject    { background:#E02020; color:#fff; border:none; padding:4px 10px; border-radius:999px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity .15s; }
+.btn-view-cand { background:var(--off2); color:var(--black); border:none; padding:4px 10px; border-radius:5px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
 .btn-shortlist:hover,.btn-reject:hover,.btn-view-cand:hover { opacity:.8; }
 
 /* MODAL */
@@ -125,7 +125,7 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .form-group { display:flex; flex-direction:column; gap:4px; }
 .form-label { font-size:.78rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; }
-.form-input { border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:.88rem; font-family:'Source Sans 3',sans-serif; color:var(--black); background:#fff; outline:none; }
+.form-input { border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:.88rem; font-family:'DM Sans',sans-serif; color:var(--black); background:#fff; outline:none; }
 .form-input:focus { border-color:var(--pink); }
 .alert { display:none; padding:10px 14px; border-radius:6px; font-size:.83rem; margin-bottom:10px; }
 .alert.show { display:block; }
@@ -283,13 +283,14 @@ function render(dash,jobs){
 
 function renderJobsTable(jobs){
   return `<div style="overflow-x:auto"><table class="jobs-table">
-    <thead><tr><th>Job Title</th><th>Location</th><th>Type</th><th>Openings</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Job Title</th><th>Location</th><th>Type</th><th>Openings</th><th>Applicants</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody>
       ${jobs.map(j=>`<tr>
         <td><div class="job-title-cell">${j.title}<small>${j.category||''}</small></div></td>
         <td style="color:var(--gray)">${j.city||'—'}</td>
         <td style="color:var(--gray)">${j.job_type||'—'}</td>
         <td style="color:var(--gray)">${j.openings||1}</td>
+        <td style="color:var(--gray);font-weight:700">${j.applicant_count||0}</td>
         <td><span class="pill pill-${j.status||'draft'}">${j.status||'draft'}</span></td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -587,7 +588,7 @@ function jobModalHTML(){
         <div class="form-group"><label class="form-label">Job Description</label><textarea class="form-input" id="jf-desc" rows="3" placeholder="Describe the role..."></textarea></div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button class="btn-primary" id="job-submit-btn" style="flex:1;justify-content:center" onclick="submitJob()">Post Job</button>
-          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600" onclick="closeModal('job-modal')">Cancel</button>
+          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600" onclick="closeModal('job-modal')">Cancel</button>
         </div>
       </div>
     </div>
@@ -705,7 +706,7 @@ function pinMapModalHTML(){
       <div id="pin-map-result" style="display:none;margin-top:10px;background:#E6F5EE;border:1px solid #b6dfc9;border-radius:6px;padding:8px 12px;font-size:.82rem;color:#0D7A4E;font-weight:600;word-break:break-word"></div>
       <div style="display:flex;gap:10px;margin-top:14px">
         <button id="pin-confirm-btn" class="btn-primary" style="flex:1;justify-content:center;opacity:.4" disabled onclick="confirmPinLocation()">Confirm This Location</button>
-        <button onclick="closePinMap()" style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600">Cancel</button>
+        <button onclick="closePinMap()" style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -746,7 +747,7 @@ function companyModalHTML(){
         <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="co-website" placeholder="https://..."/></div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button class="btn-primary" style="flex:1;justify-content:center" onclick="submitCompany()">Save Profile</button>
-          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600" onclick="closeModal('company-modal')">Cancel</button>
+          <button style="padding:9px 18px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600" onclick="closeModal('company-modal')">Cancel</button>
         </div>
       </div>
     </div>
