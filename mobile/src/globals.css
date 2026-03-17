@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 /* ── Brand Variables ───────────────────────────────────────────────────── */
 :root {
@@ -13,8 +13,9 @@
   --green:       #2d9e6b;
   --red:         #e03c3c;
   --gold:        #f59e0b;
-  --font-serif:  'Instrument Serif', serif;
+  --font-serif:  'Plus Jakarta Sans', sans-serif;
   --font-sans:   'DM Sans', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
   --radius:      10px;
   --nav-height:  64px;
   --topbar-height: 56px;
