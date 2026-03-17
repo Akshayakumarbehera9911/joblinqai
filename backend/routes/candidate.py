@@ -279,9 +279,16 @@ async def upload_photo(file: UploadFile = File(...), current_user: User = Depend
 
 # ── GET /api/candidate/dashboard ──────────────────────────────────────────────
 @router.get("/dashboard")
-def dashboard(current_user: User = Depends(require_candidate), db: Session = Depends(get_db)):
+def dashboard(
+    mode: str = "targeted",
+    current_user: User = Depends(require_candidate),
+    db: Session = Depends(get_db)
+):
     from backend.models.score import ReadinessScore, SkillGap
-    from backend.pipeline.ranker import get_ranked_jobs
+    from backend.pipeline.ranker import get_ranked_jobs, get_ranked_jobs_targeted
+
+    if mode not in ("targeted", "all"):
+        mode = "targeted"
 
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
     if not profile:
@@ -291,7 +298,8 @@ def dashboard(current_user: User = Depends(require_candidate), db: Session = Dep
     gaps     = db.query(SkillGap).filter(SkillGap.candidate_id == profile.id, SkillGap.target_role == profile.target_role).all()
     skills   = db.query(CandidateSkill).filter(CandidateSkill.candidate_id == profile.id).all()
     skill_names = [s.skill_name for s in skills]
-    top_jobs = get_ranked_jobs(profile, skill_names, db)[:5]
+    top_jobs = (get_ranked_jobs_targeted(profile, skill_names, db) if mode == "targeted"
+                else get_ranked_jobs(profile, skill_names, db))[:5]
 
     return {
         "success": True,

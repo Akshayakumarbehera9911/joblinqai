@@ -13,6 +13,14 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
+
+def _normalize_role(role: str) -> str:
+    """Normalize role to title case for consistent cache keys.
+    Prevents duplicate cache entries for same role with different casing.
+    e.g. \"data analyst\" -> \"Data Analyst\"
+    """
+    return role.strip().title() if role else role
+
 # ── Cache settings ─────────────────────────────────────────────────────────────
 CACHE_MAX_AGE_DAYS  = 7    # rebuild cache after 7 days
 CACHE_JOB_DELTA     = 15   # rebuild if job count grew by this many since last cache
@@ -66,22 +74,29 @@ Here is a list of job titles from a job portal database:
 
 The candidate's target role is: "{target_role}"
 
-Task: From the list above, identify ALL job titles that belong to the SAME role family as "{target_role}".
-A role family means jobs that require largely overlapping skills and a candidate applying for "{target_role}" would also be competitive for.
+Task: From the list above, identify job titles in the SAME role family as "{target_role}".
 
-Rules:
-- Only return titles that exist in the list above, nothing new
-- Always include "{target_role}" itself if it appears in the list
-- Be inclusive for Indian market (e.g. MIS Executive is same family as Data Analyst in India)
-- Exclude roles that only share one keyword but are clearly different (e.g. Data Engineer is different from Data Analyst)
-- Return ONLY a valid JSON array of strings, no explanation, no markdown
+RULES — follow exactly:
+1. Only return titles from the list above, nothing new
+2. Always include "{target_role}" itself if it appears
+3. Include roles with significantly overlapping core skills (50%+ overlap)
+4. Include specialist/senior variants of the same domain — e.g. ML Engineer is in Data Science family, DevOps is in Software family
+5. Frontend roles MUST NOT include pure backend roles (Django, FastAPI only)
+6. Backend roles MUST NOT include pure frontend roles (React, CSS, HTML only)
+7. Full Stack roles MUST include BOTH frontend (React, Frontend Developer) AND backend (Backend Engineer, Python Developer) adjacent titles
+8. Data Analytics roles MUST NOT include Data Engineering or pure ML/AI roles
+9. Data Science/ML roles MUST NOT include pure Data Analytics roles (SQL/Excel focus)
+10. Non-tech roles (HR, Sales, Marketing) MUST NOT include tech roles
+11. Engineering roles (Electrical, Mechanical, Civil) are isolated — never mix with IT roles
+12. If a role shares ONLY generic skills like Communication, Excel, SQL — NOT enough, check domain fit
+13. Be deterministic — same input always gives same output
 
-Example: ["Data Analyst", "MIS Executive", "BI Developer", "Reporting Analyst"]"""
+Return ONLY a valid JSON array of strings. No explanation, no markdown."""
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
+            temperature=0.0,
             max_tokens=500,
         )
 
@@ -134,10 +149,13 @@ def _get_matched_titles(target_role: str, db: Session) -> list:
     """
     Return list of job titles in same family as target_role.
     Uses cache if fresh, otherwise calls Groq and refreshes cache.
+    Normalizes target_role to title case before cache lookup to prevent
+    duplicate entries for same role with different casing.
     """
     from backend.models.job import Job
     from backend.models.score import RoleSynonymCache
 
+    target_role = _normalize_role(target_role)
     current_job_count = db.query(Job).filter(Job.status == "active").count()
 
     cache = db.query(RoleSynonymCache).filter(

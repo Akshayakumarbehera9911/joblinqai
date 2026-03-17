@@ -19,7 +19,7 @@ export default function CandidateDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => { load(jobMode); }, []);
+  useEffect(() => { load(jobMode); }, [jobMode]);
 
   async function load(mode = "all") {
     setLoading(true);
@@ -105,7 +105,7 @@ export default function CandidateDashboard() {
                     <span style={{ color: "var(--muted)" }}>{label} </span>
                     <span style={{
                       fontWeight: 700,
-                      color: val >= 70 ? "#9d174d" : val >= 40 ? "#0A66C2" : val == null ? "var(--muted)" : "#f9a8d4",
+                      color: val >= 70 ? "#00A651" : val >= 40 ? "#F5A623" : val == null ? "var(--muted)" : "#E02020",
                     }}>{val ?? "—"}</span>
                   </div>
                 ))}

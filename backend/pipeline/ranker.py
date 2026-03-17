@@ -88,7 +88,9 @@ def get_ranked_jobs_targeted(candidate_profile, candidate_skills: list, db: Sess
     from backend.models.score import RoleSynonymCache
     from sqlalchemy import or_
 
-    target_role = candidate_profile.target_role or ""
+    # Normalize to title case — must match how market_analyzer stores cache keys
+    raw_role    = candidate_profile.target_role or ""
+    target_role = raw_role.strip().title() if raw_role else ""
 
     # Get matched titles from cache
     cache = db.query(RoleSynonymCache).filter(

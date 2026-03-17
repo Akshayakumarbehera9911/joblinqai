@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Dashboard – JobLinqAI{% endblock %}
+{% block title %}Dashboard – JobPortal{% endblock %}
 
 {% block extra_css %}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --navy:     #1E3A6E;
   --navy-dk:  #122447;
   --navy-lt:  #EEF3FB;
-  --pink-primary:   #0A66C2;
-  --pink-soft:      #5b9bd5;
-  --pink-warm:      #0A66C2;
-  --pink-light:     #b3d0f5;
-  --pink-lt:        #E8F0FA;
+  --pink-primary:   #d91b5c;
+  --pink-soft:      #f472b6;
+  --pink-warm:      #ec4899;
+  --pink-light:     #f8b4d7;
+  --pink-lt:        #fdf2f8;
   --bg:       #fcfaf7;
   --surface:  #FFFFFF;
   --border:   #e2e2e2;
@@ -70,7 +70,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
   position: relative;
   overflow: hidden;
 }
-.h-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; line-height: 1.15; letter-spacing: -0.3px; }
+.h-name { font-family: 'Merriweather', serif; font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; line-height: 1.15; letter-spacing: -0.3px; }
 .h-sub { color: rgba(255,255,255,0.75); font-size: 0.85rem; }
 .h-sub strong { color: #fff; font-weight: 700; }
 .h-btns { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
@@ -84,13 +84,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .stat-tile.s-red::after   { background: #0A66C2; }
 .stat-tile.s-blue::after  { background: #0A66C2; }
 .stat-tile.s-green::after { background: var(--green); }
-.stat-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.4rem; font-weight: 900; line-height: 1; }
+.stat-num { font-family: 'Merriweather', serif; font-size: 2.4rem; font-weight: 900; line-height: 1; }
 .stat-lbl { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; font-weight: 700; }
 .stat-hint { font-size: .72rem; color: var(--sub); margin-top: 3px; }
 
 .th { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .th-left { display: flex; align-items: center; gap: 7px; }
-.th-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .92rem; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
+.th-title { font-family: 'Merriweather', serif; font-size: .92rem; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
 .th a { font-size: .73rem; font-weight: 700; color: #0A66C2; text-decoration: none; }
 .th a:hover { text-decoration: underline; }
 
@@ -98,7 +98,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .ring { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
 .ring svg { transform: rotate(-90deg); }
 .ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring-num   { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.7rem; font-weight: 900; line-height: 1; }
+.ring-num   { font-family: 'Merriweather', serif; font-size: 1.7rem; font-weight: 900; line-height: 1; }
 .ring-denom { font-size: .6rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
 .cat-bars { flex: 1; min-width: 160px; }
 .cat-row  { margin-bottom: 9px; }
@@ -119,7 +119,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 
 .job-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .job-row:last-child { border-bottom: none; padding-bottom: 0; }
-.job-rank { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 900; color: var(--border); width: 22px; text-align: center; flex-shrink: 0; line-height: 1; }
+.job-rank { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 900; color: var(--border); width: 22px; text-align: center; flex-shrink: 0; line-height: 1; }
 .job-rank.top { color: #0A66C2; }
 .job-info { flex: 1; min-width: 0; }
 .job-title { font-weight: 700; font-size: .83rem; color: var(--ink); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -128,21 +128,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .match-pill { font-size: .68rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; white-space: nowrap; letter-spacing: .3px; }
 .mp-high { background: var(--green-lt); color: var(--green); }
 .mp-mid  { background: var(--amber-lt); color: var(--amber); }
-.mp-low  { background: var(--red-lt);   color: #0A66C2; }
+.mp-low  { background: #FDECEA;   color: #0A66C2; }
 .mp-neu  { background: var(--bg);       color: var(--sub); }
 .btn-view { font-size: .68rem; font-weight: 700; color: #0A66C2; text-decoration: none; }
 .btn-view:hover { text-decoration: underline; }
 
 .gap-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
 .gap-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 3px; font-size: .71rem; font-weight: 700; }
-.gc { background: var(--red-lt);   color: #0A66C2; }
+.gc { background: #FDECEA;   color: #0A66C2; }
 .gm { background: var(--amber-lt); color: var(--amber); }
-.gn { background: var(--blue-lt);  color: #0A66C2; }
+.gn { background: #E8F0FA;  color: #0A66C2; }
 .gap-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
 .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .course-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; transition: border-color .15s, background .15s, transform .1s; background: var(--bg); }
-.course-card:hover { border-color: #0A66C2; background: var(--red-lt); text-decoration: none; transform: translateY(-1px); }
+.course-card:hover { border-color: #0A66C2; background: #FDECEA; text-decoration: none; transform: translateY(-1px); }
 .cc-skill { font-weight: 700; font-size: .8rem; color: var(--ink); margin-bottom: 2px; }
 .cc-level { font-size: .68rem; font-weight: 700; }
 .cc-arrow { margin-left: auto; color: #0A66C2; font-weight: 700; flex-shrink: 0; font-size: .73rem; white-space: nowrap; }
@@ -199,22 +199,22 @@ let _jobMode = 'all';
 
 const VERDICT_CONFIG = {
   green: {
-    bg: '#E8F5EE', border: '#b7dfc9', text: '#00A651',
+    bg: '#00A651', border: '#831240', text: '#fff',
     tagline: "You're well-positioned. Recruiters are likely to shortlist you.",
     imgIcon: 'verdict-strong.png'
   },
   yellow: {
-    bg: '#0A66C2', border: '#004fa3', text: '#fff',
+    bg: '#E8F5EE', border: '#b7dfc9', text: '#00A651',
     tagline: "You have a real shot. A few more skills could push you to the top.",
     imgIcon: 'verdict-competitive.png'
   },
   orange: {
-    bg: '#FFF0E0', border: '#ffc99e', text: '#E06B00',
+    bg: '#E02020', border: '#f472b6', text: '#831240',
     tagline: "You may get interviews but face tough competition. Focus on your skill gaps now.",
     imgIcon: 'verdict-borderline.png'
   },
   red: {
-    bg: '#FDECEA', border: '#f5b0ac', text: '#E02020',
+    bg: '#fce7f3', border: '#fbcfe8', text: '#00A651',
     tagline: "Significant gaps exist. Build your skills before applying actively.",
     imgIcon: 'verdict-notyet.png'
   },
@@ -247,7 +247,7 @@ function renderVerdict(v){
         <img src="${IC(c.imgIcon)}" width="72" height="72" style="object-fit:contain;flex-shrink:0;align-self:center;margin-right:2px" onerror="this.style.display='none'">
         <div style="flex:1;min-width:0">
           <div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:${c.text};opacity:.75;margin-bottom:2px">AI Market Prediction</div>
-          <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.92rem;font-weight:900;color:${c.text};margin-bottom:3px">${v.label}</div>
+          <div style="font-family:'Merriweather',serif;font-size:.92rem;font-weight:900;color:${c.text};margin-bottom:3px">${v.label}</div>
           <div style="font-size:.7rem;color:${c.text};opacity:.8;line-height:1.45">${c.tagline}</div>
         </div>
       </div>
@@ -351,7 +351,7 @@ function render(data){
   setTimeout(animateBars, 80);
 }
 
-const scolor = v => !v&&v!==0?'#888':v>=80?'#00A651':v>=60?'#F5A623':'#E02020';
+const scolor = v => !v&&v!==0?'#888':v>=70?'#00A651':v>=40?'#F5A623':'#E02020';
 const slabel = v => v>=70?'Strong profile ✓':v>=40?'Developing':'Needs improvement';
 
 function renderScore(s){
