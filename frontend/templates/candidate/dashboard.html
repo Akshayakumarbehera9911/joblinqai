@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Dashboard – JobPortal{% endblock %}
+{% block title %}Dashboard – JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --navy:     #1E3A6E;
   --navy-dk:  #122447;
   --navy-lt:  #EEF3FB;
-  --pink-primary:   #d91b5c;
-  --pink-soft:      #f472b6;
-  --pink-warm:      #ec4899;
-  --pink-light:     #f8b4d7;
-  --pink-lt:        #fdf2f8;
+  --pink-primary:   #0A66C2;
+  --pink-soft:      #5b9bd5;
+  --pink-warm:      #0A66C2;
+  --pink-light:     #b3d0f5;
+  --pink-lt:        #E8F0FA;
   --bg:       #fcfaf7;
   --surface:  #FFFFFF;
   --border:   #e2e2e2;
@@ -58,7 +58,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 
 .hero {
   grid-column: span 12;
-  background: #E8398A;
+  background: #0A66C2;
   color: #fff;
   padding: 22px 28px;
   display: flex;
@@ -70,35 +70,35 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
   position: relative;
   overflow: hidden;
 }
-.h-name { font-family: 'Merriweather', serif; font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; line-height: 1.15; letter-spacing: -0.3px; }
+.h-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; line-height: 1.15; letter-spacing: -0.3px; }
 .h-sub { color: rgba(255,255,255,0.75); font-size: 0.85rem; }
 .h-sub strong { color: #fff; font-weight: 700; }
 .h-btns { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
-.btn-primary { background: #fff; color: #E8398A; border: none; padding: 8px 18px; border-radius: 5px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background .15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; letter-spacing: .2px; }
-.btn-primary:hover { background: #d42f7c; color: #fff; text-decoration: none; }
+.btn-primary { background: #fff; color: #0A66C2; border: none; padding: 8px 18px; border-radius: 5px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background .15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; letter-spacing: .2px; }
+.btn-primary:hover { background: #004fa3; color: #fff; text-decoration: none; }
 .btn-ghost { background: transparent; color: #fff; border: 1.5px solid #fff; padding: 8px 18px; border-radius: 5px; font-weight: 600; font-size: 0.82rem; cursor: pointer; text-decoration: none; transition: all .15s; font-family: 'DM Sans', sans-serif; }
-.btn-ghost:hover { border-color: #d42f7c; color: #fff; text-decoration: none; }
+.btn-ghost:hover { border-color: #004fa3; color: #fff; text-decoration: none; }
 
 .stat-tile { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 96px; padding: 14px 10px; position: relative; }
 .stat-tile::after { content: ''; position: absolute; bottom: 0; left: 18px; right: 18px; height: 3px; border-radius: 2px; background: var(--border); }
-.stat-tile.s-red::after   { background: #E8398A; }
-.stat-tile.s-blue::after  { background: #E8398A; }
+.stat-tile.s-red::after   { background: #0A66C2; }
+.stat-tile.s-blue::after  { background: #0A66C2; }
 .stat-tile.s-green::after { background: var(--green); }
-.stat-num { font-family: 'Merriweather', serif; font-size: 2.4rem; font-weight: 900; line-height: 1; }
+.stat-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.4rem; font-weight: 900; line-height: 1; }
 .stat-lbl { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; font-weight: 700; }
 .stat-hint { font-size: .72rem; color: var(--sub); margin-top: 3px; }
 
 .th { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .th-left { display: flex; align-items: center; gap: 7px; }
-.th-title { font-family: 'Merriweather', serif; font-size: .92rem; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
-.th a { font-size: .73rem; font-weight: 700; color: #E8398A; text-decoration: none; }
+.th-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .92rem; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
+.th a { font-size: .73rem; font-weight: 700; color: #0A66C2; text-decoration: none; }
 .th a:hover { text-decoration: underline; }
 
 .score-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .ring { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
 .ring svg { transform: rotate(-90deg); }
 .ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring-num   { font-family: 'Merriweather', serif; font-size: 1.7rem; font-weight: 900; line-height: 1; }
+.ring-num   { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.7rem; font-weight: 900; line-height: 1; }
 .ring-denom { font-size: .6rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
 .cat-bars { flex: 1; min-width: 160px; }
 .cat-row  { margin-bottom: 9px; }
@@ -107,10 +107,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .cr-val   { font-size: .73rem; font-weight: 700; color: var(--muted); }
 .bar-track { background: var(--border); border-radius: 999px; height: 5px; }
 .bar-fill  { height: 100%; border-radius: 999px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
-.b-exp  { background: #E8398A; }
-.b-proj { background: #E8398A; }
-.b-sk   { background: #E8398A; }
-.b-edu  { background: #E8398A; }
+.b-exp  { background: #0A66C2; }
+.b-proj { background: #0A66C2; }
+.b-sk   { background: #0A66C2; }
+.b-edu  { background: #0A66C2; }
 
 /* ── ML VERDICT TILE ── */
 .verdict-card { border-radius: 6px; padding: 12px 14px; border: 1px solid; }
@@ -119,8 +119,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 
 .job-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .job-row:last-child { border-bottom: none; padding-bottom: 0; }
-.job-rank { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 900; color: var(--border); width: 22px; text-align: center; flex-shrink: 0; line-height: 1; }
-.job-rank.top { color: #E8398A; }
+.job-rank { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 900; color: var(--border); width: 22px; text-align: center; flex-shrink: 0; line-height: 1; }
+.job-rank.top { color: #0A66C2; }
 .job-info { flex: 1; min-width: 0; }
 .job-title { font-weight: 700; font-size: .83rem; color: var(--ink); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .job-meta  { font-size: .7rem; color: var(--muted); display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
@@ -128,38 +128,38 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .match-pill { font-size: .68rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; white-space: nowrap; letter-spacing: .3px; }
 .mp-high { background: var(--green-lt); color: var(--green); }
 .mp-mid  { background: var(--amber-lt); color: var(--amber); }
-.mp-low  { background: var(--red-lt);   color: #E8398A; }
+.mp-low  { background: var(--red-lt);   color: #0A66C2; }
 .mp-neu  { background: var(--bg);       color: var(--sub); }
-.btn-view { font-size: .68rem; font-weight: 700; color: #E8398A; text-decoration: none; }
+.btn-view { font-size: .68rem; font-weight: 700; color: #0A66C2; text-decoration: none; }
 .btn-view:hover { text-decoration: underline; }
 
 .gap-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
 .gap-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 3px; font-size: .71rem; font-weight: 700; }
-.gc { background: var(--red-lt);   color: #E8398A; }
+.gc { background: var(--red-lt);   color: #0A66C2; }
 .gm { background: var(--amber-lt); color: var(--amber); }
-.gn { background: var(--blue-lt);  color: #E8398A; }
+.gn { background: var(--blue-lt);  color: #0A66C2; }
 .gap-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
 .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .course-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; transition: border-color .15s, background .15s, transform .1s; background: var(--bg); }
-.course-card:hover { border-color: #E8398A; background: var(--red-lt); text-decoration: none; transform: translateY(-1px); }
+.course-card:hover { border-color: #0A66C2; background: var(--red-lt); text-decoration: none; transform: translateY(-1px); }
 .cc-skill { font-weight: 700; font-size: .8rem; color: var(--ink); margin-bottom: 2px; }
 .cc-level { font-size: .68rem; font-weight: 700; }
-.cc-arrow { margin-left: auto; color: #E8398A; font-weight: 700; flex-shrink: 0; font-size: .73rem; white-space: nowrap; }
+.cc-arrow { margin-left: auto; color: #0A66C2; font-weight: 700; flex-shrink: 0; font-size: .73rem; white-space: nowrap; }
 
 .pbar-track { background: var(--border); border-radius: 999px; height: 6px; margin: 7px 0 4px; }
-.pbar-fill  { height: 100%; border-radius: 999px; background: #E8398A; transition: width 1s ease; }
+.pbar-fill  { height: 100%; border-radius: 999px; background: #0A66C2; transition: width 1s ease; }
 .ps-row { display: flex; align-items: center; justify-content: space-between; font-size: .73rem; padding: 3px 0; }
 .ps-lbl { color: var(--sub); }
 .ps-ok  { color: var(--green); font-weight: 700; display: flex; align-items: center; gap: 2px; }
-.ps-no  { color: #E8398A;   font-weight: 700; display: flex; align-items: center; gap: 2px; }
-.recalc-btn { background: #E8398A; color: #fff; border: none; padding: 9px 16px; border-radius: 5px; font-weight: 700; font-size: .79rem; cursor: pointer; transition: background .15s; display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-top: 12px; font-family: 'DM Sans', sans-serif; }
-.recalc-btn:hover { background: #d42f7c; }
+.ps-no  { color: #0A66C2;   font-weight: 700; display: flex; align-items: center; gap: 2px; }
+.recalc-btn { background: #0A66C2; color: #fff; border: none; padding: 9px 16px; border-radius: 5px; font-weight: 700; font-size: .79rem; cursor: pointer; transition: background .15s; display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-top: 12px; font-family: 'DM Sans', sans-serif; }
+.recalc-btn:hover { background: #004fa3; }
 .recalc-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .mode-toggle { display:flex; background:var(--bg); border-radius:999px; padding:3px; border:1px solid var(--border); gap:2px; }
 .mode-btn { padding:4px 12px; border-radius:999px; border:none; cursor:pointer; font-size:.72rem; font-weight:700; font-family:'DM Sans',sans-serif; transition:all .15s; }
-.mode-btn.active { background:#E8398A; color:#fff; }
+.mode-btn.active { background:#0A66C2; color:#fff; }
 .mode-btn.inactive { background:transparent; color:var(--muted); }
 .empty { text-align: center; padding: 18px 10px; color: var(--muted); font-size: .82rem; }
 .empty strong { display: block; font-size: .84rem; color: var(--ink); margin-bottom: 3px; }
@@ -199,22 +199,22 @@ let _jobMode = 'all';
 
 const VERDICT_CONFIG = {
   green: {
-    bg: '#9d174d', border: '#831240', text: '#fff',
+    bg: '#E8F5EE', border: '#b7dfc9', text: '#00A651',
     tagline: "You're well-positioned. Recruiters are likely to shortlist you.",
     imgIcon: 'verdict-strong.png'
   },
   yellow: {
-    bg: '#E8398A', border: '#d42f7c', text: '#fff',
+    bg: '#0A66C2', border: '#004fa3', text: '#fff',
     tagline: "You have a real shot. A few more skills could push you to the top.",
     imgIcon: 'verdict-competitive.png'
   },
   orange: {
-    bg: '#f9a8d4', border: '#f472b6', text: '#831240',
+    bg: '#FFF0E0', border: '#ffc99e', text: '#E06B00',
     tagline: "You may get interviews but face tough competition. Focus on your skill gaps now.",
     imgIcon: 'verdict-borderline.png'
   },
   red: {
-    bg: '#fce7f3', border: '#fbcfe8', text: '#9d174d',
+    bg: '#FDECEA', border: '#f5b0ac', text: '#E02020',
     tagline: "Significant gaps exist. Build your skills before applying actively.",
     imgIcon: 'verdict-notyet.png'
   },
@@ -247,7 +247,7 @@ function renderVerdict(v){
         <img src="${IC(c.imgIcon)}" width="72" height="72" style="object-fit:contain;flex-shrink:0;align-self:center;margin-right:2px" onerror="this.style.display='none'">
         <div style="flex:1;min-width:0">
           <div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:${c.text};opacity:.75;margin-bottom:2px">AI Market Prediction</div>
-          <div style="font-family:'Merriweather',serif;font-size:.92rem;font-weight:900;color:${c.text};margin-bottom:3px">${v.label}</div>
+          <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.92rem;font-weight:900;color:${c.text};margin-bottom:3px">${v.label}</div>
           <div style="font-size:.7rem;color:${c.text};opacity:.8;line-height:1.45">${c.tagline}</div>
         </div>
       </div>
@@ -279,12 +279,12 @@ function render(data){
       <div class="stat-hint">${S?slabel(S.overall):'Not calculated yet'}</div>
     </div>
     <div class="t c4 stat-tile s-red">
-      <div class="stat-num" style="color:${gaps.filter(g=>g.gap_level==='critical').length>0?'#E8398A':'#1A7A4A'}">${gaps.filter(g=>g.gap_level==='critical').length}</div>
+      <div class="stat-num" style="color:${gaps.filter(g=>g.gap_level==='critical').length>0?'#0A66C2':'#1A7A4A'}">${gaps.filter(g=>g.gap_level==='critical').length}</div>
       <div class="stat-lbl">Critical Gaps</div>
       <div class="stat-hint">${gaps.length} total skill gaps</div>
     </div>
     <div class="t c4 stat-tile s-blue">
-      <div class="stat-num" style="color:#E8398A">${jobs.length}</div>
+      <div class="stat-num" style="color:#0A66C2">${jobs.length}</div>
       <div class="stat-lbl">Job Matches</div>
       <div class="stat-hint">Top: ${jobs[0]?jobs[0].match_score+'%':'–'}</div>
     </div>
@@ -351,7 +351,7 @@ function render(data){
   setTimeout(animateBars, 80);
 }
 
-const scolor = v => !v&&v!==0?'#888':v>=70?'#9d174d':v>=40?'#E8398A':'#f9a8d4';
+const scolor = v => !v&&v!==0?'#888':v>=80?'#00A651':v>=60?'#F5A623':'#E02020';
 const slabel = v => v>=70?'Strong profile ✓':v>=40?'Developing':'Needs improvement';
 
 function renderScore(s){

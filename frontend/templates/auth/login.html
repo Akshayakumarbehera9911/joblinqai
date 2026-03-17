@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Login — JobPortal{% endblock %}
+{% block title %}Login — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
   body { background: var(--bg); }
   .auth-wrap { max-width: 420px; margin: 60px auto; padding: 0 16px; }
-  .auth-logo { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 8px; }
+  .auth-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2rem; text-align: center; margin-bottom: 8px; }
   .auth-logo span { color: var(--pink); }
   .auth-sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
   .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
-  .auth-card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 24px; }
+  .auth-card h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; margin-bottom: 24px; }
   .btn-login { width: 100%; padding: 13px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s; margin-top: 4px; }
   .btn-login:hover { background: var(--pink-hover); }
-  .btn-login:disabled { background: #f0b8d8; cursor: not-allowed; }
+  .btn-login:disabled { background: #b3d0f5; cursor: not-allowed; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="auth-wrap">
-  <div class="auth-logo">Job<span>Portal</span></div>
-  <div class="auth-sub">Your career starts here</div>
+  <div class="auth-logo">Job<span>LinqAI</span></div>
+  <div class="auth-sub">Connect Smarter, Hire Faster</div>
   <div class="auth-card">
     <h2>Welcome back</h2>
     <div id="form-alert" class="alert"></div>

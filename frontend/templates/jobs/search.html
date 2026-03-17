@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Find Jobs — JobPortal{% endblock %}
+{% block title %}Find Jobs — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -47,18 +47,18 @@
   .jobs-count strong { color: var(--black); }
 
   .job-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr auto; gap: 16px; transition: all 0.15s; cursor: pointer; text-decoration: none; color: inherit; }
-  .job-card:hover { border-color: var(--pink); box-shadow: 0 4px 20px rgba(232,57,138,0.08); text-decoration: none; }
-  .job-title { font-family: var(--font-serif); font-size: 1.15rem; color: var(--black); margin-bottom: 4px; }
+  .job-card:hover { border-color: var(--pink); box-shadow: 0 4px 20px rgba(10,102,194,0.08); text-decoration: none; }
+  .job-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; color: var(--black); margin-bottom: 4px; }
   .job-company { font-size: 0.88rem; font-weight: 600; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .verified-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
   .job-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .job-tag { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 0.75rem; font-weight: 500; color: var(--muted); }
-  .job-tag.pink { background: var(--pink-light); border-color: #f8c5e0; color: var(--pink); }
+  .job-tag.pink { background: #E8F0FA; border-color: #b3d0f5; color: #0A66C2; }
   .job-skills { display: flex; flex-wrap: wrap; gap: 5px; }
   .skill-pill { background: var(--bg); border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 500; color: var(--muted); }
   .skill-pill.mandatory { color: var(--black); font-weight: 600; }
   .job-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 110px; }
-  .salary-display { font-family: var(--font-serif); font-size: 1.05rem; color: var(--black); text-align: right; }
+  .salary-display { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem; color: var(--black); text-align: right; }
   .salary-type { font-size: 0.72rem; color: var(--muted); font-family: var(--font); }
   .job-location { font-size: 0.8rem; color: var(--muted); text-align: right; }
   .days-ago { font-size: 0.75rem; color: var(--muted); }
@@ -103,7 +103,7 @@
   <div class="jobs-layout">
     <!-- Sidebar -->
     <aside class="filters-panel card" style="padding:24px">
-      <div style="font-family:var(--font-serif);font-size:1.2rem;margin-bottom:20px">Filters</div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.2rem;margin-bottom:20px">Filters</div>
 
       <div class="filter-group">
         <div class="filter-group-title">Location</div>
@@ -256,7 +256,7 @@ async function fetchJobs(params={}, page=1) {
 function renderJobs(data) {
   document.getElementById("results-count").innerHTML = `<strong>${data.total}</strong> jobs found`;
   if (!data.jobs.length) {
-    document.getElementById("jobs-list").innerHTML = `<div class="no-results"><img src="/static/icons/empty-search.png" width="170" height="170" style="display:block;margin:0 auto 16px;object-fit:contain;opacity:.92" onerror="this.style.display='none'"><div style="font-family:var(--font-serif,serif);font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px">No jobs found</div><div style="font-size:.85rem;color:#888">Try different keywords or clear some filters.</div></div>`;
+    document.getElementById("jobs-list").innerHTML = `<div class="no-results"><img src="/static/icons/empty-search.png" width="170" height="170" style="display:block;margin:0 auto 16px;object-fit:contain;opacity:.92" onerror="this.style.display='none'"><div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px">No jobs found</div><div style="font-size:.85rem;color:#888">Try different keywords or clear some filters.</div></div>`;
     return;
   }
   document.getElementById("jobs-list").innerHTML = data.jobs.map(j => {

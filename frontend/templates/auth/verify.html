@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Verify Email — JobPortal{% endblock %}
+{% block title %}Verify Email — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
   body { background: var(--bg); }
   .auth-wrap  { max-width: 420px; margin: 48px auto; padding: 0 16px 48px; }
-  .auth-logo  { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 8px; }
+  .auth-logo  { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2rem; text-align: center; margin-bottom: 8px; }
   .auth-logo span { color: var(--pink); }
   .auth-sub   { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
   .auth-card  { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
-  .auth-card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 6px; }
+  .auth-card h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; margin-bottom: 6px; }
   .auth-card .desc { font-size: 0.86rem; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
 
   /* OTP input row */
@@ -25,7 +25,7 @@
 
   .btn-verify  { width: 100%; padding: 13px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s; }
   .btn-verify:hover    { background: var(--pink-hover); }
-  .btn-verify:disabled { background: #f0b8d8; cursor: not-allowed; }
+  .btn-verify:disabled { background: #b3d0f5; cursor: not-allowed; }
 
   .resend-row { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
   .resend-btn { color: var(--pink); font-weight: 700; cursor: pointer; background: none; border: none; font-size: 0.85rem; }
@@ -37,7 +37,7 @@
 
 {% block content %}
 <div class="auth-wrap">
-  <div class="auth-logo">Job<span>Portal</span></div>
+  <div class="auth-logo">Job<span>LinqAI</span></div>
   <div class="auth-sub">One step away</div>
 
   <div class="auth-card">

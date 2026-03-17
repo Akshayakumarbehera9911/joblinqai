@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}HR Dashboard — JobPortal{% endblock %}
+{% block title %}HR Dashboard — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -8,8 +8,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Libre+Baskerville:wght@700&display=swap');
 
 :root {
-  --pink:     #E8398A;
-  --pink-lt:  #FDEDF3;
+  --pink:     #0A66C2;
+  --pink-lt:  #E8F0FA;
   --off:      #F5F5F0;
   --off2:     #EEEEE9;
   --white:    #FFFFFF;
@@ -19,7 +19,7 @@
   --border:   #EEEEE9;
   --good:     #0D7A4E; --good-lt: #E6F5EE;
   --mid:      #9A5C00; --mid-lt:  #FFF3DC;
-  --bad:      #E8398A; --bad-lt:  #FDEDF3;
+  --bad:      #0A66C2; --bad-lt:  #E8F0FA;
   --r: 10px;
 }
 
@@ -29,7 +29,7 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .wrap { max-width:1200px; margin:0 auto; padding:28px 20px 60px; }
 
 /* HERO */
-.hero { background:#E8398A; color:#fff; padding:28px 32px; border-radius:var(--r); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
+.hero { background:#0A66C2; color:#fff; padding:28px 32px; border-radius:var(--r); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
 .hero-left { display:flex; align-items:center; gap:16px; }
 .hero-logo { width:56px; height:56px; border-radius:8px; object-fit:cover; background:#222; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
 .hero-logo img { width:100%; height:100%; object-fit:cover; }
@@ -37,8 +37,8 @@ body { font-family:'Source Sans 3',sans-serif; background:var(--white); color:va
 .hero-name { font-family:'Libre Baskerville',serif; font-size:1.6rem; font-weight:700; line-height:1.1; margin-bottom:4px; }
 .hero-sub  { color:rgba(255,255,255,0.75); font-size:0.85rem; }
 .hero-badge { background:var(--good); color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.5px; margin-left:8px; vertical-align:middle; }
-.btn-primary { background:#fff; color:#E8398A; border:none; padding:9px 20px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
-.btn-primary:hover { background:#d42f7c; color:#fff; text-decoration:none; }
+.btn-primary { background:#fff; color:#0A66C2; border:none; padding:9px 20px; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
+.btn-primary:hover { background:#004fa3; color:#fff; text-decoration:none; }
 .btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.5); padding:9px 20px; border-radius:6px; font-weight:600; font-size:0.85rem; cursor:pointer; text-decoration:none; font-family:'Source Sans 3',sans-serif; transition:all .15s; }
 .btn-ghost:hover { border-color:#aaa; color:#fff; text-decoration:none; }
 
@@ -606,7 +606,7 @@ async function locationSearch(q){
     try{
       dd.innerHTML='<div style="padding:10px 14px;font-size:.8rem;color:#aaa">Searching...</div>';
       dd.style.display='block';
-      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6&countrycodes=in`,{headers:{'Accept-Language':'en','User-Agent':'JobPortal/1.0'}});
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6&countrycodes=in`,{headers:{'Accept-Language':'en','User-Agent':'JobLinqAI/1.0'}});
       const results=await res.json();
       if(!results.length){
         dd.innerHTML='<div style="padding:10px 14px;font-size:.8rem;color:#888">No results. Try a broader term or <a href="#" onclick="openPinMap();return false;" style="color:var(--pink)">drop a pin</a>.</div>';
@@ -661,7 +661,7 @@ function openPinMap(){
         const btn=document.getElementById('pin-confirm-btn');
         btn.disabled=true; btn.style.opacity='.4';
         try{
-          const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en','User-Agent':'JobPortal/1.0'}});
+          const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en','User-Agent':'JobLinqAI/1.0'}});
           const d=await r.json();
           const a=d.address||{};
           _pendingPin.city=a.city||a.town||a.village||a.suburb||a.county||'';

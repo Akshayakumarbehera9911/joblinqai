@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 /* ── Variables ─────────────────────────────────────────────────────────── */
 :root {
   --bg:         #F2EDE8;
-  --pink:       #E8398A;
-  --pink-hover: #d42f7c;
-  --pink-light: #fdf0f7;
+  --pink:       #0A66C2;
+  --pink-hover: #004fa3;
+  --pink-light: #E8F0FA;
   --black:      #111111;
   --muted:      #888880;
   --card:       #ffffff;
@@ -15,15 +15,15 @@
   --gold:       #C9A84C;
 
   --font:       'DM Sans', sans-serif;
-  --font-serif: 'Instrument Serif', serif;
+  --font-serif: 'Plus Jakarta Sans', sans-serif;
   --radius:     8px;
   --shadow:     0 1px 3px rgba(0,0,0,0.06);
   --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
 
   /* Legacy aliases for compatibility */
   --navy:       #111111;
-  --blue:       #E8398A;
-  --light-blue: #fdf0f7;
+  --blue:       #0A66C2;
+  --light-blue: #E8F0FA;
   --cream:      #F2EDE8;
   --white:      #ffffff;
   --gray:       #888880;
@@ -106,11 +106,11 @@ p  { color: var(--muted); }
 .alert.show { display: block; }
 .alert-error   { background: #fef2f4; color: var(--red);   border: 1px solid #fccdd3; }
 .alert-success { background: #f0fdf4; color: #166534;       border: 1px solid #bbf7d0; }
-.alert-info    { background: var(--pink-light); color: var(--pink); border: 1px solid #f8c5e0; }
+.alert-info    { background: var(--pink-light); color: var(--pink); border: 1px solid #b3d0f5; }
 
 /* ── Badges ────────────────────────────────────────────────────────────── */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-.badge-pink  { background: var(--pink-light); color: var(--pink); }
+.badge-pink  { background: #E8F0FA; color: #0A66C2; }
 .badge-green { background: #d1fae5; color: #065f46; }
 .badge-red   { background: #fee2e2; color: var(--red); }
 .badge-gray  { background: var(--bg); color: var(--muted); }

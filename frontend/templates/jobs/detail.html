@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Job Detail — JobPortal{% endblock %}
+{% block title %}Job Detail — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
   body { background: var(--bg); }
   .job-detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 28px; padding: 36px 0 60px; }
-  .job-detail-title { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 8px; }
+  .job-detail-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2rem; margin-bottom: 8px; }
   .jd-company { font-size: 1rem; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
   .jd-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
   .jd-tag { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 0.82rem; font-weight: 500; color: var(--muted); }
-  .jd-tag.pink { background: var(--pink-light); border-color: #f8c5e0; color: var(--pink); }
-  .section-heading { font-family: var(--font-serif); font-size: 1.2rem; margin: 24px 0 12px; color: var(--black); }
+  .jd-tag.pink { background: #E8F0FA; border-color: #b3d0f5; color: #0A66C2; }
+  .section-heading { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; margin: 24px 0 12px; color: var(--black); }
   .jd-description { font-size: 0.95rem; line-height: 1.8; color: #444; white-space: pre-wrap; }
   .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .skill-tag { padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
@@ -19,7 +19,7 @@
 
   /* Sticky apply card */
   .apply-card { position: sticky; top: 76px; }
-  .salary-big { font-family: var(--font-serif); font-size: 1.8rem; color: var(--black); margin-bottom: 4px; }
+  .salary-big { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.8rem; color: var(--black); margin-bottom: 4px; }
   .salary-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
   .apply-btn { width: 100%; padding: 14px; background: var(--pink); color: #fff; border: none; border-radius: 999px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.15s; margin-bottom: 12px; }
   .apply-btn:hover { background: var(--pink-hover); }
@@ -29,7 +29,7 @@
   .meta-row:last-child { border: none; }
   .meta-key { color: var(--muted); }
   .meta-val { font-weight: 600; color: var(--black); }
-  .login-nudge { background: var(--pink-light); border: 1px solid #f8c5e0; border-radius: var(--radius); padding: 14px; font-size: 0.85rem; color: var(--pink); text-align: center; margin-top: 12px; }
+  .login-nudge { background: #E8F0FA; border: 1px solid #b3d0f5; border-radius: var(--radius); padding: 14px; font-size: 0.85rem; color: #0A66C2; text-align: center; margin-top: 12px; }
 
   @media (max-width: 768px) { .job-detail-layout { grid-template-columns: 1fr; } .apply-card { position: static; } }
 </style>

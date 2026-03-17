@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}My Applications — JobPortal{% endblock %}
+{% block title %}My Applications — JobLinqAI{% endblock %}
 
 {% block extra_css %}
 <style>
   .page-header { padding:36px 0 24px; border-bottom:1px solid var(--border); margin-bottom:32px; }
-  .page-title { font-family:var(--font-serif); font-size:2rem; margin-bottom:4px; }
+  .page-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:2rem; margin-bottom:4px; }
   .page-sub { color:var(--muted); font-size:0.9rem; }
 
   .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
   .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
-  .stat-num { font-family:var(--font-serif); font-size:2rem; font-weight:700; margin-bottom:2px; }
+  .stat-num { font-family:'Plus Jakarta Sans',sans-serif; font-size:2rem; font-weight:700; margin-bottom:2px; }
   .stat-label { font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
 
   .filter-bar { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; align-items:center; }
@@ -21,9 +21,9 @@
 
   .app-grid { display:grid; gap:14px; }
   .app-card { background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:20px 24px; transition:all 0.15s; }
-  .app-card:hover { border-color:var(--pink); box-shadow:0 4px 16px rgba(232,57,138,0.08); }
+  .app-card:hover { border-color:var(--pink); box-shadow:0 4px 16px rgba(10,102,194,0.08); }
   .app-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-  .app-job-title { font-family:var(--font-serif); font-size:1.15rem; margin-bottom:3px; }
+  .app-job-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.15rem; margin-bottom:3px; }
   .app-company { font-size:0.88rem; color:var(--muted); font-weight:500; }
   .app-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center; }
   .app-tag { font-size:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; color:var(--muted); font-weight:500; }
@@ -54,7 +54,7 @@
 
   .empty-state { text-align:center; padding:64px 20px; color:var(--muted); }
   .empty-icon { font-size:3rem; margin-bottom:12px; }
-  .empty-title { font-family:var(--font-serif); font-size:1.3rem; color:var(--black); margin-bottom:6px; }
+  .empty-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; color:var(--black); margin-bottom:6px; }
 
   .skeleton { background:linear-gradient(90deg, var(--bg) 25%, #e8e3dc 50%, var(--bg) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
@@ -226,7 +226,7 @@ function filterApps(status, btn) {
 function renderList(apps) {
   const grid = document.getElementById("app-grid");
   if (!apps.length) {
-    grid.innerHTML = `<div style='text-align:center;padding:52px 20px'><img src="/static/icons/${currentFilter==='all' ? 'empty-apply' : 'empty-filter'}.png" width='170' height='170' style='display:block;margin:0 auto;object-fit:contain;margin-bottom:16px;opacity:.93' onerror="this.style.display='none'"><div style='font-family:var(--font-serif,serif);font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px'>${currentFilter==='all' ? 'No applications yet' : 'No '+currentFilter+' applications'}</div><div style='font-size:.85rem;color:#888;margin-bottom:${currentFilter==="all" ? "18px" : "0"}'>${currentFilter==='all' ? 'Start applying to jobs to track them here.' : 'Try a different filter.'}</div>${currentFilter==='all' ? `<a href='/jobs' style='background:var(--pink);color:#fff;padding:10px 22px;border-radius:999px;font-size:.88rem;font-weight:700;text-decoration:none'>Browse Jobs</a>` : ''}</div>`;
+    grid.innerHTML = `<div style='text-align:center;padding:52px 20px'><img src="/static/icons/${currentFilter==='all' ? 'empty-apply' : 'empty-filter'}.png" width='170' height='170' style='display:block;margin:0 auto;object-fit:contain;margin-bottom:16px;opacity:.93' onerror="this.style.display='none'"><div style='font-family:'Plus Jakarta Sans',sans-serif;font-size:1.15rem;color:#111;font-weight:700;margin-bottom:6px'>${currentFilter==='all' ? 'No applications yet' : 'No '+currentFilter+' applications'}</div><div style='font-size:.85rem;color:#888;margin-bottom:${currentFilter==="all" ? "18px" : "0"}'>${currentFilter==='all' ? 'Start applying to jobs to track them here.' : 'Try a different filter.'}</div>${currentFilter==='all' ? `<a href='/jobs' style='background:var(--pink);color:#fff;padding:10px 22px;border-radius:999px;font-size:.88rem;font-weight:700;text-decoration:none'>Browse Jobs</a>` : ''}</div>`;
     return;
   }
   grid.innerHTML = apps.map(renderCard).join("");

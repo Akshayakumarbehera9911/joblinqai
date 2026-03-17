@@ -71,7 +71,7 @@ export default function HRApplicants() {
     try {
       await updateAppStatus(appId, status);
       const res = await getApplicants(id);
-      const fresh = (res.data || []).find(a => a.application_id === appId);
+      const fresh = (res.data || []).find(a => String(a.application_id) === String(appId));
       setApplicants(res.data || []);
       if (fresh) setSelected(fresh);
     } catch (e) { alert(e.message); }
@@ -194,7 +194,7 @@ export default function HRApplicants() {
             {/* Contact */}
             <div style={{ padding: "10px 16px" }}>
               {selected.status === "shortlisted" && (selected.email || selected.phone) ? (
-                <div style={{ background: "#E8F0FA", border: "1px solid #b3d0f5", borderRadius: "8px", padding: "10px 12px" }}>
+                <div style={{ background: "#E8F0FA", border: "1px solid #f8c5e0", borderRadius: "8px", padding: "10px 12px" }}>
                   <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#0A66C2", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Contact Details</div>
                   {selected.email && <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>📧 {selected.email}</div>}
                   {selected.phone && <div style={{ fontSize: "0.82rem", fontWeight: 600, marginTop: "3px" }}>📞 {selected.phone}</div>}
