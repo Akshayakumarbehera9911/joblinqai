@@ -396,43 +396,57 @@ def update_application_status(
     app.status = body.status
     db.commit()
 
-    # Send push + email notifications to candidate
-    try:
-        profile = db.query(CandidateProfile).filter(CandidateProfile.id == app.candidate_id).first()
-        candidate_user = db.query(User).filter(User.id == profile.user_id).first() if profile else None
-        from backend.utils.firebase import send_push_to_candidate
-        from backend.utils.email import send_shortlist_email, send_reject_email
-        if body.status == "shortlisted":
-            send_push_to_candidate(
-                app.candidate_id,
-                title="🎉 You've been shortlisted!",
-                body=f"Congratulations! Your application for {job.title} has been shortlisted.",
-                db=db
-            )
-            if candidate_user:
-                send_shortlist_email(
-                    candidate_user.email,
-                    candidate_user.full_name,
-                    job.title,
-                    company.company_name
-                )
-        elif body.status == "rejected":
-            send_push_to_candidate(
-                app.candidate_id,
-                title="Application Update",
-                body=f"Your application for {job.title} has been reviewed. Keep applying!",
-                db=db
-            )
-            if candidate_user:
-                send_reject_email(
-                    candidate_user.email,
-                    candidate_user.full_name,
-                    job.title,
-                    company.company_name
-                )
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).error("Notification failed: %s", str(e), exc_info=True)
+    # Send push + email in background thread — never block the response
+    import threading
+    _candidate_id = app.candidate_id
+    _status       = body.status
+    _job_title    = job.title
+    _company_name = company.company_name
+
+    def _notify():
+        try:
+            from backend.database import SessionLocal
+            bg_db = SessionLocal()
+            try:
+                profile = bg_db.query(CandidateProfile).filter(CandidateProfile.id == _candidate_id).first()
+                candidate_user = bg_db.query(User).filter(User.id == profile.user_id).first() if profile else None
+                from backend.utils.firebase import send_push_to_candidate
+                from backend.utils.email import send_shortlist_email, send_reject_email
+                if _status == "shortlisted":
+                    send_push_to_candidate(
+                        _candidate_id,
+                        title="🎉 You've been shortlisted!",
+                        body=f"Congratulations! Your application for {_job_title} has been shortlisted.",
+                        db=bg_db
+                    )
+                    if candidate_user:
+                        send_shortlist_email(
+                            candidate_user.email,
+                            candidate_user.full_name,
+                            _job_title,
+                            _company_name
+                        )
+                elif _status == "rejected":
+                    send_push_to_candidate(
+                        _candidate_id,
+                        title="Application Update",
+                        body=f"Your application for {_job_title} has been reviewed. Keep applying!",
+                        db=bg_db
+                    )
+                    if candidate_user:
+                        send_reject_email(
+                            candidate_user.email,
+                            candidate_user.full_name,
+                            _job_title,
+                            _company_name
+                        )
+            finally:
+                bg_db.close()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error("Notification failed: %s", str(e), exc_info=True)
+
+    threading.Thread(target=_notify, daemon=True).start()
 
 # ── GET /api/hr/dashboard ─────────────────────────────────────────────────
 @router.get("/dashboard")
