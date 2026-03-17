@@ -123,7 +123,9 @@ function getStatusSteps(status) {
   const idx = order.indexOf(status);
   return order.map((s,i) => ({
     label: s.charAt(0).toUpperCase()+s.slice(1),
-    state: status==="rejected" ? (i===0?"done":"") : (i<idx?"done": i===idx?"current":"")
+    state: status==="rejected" ? (i===0?"done":"") :
+           status==="shortlisted" ? "done" :
+           (i<idx?"done": i===idx?"current":"")
   }));
 }
 
