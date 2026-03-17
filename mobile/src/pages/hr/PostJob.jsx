@@ -155,7 +155,7 @@ function MapPicker({ lat, lng, onPick, onClose }) {
         overflow: "hidden", boxShadow: "0 -4px 32px rgba(0,0,0,.15)",
       }}>
         <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "1rem" }}>Pick Location</span>
+          <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1rem" }}>Pick Location</span>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", cursor: "pointer" }}>×</button>
         </div>
         <div style={{ fontSize: "0.75rem", color: "var(--muted)", padding: "8px 16px", background: "var(--bg)", flexShrink: 0 }}>
@@ -271,9 +271,9 @@ export default function HRPostJob() {
         {msg && (
           <div style={{
             marginBottom: 12, padding: "8px 12px", borderRadius: 8, fontSize: "0.78rem", fontWeight: 600,
-            background: msg.includes("!") ? "rgba(45,158,107,.08)" : "rgba(220,53,53,.08)",
-            color: msg.includes("!") ? "#1a7a4a" : "#c0392b",
-            border: `1px solid ${msg.includes("!") ? "rgba(45,158,107,.2)" : "rgba(220,53,53,.2)"}`,
+            background: msg.includes("!") ? "rgba(45,158,107,.08)" : "#E02020",
+            color: msg.includes("!") ? "#1a7a4a" : "#fff",
+            border: `1px solid ${msg.includes("!") ? "rgba(45,158,107,.2)" : "rgba(224,32,32,.3)"}`,
           }}>{msg}</div>
         )}
 
@@ -348,13 +348,14 @@ export default function HRPostJob() {
             </div>
             <div style={{ padding: "10px 12px" }}>
               <button onClick={() => setShowMapPicker(true)} style={{
-                width: "100%", padding: "9px",
-                background: "var(--bg)", border: "1.5px dashed var(--border)",
-                borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
-                color: "var(--muted)", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                width: "100%", padding: "11px 16px",
+                background: "var(--card)",
+                border: "1.5px solid #0A66C2",
+                borderRadius: 999, fontSize: "0.82rem", fontWeight: 700,
+                color: "#0A66C2", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A66C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
                 Pick on Map
@@ -460,7 +461,7 @@ export default function HRPostJob() {
                 <button onClick={() => {
                   if (skillInput.skill_name.trim()) { setSkills(prev => [...prev, { ...skillInput }]); setSkillInput({ skill_name: "", is_mandatory: false }); }
                 }} style={{
-                  padding: "0 14px", background: "var(--pink)", color: "#fff",
+                  padding: "0 14px", background: "#0A66C2", color: "#fff",
                   border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: "0.82rem",
                 }}>Add</button>
               </div>
@@ -491,7 +492,7 @@ export default function HRPostJob() {
           {/* ── Post button ── */}
           <button onClick={postJob} disabled={saving} style={{
             width: "100%", padding: "12px",
-            background: saving ? "#f0b8d8" : "var(--pink)",
+            background: saving ? "#f0b8d8" : "#0A66C2",
             border: "none", borderRadius: 10,
             color: "#fff", fontWeight: 700,
             fontSize: "0.92rem", cursor: saving ? "not-allowed" : "pointer",

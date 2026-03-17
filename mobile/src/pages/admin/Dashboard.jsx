@@ -14,11 +14,11 @@ import {
 } from "recharts";
 
 /* ─── Theme constants — exact app variables ─────────────────────────────── */
-const PINK   = "var(--pink)";
-const GREEN  = "var(--green)";
-const RED    = "var(--red)";
-const GOLD   = "var(--gold)";
-const AMBER  = "#B45309";
+const PINK   = "#0A66C2";
+const GREEN  = "#00A651";
+const RED    = "#E02020";
+const GOLD   = "#F5A623";
+const AMBER  = "#F5A623";
 const BLUE   = "#3b82f6";
 const MUTED  = "var(--muted)";
 const BLACK  = "var(--black)";
@@ -63,7 +63,7 @@ function Modal({ title, onClose, children }) {
         overflowY: "auto", boxShadow: "0 -4px 32px rgba(0,0,0,.12)",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem" }}>{title}</span>
+          <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.1rem" }}>{title}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", color: MUTED, cursor: "pointer" }}>×</button>
         </div>
         {children}
@@ -81,7 +81,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel, danger = true }) {
         background: CARD, borderRadius: "16px 16px 0 0", padding: "24px 20px 36px",
         boxShadow: "0 -4px 32px rgba(0,0,0,.12)",
       }}>
-        <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: 10 }}>{title}</div>
+        <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.1rem", marginBottom: 10 }}>{title}</div>
         <div style={{ fontSize: "0.85rem", color: MUTED, marginBottom: 24, lineHeight: 1.5 }}>{message}</div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: "12px", background: "none", border: `1.5px solid ${BORDER}`, borderRadius: "999px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", color: MUTED }}>Cancel</button>
@@ -94,21 +94,21 @@ function ConfirmModal({ title, message, onConfirm, onCancel, danger = true }) {
 
 function Badge({ type, label }) {
   const map = {
-    active:    { bg: "rgba(45,158,107,.12)",  color: GREEN },
-    inactive:  { bg: "rgba(224,60,60,.12)",   color: RED   },
-    verified:  { bg: "rgba(45,158,107,.12)",  color: GREEN },
-    unverified:{ bg: "rgba(245,158,11,.12)",  color: GOLD  },
-    open:      { bg: "rgba(224,60,60,.12)",   color: RED   },
-    resolved:  { bg: "rgba(45,158,107,.12)",  color: GREEN },
-    reviewed:  { bg: "rgba(232,57,138,.12)",  color: PINK  },
-    dismissed: { bg: "rgba(136,136,136,.12)", color: MUTED },
-    candidate: { bg: "rgba(232,57,138,.12)",  color: PINK  },
-    hr:        { bg: "rgba(232,57,138,.12)",  color: PINK  },
-    admin:     { bg: "rgba(245,158,11,.12)",  color: GOLD  },
-    closed:    { bg: "rgba(136,136,136,.12)", color: MUTED },
-    draft:     { bg: "rgba(232,57,138,.08)",  color: PINK  },
+    active:    { bg: "#00A651", color: "#fff" },
+    inactive:  { bg: "#E02020", color: "#fff"   },
+    verified:  { bg: "#00A651", color: "#fff" },
+    unverified:{ bg: "#F5A623", color: "#fff"  },
+    open:      { bg: "#E02020", color: "#fff"   },
+    resolved:  { bg: "#00A651", color: "#fff" },
+    reviewed:  { bg: "#0A66C2", color: "#fff"  },
+    dismissed: { bg: "#888", color: "#fff" },
+    candidate: { bg: "#0A66C2", color: "#fff"  },
+    hr:        { bg: "#0A66C2", color: "#fff"  },
+    admin:     { bg: "#F5A623", color: "#fff"  },
+    closed:    { bg: "#888", color: "#fff" },
+    draft:     { bg: "#0A66C2", color: "#fff"  },
   };
-  const s = map[type] || { bg: "rgba(136,136,136,.12)", color: MUTED };
+  const s = map[type] || { bg: "#888", color: "#fff" };
   return (
     <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", background: s.bg, color: s.color }}>{label || type}</span>
   );
@@ -120,7 +120,7 @@ function Card({ children, style }) {
 
 function BtnSm({ onClick, color = PINK, bg, children, danger }) {
   return (
-    <button onClick={onClick} style={{ padding: "4px 10px", borderRadius: 6, border: "none", fontSize: "0.72rem", fontWeight: 600, cursor: "pointer", background: bg || (danger ? "rgba(224,60,60,.1)" : "rgba(232,57,138,.1)"), color: danger ? RED : color }}>{children}</button>
+    <button onClick={onClick} style={{ padding: "4px 10px", borderRadius: 6, border: "none", fontSize: "0.72rem", fontWeight: 600, cursor: "pointer", background: bg || (danger ? RED : PINK), color: "#fff" }}>{children}</button>
   );
 }
 
@@ -137,7 +137,7 @@ function IconBtn({ onClick, icon, color, bg }) {
     open:       <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" {...p}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
   };
   return (
-    <button onClick={onClick} title={icon} style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: bg, color, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <button onClick={onClick} title={icon} style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: bg, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       {icons[icon]}
     </button>
   );
@@ -158,7 +158,7 @@ function FilterChips({ options, active, onSelect }) {
 }
 
 function SectionTitle({ children }) {
-  return <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", marginBottom: 14 }}>{children}</div>;
+  return <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.1rem", marginBottom: 14 }}>{children}</div>;
 }
 
 /* ─── Chart section label ───────────────────────────────────────────────── */
@@ -171,7 +171,7 @@ function KCard({ value, label, sub, color }) {
   return (
     <div style={{ background: CARD, borderRadius: 12, padding: "14px", border: `1px solid ${BORDER}`, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: color }} />
-      <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", lineHeight: 1, color: BLACK }}>{value ?? "—"}</div>
+      <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "2rem", lineHeight: 1, color: BLACK }}>{value ?? "—"}</div>
       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: BLACK, marginTop: 4 }}>{label}</div>
       {sub && <div style={{ fontSize: "0.65rem", color: MUTED, marginTop: 2 }}>{sub}</div>}
     </div>
@@ -187,7 +187,7 @@ function FRow({ label, value, total, color }) {
         <span style={{ fontSize: "0.78rem", color: BLACK, fontWeight: 500 }}>{label}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: "0.68rem", color: MUTED }}>{pct}%</span>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "0.95rem", color, minWidth: 18, textAlign: "right" }}>{value}</span>
+          <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "0.95rem", color, minWidth: 18, textAlign: "right" }}>{value}</span>
         </div>
       </div>
       <div style={{ background: BG, borderRadius: 999, height: 5, overflow: "hidden" }}>
@@ -199,14 +199,14 @@ function FRow({ label, value, total, color }) {
 
 /* ─── Horizontal bar row ────────────────────────────────────────────────── */
 function HRow({ label, value, max, color }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
     <div style={{ marginBottom: 9 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
         <span style={{ fontSize: "0.75rem", color: BLACK, fontWeight: 500 }}>{label}</span>
-        <span style={{ fontFamily: "var(--font-serif)", fontSize: "0.9rem", color }}>{value}</span>
+        <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "0.9rem", color }}>{value}</span>
       </div>
-      <div style={{ background: BG, borderRadius: 999, height: 5 }}>
+      <div style={{ background: BG, borderRadius: 999, height: 5, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 999 }} />
       </div>
     </div>
@@ -215,7 +215,7 @@ function HRow({ label, value, max, color }) {
 
 /* ─── Tab icons ─────────────────────────────────────────────────────────── */
 function TabIcon({ id, active }) {
-  const c = active ? "var(--pink)" : "var(--muted)";
+  const c = active ? "#0A66C2" : "var(--muted)";
   const p = { fill: "none", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
   const s = { width: 19, height: 19 };
   if (id === "overview")  return <svg viewBox="0 0 24 24" style={s} stroke={c} {...p}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
@@ -364,7 +364,7 @@ function PeopleCharts({ stats }) {
   const workModes  = stats.candidate_work_modes || [];
   const tooltipStyle = { fontSize: "0.75rem", borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD };
 
-  const COLORS = [PINK, BLUE, "#8b5cf6", "#f59e0b", "#10b981", "#f43f5e"];
+  const COLORS = ["#0A66C2", "#00A651", "#F5A623", "#E02020", "#9B59B6", "#00BCD4"];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -416,7 +416,7 @@ function PeopleCharts({ stats }) {
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={workModes} dataKey="count" nameKey="mode" cx="50%" cy="45%"
-                innerRadius={44} outerRadius={62} paddingAngle={3}>
+                innerRadius={44} outerRadius={62} paddingAngle={3} label={({ value }) => value} labelLine={false} fontSize={10}>
                 {workModes.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [v, n]} />
@@ -451,7 +451,7 @@ function JobsCharts({ stats }) {
     { name: "Draft",  value: stats.draft_jobs  || 0, fill: BLUE  },
   ].filter(d => d.value > 0);
 
-  const COLORS = [PINK, BLUE, "#8b5cf6", "#f59e0b", "#10b981"];
+  const COLORS = ["#0A66C2", "#00A651", "#F5A623", "#E02020", "#9B59B6"];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -504,7 +504,7 @@ function JobsCharts({ stats }) {
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={roleTypes} dataKey="count" nameKey="type" cx="50%" cy="45%"
-                innerRadius={44} outerRadius={62} paddingAngle={3}>
+                innerRadius={44} outerRadius={62} paddingAngle={3} label={({ value }) => value} labelLine={false} fontSize={10}>
                 {roleTypes.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
@@ -621,7 +621,7 @@ function PipelineCharts({ stats }) {
           <SH>Score Distribution</SH>
           {scoreDist.map((s, i) => {
             const maxCount = Math.max(...scoreDist.map(d => d.count)) || 1;
-            const COLORS = [RED, AMBER, BLUE, GREEN];
+            const COLORS = ["#E02020", "#F5A623", "#0A66C2", "#00A651"];
             return (
               <HRow key={s.band} label={s.band} value={s.count} max={maxCount} color={COLORS[i]} />
             );
@@ -665,12 +665,12 @@ export default function AdminDashboard() {
           {TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
               flex: 1, padding: "10px 0", border: "none",
-              borderBottom: activeTab === t.id ? `2px solid var(--pink)` : "2px solid transparent",
+              borderBottom: activeTab === t.id ? `2px solid #0A66C2` : "2px solid transparent",
               background: "none", cursor: "pointer",
               display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
             }}>
               <TabIcon id={t.id} active={activeTab === t.id} />
-              <span style={{ fontSize: "0.55rem", fontWeight: 600, color: activeTab === t.id ? "var(--pink)" : "var(--muted)", letterSpacing: "0.2px" }}>
+              <span style={{ fontSize: "0.55rem", fontWeight: 600, color: activeTab === t.id ? "#0A66C2" : "var(--muted)", letterSpacing: "0.2px" }}>
                 {t.label}
               </span>
             </button>
@@ -773,17 +773,17 @@ function UsersTab() {
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-                      <IconBtn onClick={() => setEditing(u)} icon="edit" color={BLUE} bg="rgba(59,130,246,.12)" />
+                      <IconBtn onClick={() => setEditing(u)} icon="edit" color="#fff" bg="#0A66C2" />
                       {u.role !== "admin" && (
                         <IconBtn
                           onClick={() => handleToggle(u)}
                           icon={u.is_active ? "deactivate" : "activate"}
                           color={u.is_active ? AMBER : GREEN}
-                          bg={u.is_active ? "rgba(245,158,11,.12)" : "rgba(45,184,125,.12)"}
+                          bg={u.is_active ? "#F5A623" : "#00A651"}
                         />
                       )}
                       {u.role !== "admin" && (
-                        <IconBtn onClick={() => setConfirm({ type: "user", data: u })} icon="trash" color={RED} bg="rgba(224,60,60,.12)" />
+                        <IconBtn onClick={() => setConfirm({ type: "user", data: u })} icon="trash" color={RED} bg="#E02020" />
                       )}
                     </div>
                   </div>
@@ -903,9 +903,9 @@ function CompaniesTab() {
                       onClick={() => handleVerify(c)}
                       icon={c.is_verified ? "unverify" : "verify"}
                       color={c.is_verified ? AMBER : GREEN}
-                      bg={c.is_verified ? "rgba(245,158,11,.12)" : "rgba(45,184,125,.12)"}
+                      bg={c.is_verified ? "#F5A623" : "#00A651"}
                     />
-                    <IconBtn onClick={() => setConfirm({ type: "company", data: c })} icon="trash" color={RED} bg="rgba(224,60,60,.12)" />
+                    <IconBtn onClick={() => setConfirm({ type: "company", data: c })} icon="trash" color={RED} bg="#E02020" />
                   </div>
                 </div>
               </div>
@@ -986,8 +986,8 @@ function JobsTab() {
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
-                    {j.status !== "active" && <IconBtn onClick={() => handleStatus(j, "active")} icon="open"  color={GREEN} bg="rgba(45,184,125,.12)" />}
-                    {j.status !== "closed" && <IconBtn onClick={() => handleStatus(j, "closed")} icon="close" color={RED}   bg="rgba(224,60,60,.12)"  />}
+                    {j.status !== "active" && <IconBtn onClick={() => handleStatus(j, "active")} icon="open"  color="#fff" bg="#00A651" />}
+                    {j.status !== "closed" && <IconBtn onClick={() => handleStatus(j, "closed")} icon="close" color={RED}   bg="#E02020"  />}
                   </div>
                 </div>
               </div>
@@ -1057,19 +1057,19 @@ function ReportsTab() {
                     By {r.reporter_name} ({r.reporter_role}) · {new Date(r.created_at).toLocaleDateString()}
                   </div>
                   {r.admin_note && (
-                    <div style={{ fontSize: "0.75rem", color: BLUE, background: "rgba(59,130,246,.08)", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
+                    <div style={{ fontSize: "0.75rem", color: BLUE, background: "#E8F0FA", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
                       Note: {r.admin_note}
                     </div>
                   )}
                   {r.status === "open" && (
                     <div style={{ display: "flex", gap: 6 }}>
-                      <BtnSm onClick={() => setResolving({ id: r.id, status: "reviewed" })} color={BLUE} bg="rgba(59,130,246,.12)">Review</BtnSm>
-                      <BtnSm onClick={() => setResolving({ id: r.id, status: "resolved" })} color={GREEN} bg="rgba(45,184,125,.12)">Resolve</BtnSm>
-                      <BtnSm onClick={() => handleUpdate(r.id, "dismissed", null)} color="var(--muted)" bg="rgba(136,136,136,.1)">Dismiss</BtnSm>
+                      <BtnSm onClick={() => setResolving({ id: r.id, status: "reviewed" })} color="#fff" bg="#0A66C2">Review</BtnSm>
+                      <BtnSm onClick={() => setResolving({ id: r.id, status: "resolved" })} color="#fff" bg="#00A651">Resolve</BtnSm>
+                      <BtnSm onClick={() => handleUpdate(r.id, "dismissed", null)} color="#fff" bg="#888">Dismiss</BtnSm>
                     </div>
                   )}
                   {r.status === "reviewed" && (
-                    <BtnSm onClick={() => setResolving({ id: r.id, status: "resolved" })} color={GREEN} bg="rgba(45,184,125,.12)">Mark Resolved</BtnSm>
+                    <BtnSm onClick={() => setResolving({ id: r.id, status: "resolved" })} color="#fff" bg="#00A651">Mark Resolved</BtnSm>
                   )}
                 </div>
               </Card>

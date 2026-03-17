@@ -116,7 +116,7 @@ export default function Detail() {
           </div>
 
           {/* Title */}
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", marginBottom: 12, lineHeight: 1.2 }}>{job.title}</h1>
+          <h1 style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.35rem", marginBottom: 12, lineHeight: 1.2 }}>{job.title}</h1>
 
           {/* Tags */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
@@ -129,7 +129,7 @@ export default function Detail() {
 
           {/* Salary */}
           {salary && (
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.45rem", marginBottom: 6, color: "var(--black)" }}>{salary}</div>
+            <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.45rem", marginBottom: 6, color: "var(--black)" }}>{salary}</div>
           )}
 
           {/* Location */}
@@ -147,7 +147,7 @@ export default function Detail() {
             <div>
               <button onClick={handleApply} disabled={applying || applied} style={{
                 width: "100%", padding: "12px",
-                background: applied ? "var(--green)" : applying ? "#f0b8d8" : "var(--pink)",
+                background: applied ? "var(--green)" : applying ? "#f0b8d8" : "#0A66C2",
                 color: "#fff", border: "none", borderRadius: 10,
                 fontWeight: 700, fontSize: "0.92rem",
                 cursor: applied || applying ? "default" : "pointer",
@@ -162,9 +162,9 @@ export default function Detail() {
 
           {!isLoggedIn && (
             <div style={{
-              background: "var(--pink-light)", border: "1px solid #f8c5e0",
+              background: "#E8F0FA", border: "1px solid #b3d0f5",
               borderRadius: 10, padding: "12px", textAlign: "center",
-              fontSize: "0.85rem", color: "var(--pink)",
+              fontSize: "0.85rem", color: "#0A66C2",
             }}>
               <span onClick={() => navigate("/login")} style={{ fontWeight: 700, cursor: "pointer" }}>Login</span>
               {" "}or{" "}
@@ -197,7 +197,7 @@ export default function Detail() {
         {/* ── Description ── */}
         {job.description && (
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px", marginBottom: 10 }}>
-            <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", marginBottom: 10 }}>About this role</div>
+            <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1rem", marginBottom: 10 }}>About this role</div>
             <div style={{ fontSize: "0.85rem", lineHeight: 1.8, color: "#444", whiteSpace: "pre-wrap" }}>{job.description}</div>
           </div>
         )}
@@ -207,7 +207,7 @@ export default function Detail() {
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px", marginBottom: 10 }}>
             {mandatory.length > 0 && (
               <div style={{ marginBottom: optional.length ? 14 : 0 }}>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", marginBottom: 10 }}>Required Skills</div>
+                <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1rem", marginBottom: 10 }}>Required Skills</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                   {mandatory.map(s => <SkillTag key={s.name} name={s.name} mandatory />)}
                 </div>
@@ -215,7 +215,7 @@ export default function Detail() {
             )}
             {optional.length > 0 && (
               <div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", marginBottom: 10 }}>Nice to Have</div>
+                <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1rem", marginBottom: 10 }}>Nice to Have</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                   {optional.map(s => <SkillTag key={s.name} name={s.name} />)}
                 </div>
@@ -246,7 +246,7 @@ export default function Detail() {
           <div className="bottom-sheet">
             <div className="sheet-handle" />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem" }}>Report Job</span>
+              <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.05rem" }}>Report Job</span>
               <button onClick={() => setShowReport(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", cursor: "pointer" }}>×</button>
             </div>
             <div style={{ marginBottom: 12 }}>
@@ -277,9 +277,9 @@ function Tag({ children, pink = false }) {
   return (
     <span style={{
       fontSize: "0.73rem", padding: "4px 11px", borderRadius: 999, fontWeight: 500,
-      background: pink ? "var(--pink-light)" : "var(--bg)",
-      border: `1px solid ${pink ? "#f8c5e0" : "var(--border)"}`,
-      color: pink ? "var(--pink)" : "var(--muted)",
+      background: pink ? "#E8F0FA" : "var(--bg)",
+      border: `1px solid ${pink ? "#b3d0f5" : "var(--border)"}`,
+      color: pink ? "#0A66C2" : "var(--muted)",
     }}>{children}</span>
   );
 }

@@ -2,9 +2,9 @@
 
 /* ── Brand Variables ───────────────────────────────────────────────────── */
 :root {
-  --pink:        #E8398A;
-  --pink-light:  #fdf0f7;
-  --pink-hover:  #d4307d;
+  --pink:        #0A66C2;
+  --pink-light:  #E8F0FA;
+  --pink-hover:  #004fa3;
   --bg:          #F5F5F0;
   --card:        #FFFFFF;
   --border:      #E8E3DC;
@@ -103,7 +103,7 @@ html, body {
   transition: background 0.15s;
 }
 .btn-primary:hover { background: var(--pink-hover); }
-.btn-primary:disabled { background: #f0b8d8; cursor: not-allowed; }
+.btn-primary:disabled { background: #b3d0f5; cursor: not-allowed; }
 
 /* ── Button outline ────────────────────────────────────────────────────── */
 .btn-outline {

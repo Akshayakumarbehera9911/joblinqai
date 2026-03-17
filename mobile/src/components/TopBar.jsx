@@ -42,7 +42,7 @@ export default function TopBar({ title, back = false, backTo = null, right = nul
 
       {/* Center — title */}
       <div style={{
-        fontFamily: "var(--font-serif)",
+        fontFamily: "Plus Jakarta Sans, sans-serif",
         fontSize: "1.05rem",
         fontWeight: 400,
         color: "var(--black)",

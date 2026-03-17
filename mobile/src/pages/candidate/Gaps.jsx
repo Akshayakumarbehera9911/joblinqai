@@ -5,7 +5,7 @@ import EmptyState from "../../components/EmptyState";
 import { getDashboard } from "../../api/candidate";
 
 const GAP_STYLE = {
-  critical: { color: "var(--pink)", bg: "var(--pink-light)", border: "var(--pink)", label: "Critical" },
+  critical: { color: "#0A66C2", bg: "#E8F0FA", border: "#0A66C2", label: "Critical" },
   moderate: { color: "var(--black)", bg: "#f0f0ed",          border: "var(--border)", label: "Moderate" },
   minor:    { color: "var(--muted)", bg: "var(--bg)",        border: "var(--border)", label: "Minor" },
 };
@@ -74,7 +74,7 @@ export default function Gaps() {
                 return (
                   <div key={g.skill_name || i} style={{
                     background: "var(--card)",
-                    border: `1.5px solid ${isCritical ? "var(--pink)" : "var(--border)"}`,
+                    border: `1.5px solid ${isCritical ? "#0A66C2" : "var(--border)"}`,
                     borderRadius: 12,
                     padding: "14px 12px",
                     display: "flex", flexDirection: "column", gap: 10,
@@ -87,16 +87,16 @@ export default function Gaps() {
                       fontFamily: "var(--font-sans)",
                       textTransform: "uppercase",
                       letterSpacing: "0.07em",
-                      color: isCritical ? "var(--pink)" : "var(--muted)",
-                      background: isCritical ? "var(--pink-light)" : "var(--bg)",
+                      color: isCritical ? "#0A66C2" : "var(--muted)",
+                      background: isCritical ? "#E8F0FA" : "var(--bg)",
                       padding: "3px 8px",
                       borderRadius: 999,
-                      border: `1px solid ${isCritical ? "var(--pink)" : "var(--border)"}`,
+                      border: `1px solid ${isCritical ? "#0A66C2" : "var(--border)"}`,
                     }}>{s.label}</span>
 
                     {/* Skill name */}
                     <div style={{
-                      fontFamily: "var(--font-serif)",
+                      fontFamily: "Plus Jakarta Sans, sans-serif",
                       fontSize: "0.95rem",
                       color: "var(--black)",
                       lineHeight: 1.2,
@@ -113,7 +113,7 @@ export default function Gaps() {
                         style={{
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                           padding: "6px 0",
-                          background: isCritical ? "var(--pink)" : "var(--black)",
+                          background: isCritical ? "#0A66C2" : "var(--black)",
                           color: "#fff",
                           borderRadius: 8,
                           textDecoration: "none",

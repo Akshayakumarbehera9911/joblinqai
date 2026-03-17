@@ -19,10 +19,10 @@ const STATUS = {
 function Btn({ onClick, variant = "ghost", children, flex }) {
   const V = {
     ghost:   { bg: "var(--bg)",              color: "var(--muted)", border: "1px solid var(--border)"         },
-    primary: { bg: "var(--pink-light)",       color: "var(--pink)",  border: "1px solid #f0b8d9"              },
+    primary: { bg: "#E8F0FA",       color: "#0A66C2",  border: "1px solid #f0b8d9"              },
     blue:    { bg: "rgba(59,130,246,.09)",    color: "#2563eb",      border: "1px solid rgba(59,130,246,.2)"  },
     success: { bg: "rgba(45,158,107,.10)",    color: "#1a7a4a",      border: "1px solid rgba(45,158,107,.22)" },
-    danger:  { bg: "rgba(220,53,53,.08)",     color: "#c0392b",      border: "1px solid rgba(220,53,53,.18)"  },
+    danger:  { bg: "#E02020", color: "#fff", border: "none" },
   }[variant] || {};
   return (
     <button onClick={onClick} style={{
@@ -60,7 +60,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
         background: "var(--card)", borderRadius: "16px 16px 0 0",
         padding: "22px 18px 36px", boxShadow: "0 -4px 32px rgba(0,0,0,.12)",
       }}>
-        <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem", marginBottom: 8 }}>{title}</div>
+        <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.05rem", marginBottom: 8 }}>{title}</div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: 22, lineHeight: 1.5 }}>{message}</div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onCancel} style={{
@@ -69,7 +69,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
             fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", color: "var(--muted)",
           }}>Cancel</button>
           <button onClick={onConfirm} style={{
-            flex: 1, padding: 11, background: "#c0392b",
+            flex: 1, padding: 11, background: "#E02020",
             border: "none", borderRadius: 8, color: "#fff",
             fontWeight: 700, fontSize: "0.85rem", cursor: "pointer",
           }}>Delete</button>
@@ -119,7 +119,7 @@ function EditJobModal({ job, onClose, onSave }) {
       }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 14px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem" }}>Edit Job</span>
+          <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.05rem" }}>Edit Job</span>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", color: "var(--muted)", cursor: "pointer" }}>×</button>
         </div>
 
@@ -306,7 +306,7 @@ export default function HRDashboard() {
           {dash.logo_url ? (
             <img src={dash.logo_url} style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }} />
           ) : (
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--pink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <span style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", lineHeight: 1 }}>
                 {(dash.company_name || "?").charAt(0).toUpperCase()}
               </span>
@@ -334,7 +334,7 @@ export default function HRDashboard() {
               borderRadius: 10, padding: "10px 14px",
               display: "flex", alignItems: "center", gap: 10,
             }}>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--pink)", lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.5rem", color: "#0A66C2", lineHeight: 1 }}>{s.value}</div>
               <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.4px", lineHeight: 1.3 }}>{s.label}</div>
             </div>
           ))}
@@ -344,7 +344,7 @@ export default function HRDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Your Jobs</span>
           <button onClick={() => navigate("/hr/post-job")} style={{
-            padding: "6px 13px", background: "var(--pink)", color: "#fff",
+            padding: "6px 13px", background: "#0A66C2", color: "#fff",
             border: "none", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, cursor: "pointer",
           }}>+ Post Job</button>
         </div>
@@ -381,9 +381,9 @@ export default function HRDashboard() {
                 </Btn>
                 {/* Trash icon delete */}
                 <button onClick={() => setConfirm(job)} style={{
-                  padding: "5px 8px", background: "rgba(220,53,53,.08)", border: "1px solid rgba(220,53,53,.2)",
+                  padding: "5px 8px", background: "#E02020", border: "none",
                   borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#c0392b",
+                  color: "#fff",
                 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>

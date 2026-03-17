@@ -95,7 +95,7 @@ function AboutModal({ onClose }) {
         maxWidth:320,width:"100%",fontFamily:"DM Sans,sans-serif",
         boxShadow:"0 8px 32px rgba(0,0,0,0.18)",
       }}>
-        <div style={{fontWeight:800,fontSize:"1.5rem",color:"var(--pink)",marginBottom:4}}>JobPortal</div>
+        <div style={{fontWeight:800,fontSize:"1.5rem",color:"var(--blue)",marginBottom:4}}>JobLinqAI</div>
         <div style={{fontSize:"0.75rem",color:"var(--muted)",marginBottom:16}}>Version 1.0 · Built for India's job seekers</div>
         <div style={{fontSize:"0.85rem",lineHeight:1.75,marginBottom:16}}>
           Connects candidates with opportunities across India using ML-powered readiness scoring,
@@ -106,7 +106,7 @@ function AboutModal({ onClose }) {
         </div>
         <button onClick={onClose} style={{
           width:"100%",padding:"10px",borderRadius:999,
-          background:"var(--pink)",color:"#fff",border:"none",
+          background:"var(--blue)",color:"#fff",border:"none",
           fontWeight:700,fontSize:"0.85rem",cursor:"pointer",fontFamily:"DM Sans,sans-serif",
         }}>Close</button>
       </div>
@@ -128,16 +128,16 @@ function InstallModal({ onClose }) {
         boxShadow:"0 -4px 24px rgba(0,0,0,0.14)",
       }}>
         <div style={{width:36,height:4,background:"var(--border)",borderRadius:999,margin:"0 auto 20px"}}/>
-        <div style={{fontWeight:700,fontSize:"1rem",marginBottom:16}}>Install JobPortal</div>
+        <div style={{fontWeight:700,fontSize:"1rem",marginBottom:16}}>Install JobLinqAI</div>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           {[
             ["1","Open browser menu","Tap ⋮ or ··· at the top right of Chrome or Safari"],
             ["2","Tap 'Add to Home Screen'","Also shown as 'Install App' in some browsers"],
-            ["3","Tap Install / Add","JobPortal will appear on your home screen like a native app"],
+            ["3","Tap Install / Add","JobLinqAI will appear on your home screen like a native app"],
           ].map(([num,title,desc])=>(
             <div key={num} style={{display:"flex",gap:14,alignItems:"flex-start"}}>
               <div style={{
-                width:28,height:28,borderRadius:"50%",background:"var(--pink)",
+                width:28,height:28,borderRadius:"50%",background:"var(--blue)",
                 color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",
                 fontWeight:700,fontSize:"0.8rem",flexShrink:0,
               }}>{num}</div>
@@ -150,7 +150,7 @@ function InstallModal({ onClose }) {
         </div>
         <button onClick={onClose} style={{
           width:"100%",padding:"11px",borderRadius:999,marginTop:24,
-          background:"var(--pink)",color:"#fff",border:"none",
+          background:"var(--blue)",color:"#fff",border:"none",
           fontWeight:700,fontSize:"0.85rem",cursor:"pointer",fontFamily:"DM Sans,sans-serif",
         }}>Got it</button>
       </div>
@@ -200,7 +200,7 @@ function GlobalMenu() {
     setOpen(false);
     const url = "https://joblinqai-production.up.railway.app";
     if (navigator.share) {
-      navigator.share({ title:"JobPortal", text:"Find jobs across India", url }).catch(()=>{});
+      navigator.share({ title:"JobLinqAI", text:"Find jobs across India", url }).catch(()=>{});
     } else {
       navigator.clipboard?.writeText(url).then(()=>alert("Link copied!")).catch(()=>{});
     }
@@ -228,7 +228,7 @@ function GlobalMenu() {
       <div ref={menuRef} style={{position:"fixed",top:12,right:14,zIndex:1200}}>
         <button onClick={()=>setOpen(o=>!o)} style={{
           width:36,height:36,borderRadius:"50%",
-          background: open ? "var(--pink)" : "var(--card)",
+          background: open ? "var(--blue)" : "var(--card)",
           border:"1px solid var(--border)",
           display:"flex",alignItems:"center",justifyContent:"center",
           cursor:"pointer",color: open ? "#fff" : "var(--black)",
@@ -310,11 +310,11 @@ export default function App() {
         }
         // Listen for foreground messages
         onForegroundMessage((payload) => {
-          const title = payload.notification?.title || "JobPortal";
+          const title = payload.notification?.title || "JobLinqAI";
           const body  = payload.notification?.body  || "";
           setNotif({ title, body });
           // Tell Applications page to refresh
-          window.dispatchEvent(new CustomEvent("jobportal:notification"));
+          window.dispatchEvent(new CustomEvent("joblinqai:notification"));
         });
       } catch (e) {
         console.warn("Push registration failed:", e);

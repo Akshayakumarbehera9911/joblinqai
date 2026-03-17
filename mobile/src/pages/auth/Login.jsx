@@ -42,8 +42,8 @@ export default function Login() {
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", letterSpacing: "-0.5px" }}>
-          Job<span style={{ color: "var(--pink)" }}>Portal</span>
+        <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "2rem", letterSpacing: "-0.5px" }}>
+          Job<span style={{ color: "#0A66C2" }}>LinqAI</span>
         </div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "5px", letterSpacing: "0.01em" }}>
           Your career starts here
@@ -54,7 +54,7 @@ export default function Login() {
       <div className="card" style={{ borderRadius: "18px", padding: "24px 22px" }}>
 
         <div style={{ marginBottom: "22px" }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", marginBottom: "3px" }}>
+          <h2 style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.35rem", marginBottom: "3px" }}>
             Welcome back
           </h2>
           <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Sign in to continue</div>
@@ -92,7 +92,7 @@ export default function Login() {
         }}>
           No account?{" "}
           <span onClick={() => navigate("/register")}
-            style={{ color: "var(--pink)", fontWeight: 700, cursor: "pointer" }}>
+            style={{ color: "#0A66C2", fontWeight: 700, cursor: "pointer" }}>
             Register here
           </span>
         </div>

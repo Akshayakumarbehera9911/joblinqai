@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getMapData, getCityJobs, getRoleFamilies } from "../../api/jobs";
 
-const PINK = "#E8398A";
+const PINK = "#0A66C2";
 
 // ── Location blocked modal ───────────────────────────────────────────────
 function LocationBlockedModal({ onClose }) {
@@ -40,7 +40,7 @@ function LocationBlockedModal({ onClose }) {
           {[
             ["1","Open browser Settings","Tap the menu or tap the lock icon in the address bar"],
             ["2","Find Site Settings","Go to Privacy → Site Settings → Location"],
-            ["3","Allow this site","Find jobportal-mobile.onrender.com → set to Allow"],
+            ["3","Allow this site","Find joblinqai.pages.dev → set to Allow"],
             ["4","Reload the page","Come back and try again"],
           ].map(([num,title,desc])=>(
             <div key={num} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
@@ -569,7 +569,7 @@ export default function MapPage() {
 
       {/* ── Title ── */}
       <div style={{
-        position: "absolute", top: 14, right: 14, zIndex: 1000,
+        position: "absolute", bottom: "calc(var(--nav-height) + 16px)", right: 14, zIndex: 1000,
         background: "var(--card)", border: "1px solid var(--border)",
         borderRadius: 8, padding: "7px 12px",
         fontSize: "0.82rem", fontWeight: 700,
@@ -579,7 +579,7 @@ export default function MapPage() {
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={PINK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
         </svg>
-        Job<span style={{ color: PINK }}>Map</span>
+        Linq<span style={{ color: PINK }}>Map</span>
       </div>
 
       {/* ── Map ── */}

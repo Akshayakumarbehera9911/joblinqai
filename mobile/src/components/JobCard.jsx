@@ -28,7 +28,7 @@ export default function JobCard({ job }) {
       marginBottom: "10px",
       cursor: "pointer",
       transition: "border-color 0.15s",
-      active: { borderColor: "var(--pink)" },
+      active: { borderColor: "#0A66C2" },
     }}>
       {/* Title + time */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
@@ -100,9 +100,9 @@ function Tag({ children, pink = false }) {
       padding: "3px 10px",
       borderRadius: "999px",
       fontWeight: 500,
-      background: pink ? "var(--pink-light)" : "var(--bg)",
-      border: `1px solid ${pink ? "#f8c5e0" : "var(--border)"}`,
-      color: pink ? "var(--pink)" : "var(--muted)",
+      background: pink ? "#E8F0FA" : "var(--bg)",
+      border: `1px solid ${pink ? "#b3d0f5" : "var(--border)"}`,
+      color: pink ? "#0A66C2" : "var(--muted)",
     }}>
       {children}
     </span>

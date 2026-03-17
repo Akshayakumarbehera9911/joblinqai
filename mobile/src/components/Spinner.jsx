@@ -1,4 +1,4 @@
-export default function Spinner({ size = 32, color = "var(--pink)" }) {
+export default function Spinner({ size = 32, color = "#0A66C2" }) {
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "40px 0" }}>
       <div style={{

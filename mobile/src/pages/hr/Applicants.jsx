@@ -90,10 +90,10 @@ export default function HRApplicants() {
           {["all","applied","viewed","shortlisted","rejected"].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               flexShrink: 0, padding: "5px 13px",
-              border: `1.5px solid ${filter === f ? "var(--pink)" : "var(--border)"}`,
+              border: `1.5px solid ${filter === f ? "#0A66C2" : "var(--border)"}`,
               borderRadius: "999px",
-              background: filter === f ? "var(--pink-light)" : "var(--card)",
-              color: filter === f ? "var(--pink)" : "var(--muted)",
+              background: filter === f ? "#E8F0FA" : "var(--card)",
+              color: filter === f ? "#0A66C2" : "var(--muted)",
               fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
               textTransform: "capitalize", fontFamily: "inherit",
             }}>{f}</button>
@@ -117,9 +117,9 @@ export default function HRApplicants() {
 
               {/* Avatar */}
               <img
-                src={app.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.full_name)}&background=E8398A&color=fff`}
+                src={app.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.full_name)}&background=0A66C2&color=fff`}
                 style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
-                onError={e => e.target.src = `https://ui-avatars.com/api/?name=U&background=E8398A&color=fff`}
+                onError={e => e.target.src = `https://ui-avatars.com/api/?name=U&background=0A66C2&color=fff`}
               />
 
               {/* Name + meta */}
@@ -135,7 +135,7 @@ export default function HRApplicants() {
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
               <Pill label={app.status} />
-              <ActionBtn label="View" color="var(--pink)" onClick={() => openModal(app)} />
+              <ActionBtn label="View" color="#0A66C2" onClick={() => openModal(app)} />
             </div>
           </div>
         ))}
@@ -160,9 +160,9 @@ export default function HRApplicants() {
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px 12px", borderBottom: "1px solid var(--border)" }}>
               <img
-                src={selected.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selected.full_name)}&background=E8398A&color=fff`}
+                src={selected.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selected.full_name)}&background=0A66C2&color=fff`}
                 style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
-                onError={e => e.target.src = `https://ui-avatars.com/api/?name=U&background=E8398A&color=fff`}
+                onError={e => e.target.src = `https://ui-avatars.com/api/?name=U&background=0A66C2&color=fff`}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{selected.full_name}</div>
@@ -194,8 +194,8 @@ export default function HRApplicants() {
             {/* Contact */}
             <div style={{ padding: "10px 16px" }}>
               {selected.status === "shortlisted" && (selected.email || selected.phone) ? (
-                <div style={{ background: "var(--pink-light)", border: "1px solid #f8c5e0", borderRadius: "8px", padding: "10px 12px" }}>
-                  <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "var(--pink)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Contact Details</div>
+                <div style={{ background: "#E8F0FA", border: "1px solid #b3d0f5", borderRadius: "8px", padding: "10px 12px" }}>
+                  <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#0A66C2", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Contact Details</div>
                   {selected.email && <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>📧 {selected.email}</div>}
                   {selected.phone && <div style={{ fontSize: "0.82rem", fontWeight: 600, marginTop: "3px" }}>📞 {selected.phone}</div>}
                 </div>

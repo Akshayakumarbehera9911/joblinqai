@@ -1,11 +1,11 @@
 {
-  "name": "JobPortal",
-  "short_name": "JobPortal",
-  "description": "Find jobs across India",
+  "name": "JobLinqAI",
+  "short_name": "JobLinqAI",
+  "description": "Connect Smarter, Hire Faster",
   "start_url": "https://joblinqai.pages.dev/jobs",
   "display": "standalone",
-  "background_color": "#F5F5F0",
-  "theme_color": "#E8398A",
+  "background_color": "#F3F2EF",
+  "theme_color": "#0A66C2",
   "orientation": "portrait",
   "scope": "https://joblinqai.pages.dev/",
   "icons": [

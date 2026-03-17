@@ -14,7 +14,7 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   const { title, body } = payload.notification || {};
-  self.registration.showNotification(title || "JobPortal", {
+  self.registration.showNotification(title || "JobLinqAI", {
     body: body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",

@@ -77,7 +77,7 @@ export default function HRProfile() {
         }}>
           <div style={{
             width: 38, height: 38, borderRadius: "50%",
-            background: "var(--pink)", display: "flex", alignItems: "center",
+            background: "#0A66C2", display: "flex", alignItems: "center",
             justifyContent: "center", flexShrink: 0,
           }}>
             <span style={{ fontSize: "1rem", fontWeight: 700, color: "#fff" }}>
@@ -108,7 +108,7 @@ export default function HRProfile() {
               {company.logo_url ? (
                 <img src={company.logo_url} style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 42, height: 42, borderRadius: 8, background: "var(--pink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 8, background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff" }}>{initial}</span>
                 </div>
               )}
@@ -166,8 +166,8 @@ export default function HRProfile() {
             <div style={{ padding: "10px 12px" }}>
               <button onClick={() => setEditing(true)} style={{
                 width: "100%", padding: "9px",
-                background: "var(--pink-light)", border: "1px solid #f0b8d9",
-                borderRadius: 8, color: "var(--pink)",
+                background: "#E8F0FA", border: "1px solid #f0b8d9",
+                borderRadius: 8, color: "#0A66C2",
                 fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
               }}>Edit Company Info</button>
             </div>
@@ -247,7 +247,7 @@ export default function HRProfile() {
             <div style={{ padding: "10px 12px", borderTop: "1px solid var(--border)" }}>
               <button onClick={saveCompany} disabled={saving} style={{
                 width: "100%", padding: "9px",
-                background: saving ? "#f0b8d8" : "var(--pink)",
+                background: saving ? "#f0b8d8" : "#0A66C2",
                 border: "none", borderRadius: 8,
                 color: "#fff", fontWeight: 700,
                 fontSize: "0.85rem", cursor: saving ? "not-allowed" : "pointer",
@@ -265,7 +265,7 @@ export default function HRProfile() {
             background: "var(--card)", border: "1px solid var(--border)",
             borderRadius: 10, textAlign: "center", padding: "28px 20px", marginBottom: 10,
           }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--pink)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
@@ -281,8 +281,8 @@ export default function HRProfile() {
         {/* ── Logout ── */}
         <button onClick={logout} style={{
           width: "100%", padding: "10px 14px", marginTop: 4,
-          background: "rgba(220,53,53,.06)", border: "1px solid rgba(220,53,53,.2)",
-          borderRadius: 8, color: "#c0392b", fontWeight: 600,
+          background: "#E02020", border: "none",
+          borderRadius: 999, color: "#fff", fontWeight: 600,
           fontSize: "0.82rem", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
         }}>

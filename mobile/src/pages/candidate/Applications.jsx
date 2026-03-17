@@ -84,10 +84,10 @@ export default function CandidateApplications() {
               <button key={f} onClick={() => setFilter(f)} style={{
                 flexShrink: 0,
                 padding: "6px 16px",
-                border: `1.5px solid ${active ? "var(--pink)" : "var(--border)"}`,
+                border: `1.5px solid ${active ? "#0A66C2" : "var(--border)"}`,
                 borderRadius: "999px",
-                background: active ? "var(--pink-light)" : "var(--card)",
-                color: active ? "var(--pink)" : "var(--muted)",
+                background: active ? "#E8F0FA" : "var(--card)",
+                color: active ? "#0A66C2" : "var(--muted)",
                 fontSize: "0.78rem",
                 fontWeight: active ? 700 : 500,
                 cursor: "pointer",
@@ -143,7 +143,7 @@ function AppCard({ app, navigate, onWithdraw }) {
       {/* Header – title + status badge */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "2px" }}>
         <div style={{
-          fontFamily: "var(--font-serif)", fontSize: "0.97rem", fontWeight: 600,
+          fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "0.97rem", fontWeight: 600,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
         }}>
           {app.job_title}
@@ -180,7 +180,7 @@ function AppCard({ app, navigate, onWithdraw }) {
           </span>
         )}
         {salary && (
-          <span style={{ fontSize: "0.73rem", fontWeight: 700, color: "var(--pink)" }}>{salary}</span>
+          <span style={{ fontSize: "0.73rem", fontWeight: 700, color: "#0A66C2" }}>{salary}</span>
         )}
       </div>
 
@@ -272,7 +272,7 @@ function AppCard({ app, navigate, onWithdraw }) {
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div
           onClick={() => navigate(`/jobs/${app.job_id}`)}
-          style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 700, color: "var(--pink)", cursor: "pointer" }}
+          style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 700, color: "#0A66C2", cursor: "pointer" }}
         >
           View Job <span style={{ fontSize: "0.85rem" }}>→</span>
         </div>

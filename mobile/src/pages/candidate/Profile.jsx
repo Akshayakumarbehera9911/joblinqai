@@ -242,14 +242,14 @@ export default function CandidateProfile() {
           {/* Avatar with edit button */}
           <div style={{ position: "relative", flexShrink: 0 }}>
             <img
-              src={profile?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=E8398A&color=fff`}
+              src={profile?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0A66C2&color=fff`}
               style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "2.5px solid var(--border)" }}
-              onError={e => { e.target.src = `https://ui-avatars.com/api/?name=U&background=E8398A&color=fff`; }}
+              onError={e => { e.target.src = `https://ui-avatars.com/api/?name=U&background=0A66C2&color=fff`; }}
             />
             <label style={{
               position: "absolute", bottom: 1, right: 1,
               width: 22, height: 22, borderRadius: "50%",
-              background: "var(--pink)", display: "flex", alignItems: "center", justifyContent: "center",
+              background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
             }}>
               <span style={{ color: "#fff", fontSize: "0.65rem", lineHeight: 1 }}>✎</span>
@@ -270,7 +270,7 @@ export default function CandidateProfile() {
           {/* Name + subtitle */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontFamily: "var(--font-serif)", fontSize: "1.05rem", fontWeight: 600,
+              fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.05rem", fontWeight: 600,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>{displayName}</div>
             <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "2px" }}>
@@ -291,10 +291,10 @@ export default function CandidateProfile() {
             return (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
                 padding: "8px 4px",
-                border: `1.5px solid ${tab === t.key ? "var(--pink)" : "var(--border)"}`,
+                border: `1.5px solid ${tab === t.key ? "#0A66C2" : "var(--border)"}`,
                 borderRadius: "10px",
-                background: tab === t.key ? "var(--pink-light)" : "var(--card)",
-                color: tab === t.key ? "var(--pink)" : "var(--muted)",
+                background: tab === t.key ? "#E8F0FA" : "var(--card)",
+                color: tab === t.key ? "#0A66C2" : "var(--muted)",
                 fontSize: "0.7rem", fontWeight: tab === t.key ? 700 : 500,
                 cursor: "pointer", position: "relative",
                 transition: "border-color 0.15s, background 0.15s, color 0.15s",
@@ -304,7 +304,7 @@ export default function CandidateProfile() {
                   <span style={{
                     position: "absolute", top: 4, right: 6,
                     width: 7, height: 7, borderRadius: "50%",
-                    background: "var(--pink)", border: "1.5px solid var(--card)",
+                    background: "#0A66C2", border: "1.5px solid var(--card)",
                   }} />
                 )}
               </button>
@@ -525,7 +525,7 @@ export default function CandidateProfile() {
             <div style={{ marginBottom: "16px" }}>
               {profile?.resume_url && (
                 <a href={profile.resume_url} target="_blank" rel="noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.82rem", color: "var(--pink)", marginBottom: "8px" }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.82rem", color: "#0A66C2", marginBottom: "8px" }}>
                   View current resume →
                 </a>
               )}
@@ -553,11 +553,11 @@ export default function CandidateProfile() {
             {/* ── Resume Skill Suggestions ── */}
             {suggestions.length > 0 && (
               <div style={{
-                background: "var(--pink-light)", border: "1.5px solid #f8c5e0",
+                background: "#E8F0FA", border: "1.5px solid #b3d0f5",
                 borderRadius: 12, padding: "12px 14px", marginBottom: 16,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--pink)" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0A66C2" }}>
                     📄 Found in your resume
                   </span>
                   <button onClick={handleDismissSuggestions} style={{
@@ -575,9 +575,9 @@ export default function CandidateProfile() {
                       style={{
                         padding: "5px 11px",
                         background: addingSkill === skill ? "#f0b8d8" : "#fff",
-                        border: "1.5px solid #f8c5e0", borderRadius: 999,
+                        border: "1.5px solid #b3d0f5", borderRadius: 999,
                         cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
-                        color: "var(--pink)",
+                        color: "#0A66C2",
                       }}>
                       {addingSkill === skill ? "Adding…" : `+ ${skill}`}
                     </button>
@@ -646,7 +646,7 @@ export default function CandidateProfile() {
                   </div>
 
                   {p.tech_stack && (
-                    <div style={{ fontSize: "0.75rem", color: "var(--pink)", fontWeight: 600, marginTop: "5px" }}>
+                    <div style={{ fontSize: "0.75rem", color: "#0A66C2", fontWeight: 600, marginTop: "5px" }}>
                       {p.tech_stack}
                     </div>
                   )}
@@ -657,7 +657,7 @@ export default function CandidateProfile() {
                   )}
                   {p.project_url && (
                     <a href={p.project_url} target="_blank" rel="noreferrer"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "var(--pink)", marginTop: "8px", fontWeight: 600 }}>
+                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "#0A66C2", marginTop: "8px", fontWeight: 600 }}>
                       View project →
                     </a>
                   )}
@@ -718,7 +718,7 @@ export default function CandidateProfile() {
 
                   {c.cert_url && (
                     <a href={c.cert_url} target="_blank" rel="noreferrer"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "var(--pink)", marginTop: "8px", fontWeight: 600 }}>
+                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "#0A66C2", marginTop: "8px", fontWeight: 600 }}>
                       View certificate →
                     </a>
                   )}

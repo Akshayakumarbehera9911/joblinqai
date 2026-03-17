@@ -111,7 +111,7 @@ export default function Search() {
             />
           </div>
           <button type="submit" style={{
-            padding: "0 16px", background: "var(--pink)", color: "#fff",
+            padding: "0 16px", background: "#0A66C2", color: "#fff",
             border: "none", borderRadius: 12, cursor: "pointer",
             fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap",
           }}>Search</button>
@@ -127,9 +127,9 @@ export default function Search() {
         <div style={{ display: "flex", gap: 7, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
           <button onClick={() => setShowFilter(true)} style={{
             flexShrink: 0, padding: "6px 12px",
-            border: `1.5px solid ${activeFilterCount > 0 ? "var(--pink)" : "var(--border)"}`,
+            border: `1.5px solid ${activeFilterCount > 0 ? "#0A66C2" : "var(--border)"}`,
             borderRadius: 999,
-            background: activeFilterCount > 0 ? "var(--pink)" : "var(--card)",
+            background: activeFilterCount > 0 ? "#0A66C2" : "var(--card)",
             color: activeFilterCount > 0 ? "#fff" : "var(--muted)",
             fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", gap: 5,
@@ -155,10 +155,10 @@ export default function Search() {
                 fetchJobs({ q: query, ...newApplied });
               }} style={{
                 flexShrink: 0, padding: "6px 13px",
-                border: `1.5px solid ${isActive ? "var(--pink)" : "var(--border)"}`,
+                border: `1.5px solid ${isActive ? "#0A66C2" : "var(--border)"}`,
                 borderRadius: 999,
-                background: isActive ? "var(--pink-light)" : "var(--card)",
-                color: isActive ? "var(--pink)" : "var(--muted)",
+                background: isActive ? "#E8F0FA" : "var(--card)",
+                color: isActive ? "#0A66C2" : "var(--muted)",
                 fontSize: "0.78rem", fontWeight: isActive ? 700 : 500, cursor: "pointer",
               }}>{chip.label}</button>
             );
@@ -182,7 +182,7 @@ export default function Search() {
               <button onClick={() => fetchJobs({ q: query, ...applied }, page + 1)} style={{
                 width: "100%", padding: "11px",
                 background: "var(--card)", border: "1.5px solid var(--border)",
-                borderRadius: 10, color: "var(--pink)",
+                borderRadius: 10, color: "#0A66C2",
                 fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", marginTop: 8,
               }}>
                 {loading ? "Loading…" : "Load more"}
@@ -199,8 +199,8 @@ export default function Search() {
           <div className="bottom-sheet">
             <div className="sheet-handle" />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem" }}>Filters</span>
-              <button onClick={clearFilters} style={{ background: "none", border: "none", color: "var(--pink)", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}>Clear all</button>
+              <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.05rem" }}>Filters</span>
+              <button onClick={clearFilters} style={{ background: "none", border: "none", color: "#0A66C2", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}>Clear all</button>
             </div>
 
             <FilterSection label="Job Type">
@@ -258,9 +258,9 @@ function FilterChip({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{
       padding: "6px 13px",
-      border: `1.5px solid ${active ? "var(--pink)" : "var(--border)"}`,
+      border: `1.5px solid ${active ? "#0A66C2" : "var(--border)"}`,
       borderRadius: 999,
-      background: active ? "var(--pink)" : "var(--card)",
+      background: active ? "#0A66C2" : "var(--card)",
       color: active ? "#fff" : "var(--muted)",
       fontSize: "0.78rem", fontWeight: 600,
       cursor: "pointer", textTransform: "capitalize",
