@@ -574,7 +574,7 @@ export default function CandidateProfile() {
                       disabled={addingSkill === skill}
                       style={{
                         padding: "5px 11px",
-                        background: addingSkill === skill ? "#f0b8d8" : "#fff",
+                        background: addingSkill === skill ? "#E8F0FA" : "#fff",
                         border: "1.5px solid #b3d0f5", borderRadius: 999,
                         cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
                         color: "#0A66C2",
