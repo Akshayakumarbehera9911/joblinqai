@@ -70,10 +70,21 @@ export default function HRApplicants() {
     setUpdating(true);
     try {
       await updateAppStatus(appId, status);
-      const res = await getApplicants(id);
-      const fresh = (res.data || []).find(a => String(a.application_id) === String(appId));
-      setApplicants(res.data || []);
-      if (fresh) setSelected(fresh);
+      // Update local state immediately — no extra API call needed for reject
+      const updated = applicants.map(a =>
+        String(a.application_id) === String(appId) ? { ...a, status } : a
+      );
+      setApplicants(updated);
+      const localFresh = updated.find(a => String(a.application_id) === String(appId));
+      if (localFresh) setSelected(localFresh);
+      // Only re-fetch when shortlisting — to get contact details from server
+      if (status === 'shortlisted') {
+        try {
+          const res = await getApplicants(id);
+          const serverFresh = (res.data || []).find(a => String(a.application_id) === String(appId));
+          if (serverFresh) { setApplicants(res.data || []); setSelected(serverFresh); }
+        } catch {} // silently ignore — local state already updated
+      }
     } catch (e) { alert(e.message); }
     finally { setUpdating(false); }
   }
@@ -194,7 +205,7 @@ export default function HRApplicants() {
             {/* Contact */}
             <div style={{ padding: "10px 16px" }}>
               {selected.status === "shortlisted" && (selected.email || selected.phone) ? (
-                <div style={{ background: "#E8F0FA", border: "1px solid #f8c5e0", borderRadius: "8px", padding: "10px 12px" }}>
+                <div style={{ background: "#E8F0FA", border: "1px solid #b3d0f5", borderRadius: "8px", padding: "10px 12px" }}>
                   <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#0A66C2", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Contact Details</div>
                   {selected.email && <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>📧 {selected.email}</div>}
                   {selected.phone && <div style={{ fontSize: "0.82rem", fontWeight: 600, marginTop: "3px" }}>📞 {selected.phone}</div>}
