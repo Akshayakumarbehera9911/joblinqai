@@ -211,9 +211,9 @@ def analyze_market_demand(target_role: str, role_type: str, db: Session) -> list
         or_(*title_filters)
     ).limit(100).all()
 
-    if len(matching_jobs) < 5:
+    if len(matching_jobs) < 2:
         logger.debug(
-            "Not enough jobs for '%s' (found %d) — using static fallback",
+            "Not enough jobs for '%s' (found %d) — using static fallback (threshold: 2)",
             target_role, len(matching_jobs)
         )
         return STATIC_MARKET_DEMAND.get(role_type, STATIC_MARKET_DEMAND["non-technical"])
