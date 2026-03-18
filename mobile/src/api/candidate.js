@@ -20,8 +20,12 @@ export const getCertifications   = () => apiFetch("/candidate/certifications");
 export const addCertification    = (data) => apiFetch("/candidate/certifications", { method: "POST", body: JSON.stringify(data) });
 export const deleteCertification = (id) => apiFetch(`/candidate/certifications/${id}`, { method: "DELETE" });
 
-export const uploadResume      = (formData) => apiUpload("/candidate/resume", formData);
-export const uploadPhoto       = (formData) => apiUpload("/candidate/photo", formData);
+export const uploadResume = (formData) => apiUpload("/candidate/resume", formData);
+export const deleteResume = () => apiFetch("/candidate/resume", { method: "DELETE" });
+
+export const uploadPhoto  = (formData) => apiUpload("/candidate/photo", formData);
+export const deletePhoto  = () => apiFetch("/candidate/photo", { method: "DELETE" });
+
 // Correct pipeline route (not /candidate/run-pipeline)
-export const runPipeline       = () => apiFetch("/scoring/calculate", { method: "POST" });
-export const deletePhoto = () => apiFetch("/candidate/photo", { method: "DELETE" });export const saveFCMToken = (token) => apiFetch("/candidate/fcm-token", { method: "POST", body: JSON.stringify({ token }) });
+export const runPipeline  = () => apiFetch("/scoring/calculate", { method: "POST" });
+export const saveFCMToken = (token) => apiFetch("/candidate/fcm-token", { method: "POST", body: JSON.stringify({ token }) });
