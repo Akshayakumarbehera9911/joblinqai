@@ -19,10 +19,15 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      await register(fullName.trim(), email.trim(), phone.trim(), password, role);
+      const res = await register(fullName.trim(), email.trim(), phone.trim(), password, role);
       setSuccess(true);
-      // Redirect to verify page with email passed as state
-      setTimeout(() => navigate("/verify", { state: { email: email.trim() } }), 1200);
+      const emailFailed = res?.data?.email_failed === true;
+      setTimeout(() => navigate("/verify", {
+        state: {
+          email: email.trim(),
+          emailFailed,
+        }
+      }), 1200);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,8 +43,8 @@ export default function Register() {
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "24px", paddingTop: "16px" }}>
-        <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "2rem", letterSpacing: "-0.5px" }}>
-          Job<span style={{ color: "#0A66C2" }}>LinqAI</span>
+        <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", letterSpacing: "-0.5px" }}>
+          Job<span style={{ color: "var(--pink)" }}>Portal</span>
         </div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "5px", letterSpacing: "0.01em" }}>
           Join thousands finding their next role
@@ -50,7 +55,7 @@ export default function Register() {
       <div className="card" style={{ borderRadius: "18px", padding: "24px 22px" }}>
 
         <div style={{ marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.35rem", marginBottom: "3px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", marginBottom: "3px" }}>
             Create account
           </h2>
           <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Pick your role to get started</div>
@@ -64,10 +69,10 @@ export default function Register() {
           ].map(tab => (
             <button key={tab.value} type="button" onClick={() => setRole(tab.value)} style={{
               padding: "11px 8px",
-              border: `1.5px solid ${role === tab.value ? "#0A66C2" : "var(--border)"}`,
+              border: `1.5px solid ${role === tab.value ? "var(--pink)" : "var(--border)"}`,
               borderRadius: "10px",
-              background: role === tab.value ? "#E8F0FA" : "var(--card)",
-              color: role === tab.value ? "#0A66C2" : "var(--muted)",
+              background: role === tab.value ? "var(--pink-light)" : "var(--card)",
+              color: role === tab.value ? "var(--pink)" : "var(--muted)",
               fontSize: "0.84rem", fontWeight: role === tab.value ? 700 : 500,
               cursor: "pointer", transition: "border-color 0.15s, background 0.15s, color 0.15s",
               letterSpacing: "0.01em",
@@ -132,7 +137,7 @@ export default function Register() {
         }}>
           Already have an account?{" "}
           <span onClick={() => navigate("/login")}
-            style={{ color: "#0A66C2", fontWeight: 700, cursor: "pointer" }}>
+            style={{ color: "var(--pink)", fontWeight: 700, cursor: "pointer" }}>
             Login
           </span>
         </div>

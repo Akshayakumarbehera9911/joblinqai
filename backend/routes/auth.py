@@ -124,21 +124,17 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     from backend.utils.email import send_otp_email
     email_sent = send_otp_email(user.email, otp_code, user.full_name)
 
-    if not email_sent:
-        db.delete(user)
-        db.commit()
-        raise HTTPException(
-            status_code=500,
-            detail="Could not send verification email. Please try again later."
-        )
-
     return {
         "success": True,
         "data": {
-            "user_id": user.id,
-            "email":   user.email,
-            "role":    user.role,
-            "message": "Account created. Please check your email for the verification code."
+            "user_id":    user.id,
+            "email":      user.email,
+            "role":       user.role,
+            "email_sent": email_sent,
+            "message":    "Account created. Please check your email for the verification code."
+                          if email_sent else
+                          "Account created but OTP email could not be sent. Please use Resend OTP on the next page.",
+            "email_failed": not email_sent,
         },
         "error": None
     }

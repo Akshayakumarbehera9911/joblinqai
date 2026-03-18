@@ -39,10 +39,14 @@ if (registerForm) {
 
     try {
       const res = await AuthAPI.register(body);
-      showAlert("form-alert", "Account created! Sending verification code…", "success");
-      // Redirect to verify page with email as query param
+      const emailFailed = res?.data?.email_failed === true;
+      const msg = emailFailed
+        ? "Account created but OTP email failed. Click Resend on next page."
+        : "Account created! Sending verification code…";
+      showAlert("form-alert", msg, emailFailed ? "error" : "success");
+      // Redirect to verify page with email + email_failed as query params
       setTimeout(() => {
-        window.location.href = `/verify?email=${encodeURIComponent(body.email)}`;
+        window.location.href = `/verify?email=${encodeURIComponent(body.email)}${emailFailed ? "&email_failed=1" : ""}`;
       }, 1200);
     } catch (err) {
       showAlert("form-alert", err.message);
@@ -92,11 +96,11 @@ if (loginForm) {
       if (err.message && err.message.toLowerCase().includes("verify your email")) {
         const email = body.email;
         showAlert("form-alert",
-          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#9d174d;font-weight:700">Verify now →</a>`,
+          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#0A66C2;font-weight:700">Verify now →</a>`,
           "error"
         );
         document.getElementById("form-alert").innerHTML =
-          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#9d174d;font-weight:700">Verify now →</a>`;
+          `${err.message} <a href="/verify?email=${encodeURIComponent(email)}" style="color:#0A66C2;font-weight:700">Verify now →</a>`;
         document.getElementById("form-alert").className = "alert alert-error show";
       } else {
         showAlert("form-alert", err.message);

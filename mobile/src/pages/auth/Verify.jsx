@@ -18,10 +18,15 @@ export default function Verify() {
   // Email passed from Register page via navigate state, or fallback to query param
   const email = location.state?.email ||
     new URLSearchParams(location.search).get("email") || "";
+  const emailFailed = location.state?.emailFailed === true;
 
   // Start resend cooldown if coming fresh from register
   useEffect(() => {
-    startTimer();
+    if (emailFailed) {
+      setError("OTP email could not be sent. Please tap Resend OTP below.");
+    } else {
+      startTimer();
+    }
   }, []);
 
   function startTimer() {
@@ -100,8 +105,8 @@ export default function Verify() {
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <div style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "2rem", letterSpacing: "-0.5px" }}>
-          Job<span style={{ color: "#0A66C2" }}>LinqAI</span>
+        <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", letterSpacing: "-0.5px" }}>
+          Job<span style={{ color: "var(--pink)" }}>Portal</span>
         </div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "5px" }}>
           One step away
@@ -112,7 +117,7 @@ export default function Verify() {
       <div className="card" style={{ borderRadius: "18px", padding: "24px 22px" }}>
 
         <div style={{ marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "1.35rem", marginBottom: "6px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", marginBottom: "6px" }}>
             Verify your email
           </h2>
           <div style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -145,7 +150,7 @@ export default function Verify() {
               style={{
                 width: "46px", height: "56px",
                 textAlign: "center", fontSize: "1.4rem", fontWeight: 700,
-                border: `1.5px solid ${d ? "#0A66C2" : "var(--border)"}`,
+                border: `1.5px solid ${d ? "var(--pink)" : "var(--border)"}`,
                 borderRadius: "10px",
                 background: "var(--bg)", color: "var(--text)",
                 outline: "none",
@@ -169,13 +174,13 @@ export default function Verify() {
         }}>
           Didn't get the code?{" "}
           {timer > 0 ? (
-            <span style={{ color: "#0A66C2", fontWeight: 600 }}>
+            <span style={{ color: "var(--pink)", fontWeight: 600 }}>
               Resend in {timer}s
             </span>
           ) : (
             <span
               onClick={handleResend}
-              style={{ color: "#0A66C2", fontWeight: 700, cursor: "pointer" }}
+              style={{ color: "var(--pink)", fontWeight: 700, cursor: "pointer" }}
             >
               Resend
             </span>
@@ -189,7 +194,7 @@ export default function Verify() {
           Wrong email?{" "}
           <span
             onClick={() => navigate("/register")}
-            style={{ color: "#0A66C2", fontWeight: 700, cursor: "pointer" }}
+            style={{ color: "var(--pink)", fontWeight: 700, cursor: "pointer" }}
           >
             Register again
           </span>
