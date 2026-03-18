@@ -4,6 +4,7 @@ export const getCompany      = () => apiFetch("/hr/company");
 export const createCompany   = (data) => apiFetch("/hr/company", { method: "POST", body: JSON.stringify(data) });
 export const updateCompany   = (data) => apiFetch("/hr/company", { method: "PUT", body: JSON.stringify(data) });
 export const uploadLogo      = (formData) => apiUpload("/hr/company/logo", formData);
+export const deleteLogo = () => apiFetch("/hr/company/logo", { method: "DELETE" });
 
 export const getHRJobs       = () => apiFetch("/hr/jobs");
 export const createJob       = (data) => apiFetch("/hr/jobs", { method: "POST", body: JSON.stringify(data) });
