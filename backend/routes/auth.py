@@ -125,18 +125,24 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
 
     from backend.utils.email import send_otp_email
 
+    # Capture plain values before thread — SQLAlchemy session not thread-safe
+    _email     = user.email
+    _name      = user.full_name
+    _user_id   = user.id
+    _role      = user.role
+
     def send_email_bg():
-        send_otp_email(user.email, otp_code, user.full_name)
+        send_otp_email(_email, otp_code, _name)
 
     threading.Thread(target=send_email_bg, daemon=True).start()
 
     return {
         "success": True,
         "data": {
-            "user_id":    user.id,
-            "email":      user.email,
-            "role":       user.role,
-            "email_sent": True,   # optimistic — background thread handles it
+            "user_id":    _user_id,
+            "email":      _email,
+            "role":       _role,
+            "email_sent": True,
             "email_failed": False,
             "message":    "Account created. Please check your email for the verification code.",
         },
@@ -212,8 +218,12 @@ def resend_otp(body: ResendOTPRequest, db: Session = Depends(get_db)):
 
     from backend.utils.email import send_otp_email
 
+    # Capture plain values before thread
+    _email = user.email
+    _name  = user.full_name
+
     def send_email_bg():
-        send_otp_email(user.email, otp_code, user.full_name)
+        send_otp_email(_email, otp_code, _name)
 
     threading.Thread(target=send_email_bg, daemon=True).start()
 
