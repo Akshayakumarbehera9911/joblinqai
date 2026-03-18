@@ -114,6 +114,30 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
         db.rollback()
         error = str(e.orig)
         if "email" in error:
+            # Check if zombie account — registered but unverified
+            existing = db.query(User).filter(
+                User.email == body.email.lower().strip()
+            ).first()
+            if existing and not existing.is_verified:
+                # Resend OTP silently — treat as fresh registration
+                _email = existing.email
+                _name  = existing.full_name
+                _role  = existing.role
+                _uid   = existing.id
+                new_otp = create_and_save_otp(existing.id, db)
+                from backend.utils.email import send_otp_email
+                def _resend_bg():
+                    send_otp_email(_email, new_otp, _name)
+                threading.Thread(target=_resend_bg, daemon=True).start()
+                return {
+                    "success": True,
+                    "data": {
+                        "user_id": _uid, "email": _email, "role": _role,
+                        "email_sent": True, "email_failed": False,
+                        "message": "Account already exists but not verified. A new OTP has been sent to your email.",
+                    },
+                    "error": None
+                }
             raise HTTPException(status_code=400, detail="This email is already registered")
         if "phone" in error:
             raise HTTPException(status_code=400, detail="This phone number is already registered")
