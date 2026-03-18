@@ -1,4 +1,5 @@
 import random
+import threading
 import string
 from datetime import datetime, timedelta, timezone
 
@@ -118,11 +119,16 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="This phone number is already registered")
         raise HTTPException(status_code=400, detail="Registration failed — duplicate entry")
 
-    # Generate OTP and send email
+    # Generate OTP and send email in background thread
+    # Background sending = instant response to user, no hanging on SMTP
     otp_code = create_and_save_otp(user.id, db)
 
     from backend.utils.email import send_otp_email
-    email_sent = send_otp_email(user.email, otp_code, user.full_name)
+
+    def send_email_bg():
+        send_otp_email(user.email, otp_code, user.full_name)
+
+    threading.Thread(target=send_email_bg, daemon=True).start()
 
     return {
         "success": True,
@@ -130,11 +136,9 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
             "user_id":    user.id,
             "email":      user.email,
             "role":       user.role,
-            "email_sent": email_sent,
-            "message":    "Account created. Please check your email for the verification code."
-                          if email_sent else
-                          "Account created but OTP email could not be sent. Please use Resend OTP on the next page.",
-            "email_failed": not email_sent,
+            "email_sent": True,   # optimistic — background thread handles it
+            "email_failed": False,
+            "message":    "Account created. Please check your email for the verification code.",
         },
         "error": None
     }
@@ -207,14 +211,15 @@ def resend_otp(body: ResendOTPRequest, db: Session = Depends(get_db)):
     otp_code = create_and_save_otp(user.id, db)
 
     from backend.utils.email import send_otp_email
-    email_sent = send_otp_email(user.email, otp_code, user.full_name)
 
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Could not send email. Check Gmail credentials.")
+    def send_email_bg():
+        send_otp_email(user.email, otp_code, user.full_name)
+
+    threading.Thread(target=send_email_bg, daemon=True).start()
 
     return {
         "success": True,
-        "data": {"message": "New OTP sent to your email."},
+        "data": {"message": "OTP sent. Check your email (may take a minute)."},
         "error": None
     }
 

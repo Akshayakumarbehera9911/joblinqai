@@ -78,7 +78,7 @@ def send_otp_email(to_email: str, otp_code: str, full_name: str) -> bool:
         msg.attach(text_part)
         msg.attach(html_part)
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, to_email, msg.as_string())
 
@@ -137,7 +137,7 @@ def send_shortlist_email(to_email: str, full_name: str, job_title: str, company_
             "plain"
         ))
         msg.attach(MIMEText(html_body, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, to_email, msg.as_string())
         logger.info("Shortlist email sent to %s", to_email)
@@ -188,7 +188,7 @@ def send_reject_email(to_email: str, full_name: str, job_title: str, company_nam
             "plain"
         ))
         msg.attach(MIMEText(html_body, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, to_email, msg.as_string())
         logger.info("Reject email sent to %s", to_email)
