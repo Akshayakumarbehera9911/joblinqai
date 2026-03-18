@@ -7,7 +7,7 @@ import EmptyState from "../../components/EmptyState";
 import { getDashboard, runPipeline } from "../../api/candidate";
 import { useAuth } from "../../context/AuthContext";
 
-const STATIC = "https://joblinqai-production.up.railway.app/static/icons/";
+const STATIC = "https://joblinqai-api.onrender.com/static/icons/";
 
 export default function CandidateDashboard() {
   const [data,      setData]      = useState(null);

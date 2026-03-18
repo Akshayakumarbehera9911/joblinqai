@@ -198,7 +198,7 @@ function GlobalMenu() {
 
   function handleShare() {
     setOpen(false);
-    const url = "https://joblinqai-production.up.railway.app";
+    const url = "https://joblinqai-api.onrender.com";
     if (navigator.share) {
       navigator.share({ title:"JobLinqAI", text:"Find jobs across India", url }).catch(()=>{});
     } else {

@@ -104,7 +104,7 @@
 
 {% block extra_js %}
 <script>
-const API = "https://joblinqai-production.up.railway.app/api";
+const API = "https://joblinqai-api.onrender.com/api";
 const token = localStorage.getItem("token");
 if (!token) { window.location.href = "/login?returnTo=" + encodeURIComponent(window.location.pathname); }
 

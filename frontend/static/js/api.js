@@ -1,5 +1,5 @@
 // ── Base URL ───────────────────────────────────────────────────────────────
-const API_BASE = "https://joblinqai-production.up.railway.app/api";
+const API_BASE = "https://joblinqai-api.onrender.com/api";
 
 // ── Token helpers ──────────────────────────────────────────────────────────
 const Auth = {

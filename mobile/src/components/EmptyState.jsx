@@ -1,4 +1,4 @@
-const ICON_BASE = "https://joblinqai-production.up.railway.app/static/icons/";
+const ICON_BASE = "https://joblinqai-api.onrender.com/static/icons/";
 
 export default function EmptyState({ icon, title, subtitle, action = null }) {
   return (

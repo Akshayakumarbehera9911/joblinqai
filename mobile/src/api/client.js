@@ -1,4 +1,4 @@
-const BASE = "https://joblinqai-production.up.railway.app/api";
+const BASE = "https://joblinqai-api.onrender.com/api";
 
 function getToken() {
   return localStorage.getItem("token");
