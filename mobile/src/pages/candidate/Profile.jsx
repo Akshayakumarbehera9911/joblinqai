@@ -524,10 +524,9 @@ export default function CandidateProfile() {
             {sectionLabel("Resume")}
             <div style={{ marginBottom: "16px" }}>
               {profile?.resume_url && (
-                <a href={profile.resume_url} target="_self"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.82rem", color: "var(--pink)", marginBottom: "8px" }}>
-                  View current resume →
-                </a>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "#00A651", marginBottom: "8px", background: "#E8F5EE", borderRadius: 8, padding: "6px 12px" }}>
+                  ✓ Resume uploaded
+                </div>
               )}
               <input type="file" accept=".pdf" onChange={handleResumeUpload}
                 style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block" }} />
@@ -557,7 +556,7 @@ export default function CandidateProfile() {
                 borderRadius: 12, padding: "12px 14px", marginBottom: 16,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--pink)" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0A66C2" }}>
                     📄 Found in your resume
                   </span>
                   <button onClick={handleDismissSuggestions} style={{
@@ -577,7 +576,7 @@ export default function CandidateProfile() {
                         background: addingSkill === skill ? "#f0b8d8" : "#fff",
                         border: "1.5px solid #f8c5e0", borderRadius: 999,
                         cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
-                        color: "var(--pink)",
+                        color: "#0A66C2",
                       }}>
                       {addingSkill === skill ? "Adding…" : `+ ${skill}`}
                     </button>
@@ -646,7 +645,7 @@ export default function CandidateProfile() {
                   </div>
 
                   {p.tech_stack && (
-                    <div style={{ fontSize: "0.75rem", color: "var(--pink)", fontWeight: 600, marginTop: "5px" }}>
+                    <div style={{ fontSize: "0.75rem", color: "#0A66C2", fontWeight: 600, marginTop: "5px" }}>
                       {p.tech_stack}
                     </div>
                   )}
@@ -657,7 +656,7 @@ export default function CandidateProfile() {
                   )}
                   {p.project_url && (
                     <a href={p.project_url} target="_blank" rel="noreferrer"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "var(--pink)", marginTop: "8px", fontWeight: 600 }}>
+                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "#0A66C2", marginTop: "8px", fontWeight: 600 }}>
                       View project →
                     </a>
                   )}
@@ -718,7 +717,7 @@ export default function CandidateProfile() {
 
                   {c.cert_url && (
                     <a href={c.cert_url} target="_blank" rel="noreferrer"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "var(--pink)", marginTop: "8px", fontWeight: 600 }}>
+                      style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.76rem", color: "#0A66C2", marginTop: "8px", fontWeight: 600 }}>
                       View certificate →
                     </a>
                   )}
