@@ -10,7 +10,7 @@ import {
   getSkillSuggestions,
   getProjects, addProject, deleteProject,
   getCertifications, addCertification, deleteCertification,
-  uploadResume, uploadPhoto, deletePhoto,
+  uploadResume, uploadPhoto, deletePhoto, deleteResume,
 } from "../../api/candidate";
 
 const SKILL_LEVELS = ["beginner", "intermediate", "advanced", "expert"];
@@ -523,11 +523,22 @@ export default function CandidateProfile() {
             <Divider />
             {sectionLabel("Resume")}
             <div style={{ marginBottom: "16px" }}>
-              {profile?.resume_url && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "#00A651", marginBottom: "8px", background: "#E8F5EE", borderRadius: 8, padding: "6px 12px" }}>
-                  ✓ Resume uploaded
+              {profile?.resume_url ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "#00A651", background: "#E8F5EE", borderRadius: 8, padding: "6px 12px" }}>
+                    ✓ Resume uploaded
+                  </div>
+                  <button onClick={async () => {
+                    if (!window.confirm("Remove your resume?")) return;
+                    try { await deleteResume(); setMsg("Resume removed!"); loadAll(); }
+                    catch(e) { setMsg(e.message); }
+                  }} style={{
+                    padding: "5px 14px", borderRadius: 999,
+                    background: "none", border: "1.5px solid var(--red)",
+                    color: "var(--red)", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer",
+                  }}>Remove</button>
                 </div>
-              )}
+              ) : null}
               <input type="file" accept=".pdf" onChange={handleResumeUpload}
                 style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block" }} />
             </div>
@@ -552,7 +563,7 @@ export default function CandidateProfile() {
             {/* ── Resume Skill Suggestions ── */}
             {suggestions.length > 0 && (
               <div style={{
-                background: "var(--pink-light)", border: "1.5px solid #f8c5e0",
+                background: "var(--pink-light)", border: "1.5px solid #fef6fa",
                 borderRadius: 12, padding: "12px 14px", marginBottom: 16,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -573,8 +584,8 @@ export default function CandidateProfile() {
                       disabled={addingSkill === skill}
                       style={{
                         padding: "5px 11px",
-                        background: addingSkill === skill ? "#f0b8d8" : "#fff",
-                        border: "1.5px solid #f8c5e0", borderRadius: 999,
+                        background: addingSkill === skill ? "#faf1f6" : "#fff",
+                        border: "1.5px solid #fcedf5", borderRadius: 999,
                         cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
                         color: "#0A66C2",
                       }}>

@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import TopBar  from "../../components/TopBar";
+import TopBar from "../../components/TopBar";
 import Spinner from "../../components/Spinner";
-import { getCompany, createCompany, updateCompany, uploadLogo } from "../../api/hr";
+import { getCompany, createCompany, updateCompany, uploadLogo, deleteLogo } from "../../api/hr";
 import { useAuth } from "../../context/AuthContext";
 
 export default function HRProfile() {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [saving,  setSaving]  = useState(false);
-  const [msg,     setMsg]     = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef();
   const { user, logout } = useAuth();
@@ -26,7 +26,7 @@ export default function HRProfile() {
         if (res.data) { setCompany(res.data); setForm(res.data); }
         else { setEditing(true); }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,7 +42,11 @@ export default function HRProfile() {
     } catch (e) { setMsg(e.message); }
     finally { setUploading(false); }
   }
-
+  async function handleDeleteLogo() {
+    if (!window.confirm("Remove company logo?")) return;
+    try { await deleteLogo(); setCompany(c => ({ ...c, logo_url: null })); setMsg("Logo removed!"); }
+    catch (e) { setMsg(e.message); }
+  }
   async function saveCompany() {
     setSaving(true); setMsg("");
     try {
@@ -106,7 +110,16 @@ export default function HRProfile() {
             {/* Company header */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 12px 10px" }}>
               {company.logo_url ? (
-                <img src={company.logo_url} style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }} />
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <img src={company.logo_url} style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover", border: "1px solid var(--border)" }} />
+                  <button onClick={handleDeleteLogo} style={{
+                    position: "absolute", top: -4, right: -4,
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: "var(--red)", border: "2px solid #fff",
+                    color: "#fff", fontSize: "0.55rem", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                  }}>✕</button>
+                </div>
               ) : (
                 <div style={{ width: 42, height: 42, borderRadius: 8, background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff" }}>{initial}</span>
@@ -132,7 +145,7 @@ export default function HRProfile() {
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
               <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
                 {uploading ? "Uploading…" : "Tap to update logo"}
@@ -143,10 +156,10 @@ export default function HRProfile() {
             {/* Info rows */}
             <div style={{ borderTop: "1px solid var(--border)" }}>
               {[
-                ["City",    company.city],
-                ["State",   company.state],
-                ["Size",    company.company_size],
-                ["Type",    company.company_type],
+                ["City", company.city],
+                ["State", company.state],
+                ["Size", company.company_size],
+                ["Type", company.company_type],
                 ["Founded", company.founded_year],
                 ["Website", company.website],
                 ["GST/CIN", company.gst_cin],
@@ -193,15 +206,15 @@ export default function HRProfile() {
             {/* Inline rows */}
             {[
               { label: "Company Name *", key: "company_name", type: "text" },
-              { label: "Industry",       key: "industry",     type: "text" },
-              { label: "Type",           key: "company_type", type: "text", placeholder: "Startup, MNC, SME" },
-              { label: "Size",           key: "company_size", type: "text", placeholder: "e.g. 11–50" },
-              { label: "Founded",        key: "founded_year", type: "number" },
-              { label: "City",           key: "city",         type: "text" },
-              { label: "State",          key: "state",        type: "text" },
-              { label: "Website",        key: "website",      type: "url" },
-              { label: "LinkedIn",       key: "linkedin",     type: "url" },
-              { label: "GST / CIN",      key: "gst_cin",      type: "text" },
+              { label: "Industry", key: "industry", type: "text" },
+              { label: "Type", key: "company_type", type: "text", placeholder: "Startup, MNC, SME" },
+              { label: "Size", key: "company_size", type: "text", placeholder: "e.g. 11–50" },
+              { label: "Founded", key: "founded_year", type: "number" },
+              { label: "City", key: "city", type: "text" },
+              { label: "State", key: "state", type: "text" },
+              { label: "Website", key: "website", type: "url" },
+              { label: "LinkedIn", key: "linkedin", type: "url" },
+              { label: "GST / CIN", key: "gst_cin", type: "text" },
             ].map(({ label, key, type, placeholder }, i, arr) => (
               <div key={key} style={{
                 display: "flex", alignItems: "center",
@@ -267,7 +280,7 @@ export default function HRProfile() {
           }}>
             <div style={{ width: 44, height: 44, borderRadius: 10, background: "#0A66C2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
             <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: 4 }}>No company profile yet</div>
@@ -287,7 +300,7 @@ export default function HRProfile() {
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
         }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
           </svg>
           Log out
         </button>

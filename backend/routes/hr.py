@@ -163,6 +163,24 @@ async def upload_logo(
     return {"success": True, "data": {"logo_url": url}, "error": None}
 
 
+# ── DELETE /api/hr/company/logo ───────────────────────────────────────────
+@router.delete("/company/logo")
+def delete_logo(current_user: User = Depends(require_hr), db: Session = Depends(get_db)):
+    company = get_company_or_404(current_user.id, db)
+    if not company.logo_url:
+        raise HTTPException(status_code=404, detail="No logo found")
+    try:
+        from backend.utils.cloudinary_helper import delete_file, url_to_public_id
+        public_id = url_to_public_id(company.logo_url)
+        if public_id:
+            delete_file(public_id, resource_type="image")
+    except Exception:
+        pass
+    company.logo_url = None
+    db.commit()
+    return {"success": True, "data": {"message": "Logo deleted"}, "error": None}
+
+
 # ── GET /api/hr/jobs ───────────────────────────────────────────────────────
 @router.get("/jobs")
 def get_jobs(current_user: User = Depends(require_hr), db: Session = Depends(get_db)):
