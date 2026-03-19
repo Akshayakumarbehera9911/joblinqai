@@ -62,10 +62,12 @@ def page_login(request: Request):
 def page_home(request: Request):
     return templates.TemplateResponse("auth/login.html", {"request": request})
 
-from backend.routes.jobs  import router as jobs_router
-from backend.routes.admin import router as admin_router
-app.include_router(jobs_router,  prefix="/api/jobs",  tags=["jobs"])
-app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+from backend.routes.jobs       import router as jobs_router
+from backend.routes.admin      import router as admin_router
+from backend.routes.test_email import router as test_email_router
+app.include_router(jobs_router,        prefix="/api/jobs",       tags=["jobs"])
+app.include_router(admin_router,       prefix="/api/admin",      tags=["admin"])
+app.include_router(test_email_router,  prefix="/api",            tags=["test"])
 
 @app.get("/dashboard")
 def page_dashboard(request: Request):
