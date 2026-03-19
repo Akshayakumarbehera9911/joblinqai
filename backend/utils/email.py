@@ -9,7 +9,7 @@ import resend
 logger = logging.getLogger(__name__)
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-FROM_EMAIL     = "JobLinqAI <onboarding@resend.dev>"  # replace with verified domain later
+FROM_EMAIL     = "JobLinqAI <noreply@joblinqai.online>"  # replace with verified domain later
 
 
 def _send(to_email: str, subject: str, html_body: str, text_body: str) -> bool:
