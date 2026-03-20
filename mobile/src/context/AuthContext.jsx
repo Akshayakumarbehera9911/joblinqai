@@ -3,36 +3,12 @@ import { createContext, useContext, useState, useEffect } from "react";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [role,  setRole]  = useState(() => localStorage.getItem("role"));
-  const [user,  setUser]  = useState(() => {
+  const [token, setToken]   = useState(() => localStorage.getItem("token"));
+  const [role,  setRole]    = useState(() => localStorage.getItem("role"));
+  const [user,  setUser]    = useState(() => {
     try { return JSON.parse(localStorage.getItem("user")); }
     catch { return null; }
   });
-
-  // On app load — silently clear if token is expired
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) return;
-    try {
-      const payload = JSON.parse(atob(storedToken.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("user");
-        setToken(null);
-        setRole(null);
-        setUser(null);
-      }
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("user");
-      setToken(null);
-      setRole(null);
-      setUser(null);
-    }
-  }, []);
 
   function login(data) {
     // data = { access_token, role, user_id, full_name }
