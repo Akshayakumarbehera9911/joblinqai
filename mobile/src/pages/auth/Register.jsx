@@ -44,7 +44,7 @@ export default function Register() {
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "24px", paddingTop: "16px" }}>
         <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", letterSpacing: "-0.5px" }}>
-          Job<span style={{ color: "var(--pink)" }}>Portal</span>
+          Job<span style={{ color: "var(--pink)" }}>LinqAI</span>
         </div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "5px", letterSpacing: "0.01em" }}>
           Join thousands finding their next role

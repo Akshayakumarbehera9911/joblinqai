@@ -106,7 +106,7 @@ export default function Verify() {
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
         <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", letterSpacing: "-0.5px" }}>
-          Job<span style={{ color: "var(--pink)" }}>Portal</span>
+          Job<span style={{ color: "var(--pink)" }}>LinqAI</span>
         </div>
         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "5px" }}>
           One step away
