@@ -1,71 +1,37 @@
-import { createContext, useContext, useState, useEffect } from "react";
+// ── Base URL ───────────────────────────────────────────────────────────────
+const API_BASE = "https://joblinqai-api.onrender.com/api";
 
-const AuthContext = createContext(null);
+// ── Token helpers ──────────────────────────────────────────────────────────
+const Auth = {
+  getToken: () => localStorage.getItem("token"),
+  setToken: (t) => localStorage.setItem("token", t),
+  getRole:  () => localStorage.getItem("role"),
+  setRole:  (r) => localStorage.setItem("role", r),
+  getUser:  () => JSON.parse(localStorage.getItem("user") || "null"),
+  setUser:  (u) => localStorage.setItem("user", JSON.stringify(u)),
+  clear:    () => { localStorage.removeItem("token"); localStorage.removeItem("role"); localStorage.removeItem("user"); },
+  isLoggedIn: () => !!localStorage.getItem("token"),
+};
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [role,  setRole]  = useState(() => localStorage.getItem("role"));
-  const [user,  setUser]  = useState(() => {
-    try { return JSON.parse(localStorage.getItem("user")); }
-    catch { return null; }
-  });
+// ── Core fetch wrapper ─────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const headers = { "Content-Type": "application/json", ...options.headers };
+  const token = Auth.getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // On app load — silently clear if token is expired
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) return;
-    try {
-      const payload = JSON.parse(atob(storedToken.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("user");
-        setToken(null);
-        setRole(null);
-        setUser(null);
-      }
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("user");
-      setToken(null);
-      setRole(null);
-      setUser(null);
-    }
-  }, []);
+  const res = await fetch(API_BASE + path, { ...options, headers });
+  const data = await res.json();
 
-  function login(data) {
-    // data = { access_token, role, user_id, full_name }
-    localStorage.setItem("token", data.access_token);
-    localStorage.setItem("role",  data.role);
-    localStorage.setItem("user",  JSON.stringify({
-      id:        data.user_id,
-      full_name: data.full_name,
-      role:      data.role,
-    }));
-    setToken(data.access_token);
-    setRole(data.role);
-    setUser({ id: data.user_id, full_name: data.full_name, role: data.role });
+  if (!res.ok) {
+    const msg = data.detail || data.error || "Something went wrong";
+    throw new Error(msg);
   }
-
-  function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user");
-    setToken(null);
-    setRole(null);
-    setUser(null);
-  }
-
-  const isLoggedIn = !!token;
-
-  return (
-    <AuthContext.Provider value={{ token, role, user, login, logout, isLoggedIn }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return data;
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+// ── Auth API ───────────────────────────────────────────────────────────────
+const AuthAPI = {
+  register: (body) => apiFetch("/auth/register", { method: "POST", body: JSON.stringify(body) }),
+  login:    (body) => apiFetch("/auth/login",    { method: "POST", body: JSON.stringify(body) }),
+  me:       ()     => apiFetch("/auth/me"),
+};
