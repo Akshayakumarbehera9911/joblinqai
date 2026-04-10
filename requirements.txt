@@ -1,6 +1,6 @@
 gunicorn
-fastapi
-uvicorn[standard]
+fastapi==0.133.1
+uvicorn[standard]==0.41.0
 sqlalchemy
 psycopg2-binary
 python-dotenv
@@ -13,8 +13,9 @@ pdfplumber
 groq
 email-validator
 bcrypt==4.0.1
-jinja2
+jinja2==3.1.6
 scikit-learn==1.6.1
 firebase-admin
 rapidfuzz
 resend
+starlette==0.52.1
