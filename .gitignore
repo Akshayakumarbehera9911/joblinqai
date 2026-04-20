@@ -30,3 +30,9 @@ render.yaml
 forgoback.txt
 mobile/.env
 backend/firebase-service-account.json
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
